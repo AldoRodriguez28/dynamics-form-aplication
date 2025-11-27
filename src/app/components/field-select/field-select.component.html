@@ -1,0 +1,20 @@
+<div class="field-wrapper">
+  <label class="field-label" [for]="field.name">
+    {{ field.label }}
+    @if (field.required) { <span class="required">*</span> }
+  </label>
+  <select
+    class="field-control"
+    [id]="field.name"
+    [formControl]="control"
+    [attr.required]="field.required || null"
+  >
+    <option value="">Selecciona...</option>
+    @for (opt of options; track opt.value) {
+      <option [ngValue]="opt.value">{{ opt.label }}</option>
+    }
+  </select>
+  @if (field.placeholder) {
+    <p class="help">{{ field.placeholder }}</p>
+  }
+</div>

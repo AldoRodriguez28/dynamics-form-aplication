@@ -1,0 +1,206 @@
+{
+  "actorType": "AGENT",
+  "actorId": "usuario.demo",
+  "blocks": [
+    {
+      "code": "datos_contacto",
+      "values": {
+        "nombreTitular": "Ana María López",
+        "telWA": "5522334455",
+        "correoTitular": "ana.lopez@empresa.com"
+      }
+    },
+    {
+      "code": "observaciones_internas",
+      "values": {
+        "observaciones": "Cliente solicita entrega de sitio antes del 15 de marzo.",
+        "notasAgente": "Pendiente confirmar redes oficiales.",
+        "archivosObservaciones": "https://drive.google.com/folder/observaciones123"
+      }
+    },
+    {
+      "code": "contacto_negocio",
+      "values": {
+        "nombreNegocio": "Panadería La Estrella",
+        "categoriaNegocio": "PANADERIA",
+        "direccion": "Av. Reforma 123, Col. Roma Norte, CDMX",
+        "coordenadas": "19.4326,-99.1332",
+        "noPublicarDireccion": false,
+        "localidad": "Roma Norte, CDMX",
+
+        "sucursales": [
+          {
+            "nombreSucursal": "Sucursal Centro",
+            "telefonoSucursal": "5511223344",
+            "direccionSucursal": "Av. Juárez 55, Centro, CDMX"
+          },
+          {
+            "nombreSucursal": "Sucursal Polanco",
+            "telefonoSucursal": "5544556677",
+            "direccionSucursal": "Ejército Nacional 234, Polanco"
+          }
+        ],
+
+        "telsNegocio": [
+          {
+            "tipo": "Fijo",
+            "numero": "5555123456"
+          },
+          {
+            "tipo": "Celular",
+            "numero": "5512345678"
+          }
+        ],
+
+        "waAtencion": [
+          "5512345678",
+          "5599988877"
+        ],
+
+        "dominioPropio": true,
+        "dominio1": "laestrella.com.mx",
+        "dominio2": "panaderialaestrella.com",
+        "dominio3": "",
+
+        "activarCorreoPersonalizado": true,
+        "etiquetaCorreo": "contacto@",
+
+        "horarioGeneral": {
+          "Lunes a Viernes": { "abre": "08:00", "cierra": "19:00" },
+          "Sábado": { "abre": "08:00", "cierra": "14:00" },
+          "Domingo": null
+        },
+
+        "horariosPersonalizados": [
+          {
+            "dia": "Lunes",
+            "abre": "08:00",
+            "comidaSale": "14:00",
+            "comidaRegresa": "15:00",
+            "cierra": "19:00"
+          },
+          {
+            "dia": "Viernes",
+            "abre": "08:00",
+            "comidaSale": "14:30",
+            "comidaRegresa": "15:30",
+            "cierra": "18:00"
+          }
+        ],
+
+        "formasPago": [
+          "EFECTIVO",
+          "VISA",
+          "MC",
+          "AMEX",
+          "TRANSFERENCIA"
+        ]
+      }
+    },
+    {
+      "code": "presencia_digital",
+      "values": {
+        "fanpage": "https://facebook.com/panaderialaestrella",
+        "instagram": "https://instagram.com/panaderialaestrella",
+        "gbp": "https://goo.gl/maps/negocio123",
+        "gmail": "contacto.laestrella@gmail.com",
+
+        "otrasRedes": [
+          {
+            "tipo": "YouTube",
+            "url": "https://youtube.com/c/LaEstrella"
+          },
+          {
+            "tipo": "TikTok",
+            "url": "https://www.tiktok.com/@laestrella"
+          },
+          {
+            "tipo": "Linkedin",
+            "url": "https://linkedin.com/company/laestrella"
+          }
+        ]
+      }
+    },
+    {
+      "code": "informacion_contenido",
+      "values": {
+        "descripcionnegocio": "Panadería artesanal con más de 20 años de tradición, especializada en pan dulce y salado.",
+        "infoGeneralNegocio": "Panaderia artesanal, pasteles personalizados, pan de temporada.",
+        "productosServicios": [
+          "Conchas",
+          "Cuernitos",
+          "Roles de canela",
+          "Baguettes",
+          "Pasteles personalizados"
+        ],
+        "productoslistado": "Concha tradicional, roles de canela, pasteles personalizados.",
+        "infoLocalidadNegocio": "Col. Roma, Condesa, Del Valle y alrededores.",
+        "infoadicionaldeNegocio": "Todos los productos se hornean diariamente. Contamos con reparto y pedidos especiales.",
+        "infoTonomensaje": "Cordial, cercano, familiar y artesanal."
+      }
+    },
+    {
+      "code": "configuracion_redes",
+      "values": {
+        "bioSocial": "Panadería artesanal con panes recién horneados todos los días. ¡Visítanos!",
+        "publicoObjetivo": "Familias, oficinistas y comercios de zona Roma-Condesa.",
+        "intereses": "Gastronomía, postres, recetas, pan artesanal.",
+        "temasPosteo": "Promociones, productos del día, recetas, historias del pan.",
+        "diasPosteo": "Lun, Mié, Vie",
+
+        "redesActivas": [
+          "Facebook",
+          "Instagram"
+        ],
+
+        "ctaPreferido": "WhatsApp",
+        "activarAgenda": "no",
+
+        "objetivos": "Aumentar las visitas a la sucursal y pedidos por WhatsApp en un 25%."
+      }
+    },
+    {
+      "code": "tu_imagen_y_estilo",
+      "values": {
+        "logo": "logo_laestrella.png",
+        "colores": "#FFC107, #8B4513",
+        "tipografia": "Montserrat para títulos, Open Sans para texto.",
+
+        "fotosNegocio": [
+          "fachada.jpg",
+          "interior1.jpg"
+        ],
+
+        "imgProductos": [
+          "conchas.jpg",
+          "roles.jpg",
+          "baguettes.jpg"
+        ],
+
+        "imgEquipo": [
+          "equipo1.jpg",
+          "equipo2.jpg"
+        ],
+
+        "otrasImg": [
+          "promo_navidad.png"
+        ],
+
+        "Driveimagenes": "https://drive.google.com/drive/folders/imagenes123"
+      }
+    },
+    {
+      "code": "contenido_optimizado",
+      "values": {
+        "urlSitio": "https://drive.google.com/file/sitio123",
+        "plantilla": "https://drive.google.com/file/plantilla123",
+        "urlCopys": "https://drive.google.com/file/copys123",
+        "urlplantilla": "https://drive.google.com/file/rrss123",
+        "urlAviso": "https://drive.google.com/file/aviso123",
+        "urlTerminos": "https://drive.google.com/file/terminos123",
+        "urlListaProductos": "https://drive.google.com/file/lista123",
+        "urlCategorias": "https://drive.google.com/file/categorias123"
+      }
+    }
+  ]
+}

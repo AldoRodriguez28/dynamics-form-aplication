@@ -1,0 +1,55 @@
+# --- Core build output ---
+dist/
+tmp/
+out-tsc/
+.angular/cache/
+bazel-out/
+
+# --- Dependencies & package managers ---
+node_modules/
+package-lock.backup*
+yarn.lock
+pnpm-lock.yaml
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Environment / secrets ---
+.env
+.env.*
+!.env.example
+
+# --- Logs & coverage ---
+logs/
+*.log
+coverage/
+lcov.info
+testem.log
+/libpeerconnection.log
+
+# --- Angular / tooling ---
+.angular/cache/
+.sass-cache/
+.eslintcache
+
+# --- Temporary / generated assets ---
+typings/
+connect.lock
+
+# --- IDE / Editor junk ---
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.history/
+.DS_Store
+Thumbs.db
+
+# VS Code workspace settings (keep shared configs)
+temp_auto_push.bat
+temp_interactive_push.bat
+branch_structure.json
+.gitignore
