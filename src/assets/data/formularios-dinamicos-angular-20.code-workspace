@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "../../.."
+		},
+		{
+			"path": "../../../../formulario-dinamicos- maketa"
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "formulario-dinamicos- maketa"
+	}
+}

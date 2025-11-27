@@ -1,0 +1,17 @@
+<div class="field-wrapper">
+  <label class="field-label" [for]="field.name">
+    {{ field.label }}
+    @if (field.required) { <span class="required">*</span> }
+  </label>
+  <textarea
+    class="field-control"
+    [id]="field.name"
+    [formControl]="control"
+    [attr.rows]="field.rows || 3"
+    [attr.maxLength]="field.maxLength"
+    [attr.placeholder]="field.placeholder"
+  ></textarea>
+  @if (field.placeholder) {
+    <p class="help">{{ field.placeholder }}</p>
+  }
+</div>
