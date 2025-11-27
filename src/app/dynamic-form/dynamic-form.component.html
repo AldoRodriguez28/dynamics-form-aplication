@@ -1,0 +1,55 @@
+@if (form) {
+<form class="dyn-form" novalidate (ngSubmit)="onSubmit()" [formGroup]="form">
+  @for (block of blocks; track block.code) {
+  <details class="section" open>
+    <summary class="section__summary">
+      <div>
+        <p class="eyebrow">Bloque</p>
+        <p class="meta">{{ block.label }}</p>
+      </div>
+      <span class="pill">{{ block.fields.length }} campos</span>
+    </summary>
+
+    <div class="section__content" [formGroupName]="block.code">
+      <div class="field-grid">
+        @for (field of block.fields; track field.name) {
+        @switch (field.type) {
+        @case ('textarea') {
+        <app-field-textarea [field]="field" [control]="getControl(block.code, field.name)" />
+        }
+        @case ('select') {
+        <app-field-select [field]="field" [control]="getControl(block.code, field.name)"
+          [options]="optionsMap[block.code + '.' + field.name] || []" />
+        }
+        @case ('multiselect') {
+        <app-field-multiselect [field]="field" [control]="getControl(block.code, field.name)"
+          [options]="optionsMap[block.code + '.' + field.name] || []" />
+        }
+        @case ('checkbox-grid') {
+        <app-field-checkbox-grid [field]="field" [control]="getControl(block.code, field.name)"
+          [options]="optionsMap[block.code + '.' + field.name] || []"
+          (toggle)="onCheckboxToggle(block.code, field.name, $event)" />
+        }
+        @case ('file') {
+        <app-field-file [field]="field" [control]="getControl(block.code, field.name)" />
+        }
+        @default {
+        <app-field-input [field]="field" [control]="getControl(block.code, field.name)" />
+        }
+        }
+        }
+      </div>
+    </div>
+  </details>
+  }
+
+  <div class="actions">
+    <button type="button" class="btn ghost" (click)="emitDraft()">
+      Guardar avance
+    </button>
+    <button type="submit" class="btn primary">
+      Completar tarea
+    </button>
+  </div>
+</form>
+}

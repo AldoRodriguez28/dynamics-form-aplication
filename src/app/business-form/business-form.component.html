@@ -1,0 +1,21 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <p class="eyebrow">Cliente</p>
+      <h1>{{ advertiserName || clientId }}</h1>
+      <p class="meta">Negocio: {{ businessId }}</p>
+      @if (commercialName) {
+        <p class="meta">Nombre comercial: {{ commercialName }}</p>
+      }
+    </div>
+    <div class="badge">Form builder (mock)</div>
+  </header>
+
+  @if (formSchema$ | async; as schema) {
+  <div class="card">
+    <app-dynamic-form [schema]="schema" (submitForm)="handleSubmit($event)" />
+  </div>
+  } @else {
+  <p class="loading">Cargando esquema...</p>
+  }
+</section>

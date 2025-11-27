@@ -1,0 +1,56 @@
+<section class="page">
+  @if (clientData$ | async; as clientData) {
+  <header class="page__header">
+    <div>
+      <p class="eyebrow">Cliente</p>
+      <h1 class="bussine-name">{{ clientData.advertiserName }}</h1>
+      <p class="meta">Advertiser ID: {{ clientData.advertiserId }}</p>
+    </div>
+    <div class="badge">
+      Negocios: {{ clientData.businesses.length }}
+    </div>
+  </header>
+
+  <div class="card">
+    <div class="card__head">
+      <div>
+        <h2>Formularios asignados</h2>
+      </div>
+    </div>
+
+    <div class="table">
+      <div class="table__header">
+        <span>Negocio</span>
+        <span>Estado</span>
+        <span>Última actualización</span>
+        <span class="actions-col">Acciones</span>
+      </div>
+
+      @for (business of clientData.businesses; track business.businessId) {
+      <div class="table__row">
+        <div>
+          <p class="title">{{ business.commercialName }}</p>
+          <p class="sub">ID negocio: {{ business.businessId }}</p>
+        </div>
+
+        <div>
+          <span class="status" [attr.data-variant]="business.formStatus">
+            {{ statusLabel(business.formStatus) }}
+          </span>
+        </div>
+        <div>
+          <p>{{ formatDate(business.lastUpdate) }}</p>
+        </div>
+        <div class="actions-col">
+          <button type="button" (click)="goToForm(clientData.advertiserId, business,  clientData.advertiserName)">
+            Ver formulario
+          </button>
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+  } @else {
+  <p class="loading">Cargando negocios...</p>
+  }
+</section>

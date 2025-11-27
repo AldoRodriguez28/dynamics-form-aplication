@@ -1,0 +1,19 @@
+<div class="field-wrapper">
+  <label class="field-label" [for]="field.name">
+    {{ field.label }}
+    @if (field.required) { <span class="required">*</span> }
+  </label>
+  <select
+    class="field-control"
+    [id]="field.name"
+    [formControl]="control"
+    multiple
+    [attr.size]="size"
+  aria-multiselectable="true"
+  >
+    @for (opt of options; track opt.value) {
+      <option [ngValue]="opt.value">{{ opt.label }}</option>
+    }
+  </select>
+  <p class="help">Selecciona varias opciones con Ctrl/⌘ + click.</p>
+</div>
