@@ -35,3 +35,21 @@
   font-size: 0.85rem;
   color: #6b7280;
 }
+
+.checkbox-wrapper {
+  gap: 0.15rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.checkbox-control {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: #2563eb;
+}

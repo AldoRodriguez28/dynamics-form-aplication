@@ -28,6 +28,14 @@ export class BusinessService {
    * Obtiene el esquema de formulario para un negocio específico (mock local).
    */
   getBusinessForm(_businessId: string): Observable<BusinessForm> {
-    return this.http.get<BusinessForm>('assets/data/mock-business-form.json');
+    return this.http
+      .get<BusinessForm>('assets/data/mock-business-form-update.json')
+      .pipe(
+        map((data) => ({
+          actorType: data.actorType || 'AGENT',
+          actorId: data.actorId || _businessId || 'demo',
+          ...data
+        }))
+      );
   }
 }

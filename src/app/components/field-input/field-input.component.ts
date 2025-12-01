@@ -13,4 +13,19 @@ import { FormField } from '../../models/form-schema.model';
 export class FieldInputComponent {
   @Input({ required: true }) field!: FormField & { name: string };
   @Input({ required: true }) control!: FormControl;
+
+  get inputType(): string {
+    switch (this.field.type) {
+      case 'email':
+        return 'email';
+      case 'tel':
+        return 'tel';
+      case 'url':
+        return 'url';
+      case 'time':
+        return 'time';
+      default:
+        return 'text';
+    }
+  }
 }

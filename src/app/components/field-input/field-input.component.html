@@ -1,19 +1,40 @@
-<div class="field-wrapper">
-  <label class="field-label" [for]="field.name">
-    {{ field.label }}
-    @if (field.required) { <span class="required">*</span> }
-  </label>
-  <input
-    class="field-control"
-    [id]="field.name"
-    [type]="field.type === 'url' ? 'url' : 'text'"
-    [formControl]="control"
-    [attr.required]="field.required || null"
-    [attr.maxLength]="field.maxLength"
-    [attr.pattern]="field.pattern"
-    [attr.placeholder]="field.placeholder"
-  />
-  @if (field.placeholder) {
-    <p class="help">{{ field.placeholder }}</p>
-  }
-</div>
+@if (field.type === 'checkbox') {
+  <div class="field-wrapper checkbox-wrapper">
+    <label class="checkbox-label" [for]="field.name">
+      <input
+        class="checkbox-control"
+        type="checkbox"
+        [id]="field.name"
+        [formControl]="control"
+        [attr.required]="field.required || null"
+      />
+      <span>
+        {{ field.label }}
+        @if (field.required) { <span class="required">*</span> }
+      </span>
+    </label>
+    @if (field.placeholder) {
+      <p class="help">{{ field.placeholder }}</p>
+    }
+  </div>
+} @else {
+  <div class="field-wrapper">
+    <label class="field-label" [for]="field.name">
+      {{ field.label }}
+      @if (field.required) { <span class="required">*</span> }
+    </label>
+    <input
+      class="field-control"
+      [id]="field.name"
+      [type]="inputType"
+      [formControl]="control"
+      [attr.required]="field.required || null"
+      [attr.maxLength]="field.maxLength"
+      [attr.pattern]="field.pattern"
+      [attr.placeholder]="field.placeholder"
+    />
+    @if (field.placeholder) {
+      <p class="help">{{ field.placeholder }}</p>
+    }
+  </div>
+}

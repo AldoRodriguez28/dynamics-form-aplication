@@ -2,35 +2,107 @@ export type FieldType =
   | 'text'
   | 'textarea'
   | 'select'
-  | 'multiselect'
-  | 'url'
-  | 'checkbox-grid'
+  | 'checkbox-group'
+  | 'checkbox'
   | 'file'
-  | 'list<object>'
+  | 'email'
+  | 'tel'
+  | 'url'
+  | 'time'
+  | 'opening_hours'
+  | 'object'
+  | 'string'
   | string;
 
+export type FieldCollection = 'single' | 'array';
+
+export interface OptionItem {
+  value: string | number | boolean | null;
+  label: string;
+}
+
+export interface OptionSetSource {
+  type: string;
+  method: string;
+  endpoint: string;
+  auth?: Record<string, string>;
+  valuePath?: string;
+  labelPath?: string;
+}
+
+export interface OptionSet {
+  mode: 'static' | 'api';
+  items?: OptionItem[];
+  source?: OptionSetSource;
+}
+
 export interface FormField {
+  name: string;
   label: string;
   type: FieldType;
   required?: boolean;
+  placeholder?: string;
   maxLength?: number;
-  optionsSource?: string;
-  dynamicFilter?: string;
   pattern?: string;
+  colSpan?: number;
+  collection?: FieldCollection;
+  optionsRef?: string;
+  widget?: string;
+  itemSchema?: Record<
+    string,
+    {
+      label: string;
+      type: FieldType;
+      required?: boolean;
+      placeholder?: string;
+      optionsRef?: string;
+    }
+  >;
+  schema?: Record<string, unknown>;
+  description?: string;
+  rows?: number;
   allowedFormats?: string[];
   maxSizeMB?: number;
-  placeholder?: string;
-  rows?: number;
-  options?: OptionItem[];
-  description?: string;
   ui?: {
     columns?: number;
     compact?: boolean;
     layout?: string;
   };
-  itemSchema?: Record<string, FormField>;
 }
 
+export interface FormRow {
+  num: number;
+  fields: FormField[];
+}
+
+export interface BlockUI {
+  icon?: string;
+  collapsible?: boolean;
+  startOpen?: boolean;
+}
+
+export interface BusinessFormBlock {
+  code: string;
+  schemaVersion?: number;
+  name?: string;
+  description?: string;
+  order?: number;
+  ui?: BlockUI;
+  optionSets?: Record<string, OptionSet>;
+  rows: FormRow[];
+  values: Record<string, unknown>;
+}
+
+export interface BusinessForm {
+  actorType?: string;
+  actorId?: string;
+  status?: FormStatus;
+  blocks: BusinessFormBlock[];
+}
+
+export type FormStatus = 'draft' | 'in-progress' | 'content_in_creation' | 'ready' | 'locked' | string;
+
+// Legacy schema kept for reference (no longer used directly in render).
 export interface FormSchema {
   schemaVersion: number;
   uiHints: {
@@ -40,20 +112,4 @@ export interface FormSchema {
   };
   fields: Record<string, FormField>;
   visibility: Record<string, boolean>;
-}
-
-export interface OptionItem {
-  value: string | number | boolean | null;
-  label: string;
-}
-
-export interface BusinessFormBlock {
-  code: string;
-  values: Record<string, unknown>;
-}
-
-export interface BusinessForm {
-  actorType: string;
-  actorId: string;
-  blocks: BusinessFormBlock[];
 }
