@@ -2,11 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FormField, OptionItem } from '../../models/form-schema.model';
+import { FieldFileComponent } from '../field-file/field-file.component';
 
 @Component({
   selector: 'app-field-array-primitive',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FieldFileComponent],
   templateUrl: './field-array-primitive.component.html',
   styleUrl: './field-array-primitive.component.scss'
 })
@@ -38,6 +39,10 @@ export class FieldArrayPrimitiveComponent {
     return this.itemType === 'checkbox' || this.itemType === 'checkbox-group';
   }
 
+  isFile(): boolean {
+    return this.itemType === 'file';
+  }
+
   hasType(): boolean {
     return Boolean(this.itemType);
   }
@@ -63,6 +68,7 @@ export class FieldArrayPrimitiveComponent {
 
   private defaultValue(): unknown {
     if (this.isCheckbox()) return false;
+    if (this.isFile()) return null;
     return '';
   }
 

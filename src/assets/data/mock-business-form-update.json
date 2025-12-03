@@ -1231,7 +1231,10 @@
         "tipografia": "Montserrat para títulos, Open Sans para texto.",
         "fotosNegocio": ["fachada.jpg", "interior1.jpg"],
         "imgProductos": ["conchas.jpg", "roles.jpg", "baguettes.jpg"],
-        "imgEquipo": ["equipo1.jpg", "equipo2.jpg"],
+        "imgEquipo": [
+          "https://plus.unsplash.com/premium_photo-1677529496297-fd0174d65941?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8dGVhbXxlbnwwfHwwfHx8MA%3D%3D",
+          "https://plus.unsplash.com/premium_photo-1677529496297-fd0174d65941?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8dGVhbXxlbnwwfHwwfHx8MA%3D%3D"
+        ],
         "otrasImg": ["promo_navidad.png"],
         "Driveimagenes": "https://drive.google.com/drive/folders/imagenes123"
       }

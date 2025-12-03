@@ -10,6 +10,14 @@
     [attr.accept]="acceptFormats"
     (change)="onFileChange($event)"
   />
+  @if (currentName) {
+    <p class="file-hint">Archivo actual: {{ currentName }}</p>
+  }
+  @if (previewUrl) {
+    <div class="preview">
+      <img [src]="previewUrl" alt="Vista previa" />
+    </div>
+  }
   @if (field.placeholder) {
     <p class="help">{{ field.placeholder }}</p>
   }

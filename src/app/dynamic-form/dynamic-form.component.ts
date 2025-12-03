@@ -460,14 +460,20 @@ export class DynamicFormComponent implements OnChanges {
     const validators = field.required ? [Validators.required] : [];
     const values: unknown[] = Array.isArray(rawValue) ? rawValue : [];
     const controls = values.length
-      ? values.map((v) => this.fb.control(this.coercePrimitive(v), validators))
+      ? values.map((v) => this.fb.control(this.coercePrimitiveArrayValue(field, v), validators))
       : [this.fb.control(this.defaultPrimitiveArrayValue(field), validators)];
     return this.fb.array(controls);
   }
 
   private defaultPrimitiveArrayValue(field: FormField): Primitive | '' {
     if (field.type === 'checkbox' || field.type === 'checkbox-group') return false;
+    if (field.type === 'file') return null;
     return '';
+  }
+
+  private coercePrimitiveArrayValue(field: FormField, value: unknown): unknown {
+    if (field.type === 'file') return value ?? null;
+    return this.coercePrimitive(value);
   }
 
   private normalizeObjectArray(
