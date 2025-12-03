@@ -1,0 +1,89 @@
+<div class="field-wrapper">
+  <div class="field-label-row">
+    <div class="field-label">
+      <p class="eyebrow">Colección</p>
+      <div class="field-title-row">
+        <span class="field-title">{{ field.label }}</span>
+        @if (field.required) { <span class="required">Obligatorio</span> }
+      </div>
+      @if (field.placeholder) {
+        <p class="help">{{ field.placeholder }}</p>
+      }
+    </div>
+    <div class="label-actions">
+      <span class="pill">{{ formArray.length }} item(s)</span>
+      <button type="button" class="ghost-btn" (click)="addItem()">
+        + Añadir item
+      </button>
+    </div>
+  </div>
+
+  <div class="array-list">
+    @for (group of formArray.controls; track trackByIndex($index); let idx = $index) {
+    <div class="array-card" [formGroup]="asGroup(group)">
+      <div class="array-card__header">
+        <div class="array-card__lead">
+          <div class="avatar">{{ idx + 1 }}</div>
+          <div>
+            <p class="array-card__eyebrow">Item</p>
+            <p class="array-card__title">{{ field.label }} #{{ idx + 1 }}</p>
+          </div>
+        </div>
+        <button type="button" class="text-btn" (click)="removeItem(idx)" [disabled]="formArray.length <= 1">
+          Eliminar
+        </button>
+      </div>
+
+      <div class="array-grid">
+        @for (key of keys; track key) {
+        <div class="array-field">
+          <label class="sub-label" [for]="field.name + '-' + key + '-' + idx">
+            {{ labelForKey(key) }}
+          </label>
+          @if (fieldTypeForKey(key); as keyType) {
+            @switch (keyType) {
+              @case ('select') {
+                <select
+                  class="field-control"
+                  [id]="field.name + '-' + key + '-' + idx"
+                  [formControlName]="key">
+                  <option value="">Seleccione una opción</option>
+                  @for (opt of optionsForKey(key); track opt.value) {
+                    <option [value]="opt.value">{{ opt.label }}</option>
+                  }
+                </select>
+              }
+              @case ('textarea') {
+                <textarea
+                  class="field-control"
+                  [id]="field.name + '-' + key + '-' + idx"
+                  [placeholder]="placeholderForKey(key)"
+                  [formControlName]="key">
+                </textarea>
+              }
+              @default {
+                <input
+                  class="field-control"
+                  [id]="field.name + '-' + key + '-' + idx"
+                  [type]="inputTypeForKey(key)"
+                  [placeholder]="placeholderForKey(key)"
+                  [formControlName]="key"
+                />
+              }
+            }
+          } @else {
+            <input
+              class="field-control"
+              [id]="field.name + '-' + key + '-' + idx"
+              type="text"
+              [placeholder]="placeholderForKey(key)"
+              [formControlName]="key"
+            />
+          }
+        </div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+</div>

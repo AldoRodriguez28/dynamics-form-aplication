@@ -1,6 +1,15 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormArray,
+  FormBuilder,
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
+import { getControl, getFieldOptions, optionKey, OptionValue, toggleOption } from '../utils';
 import {
   BlockUI,
   BusinessForm,
@@ -10,24 +19,46 @@ import {
   OptionItem,
   OptionSet
 } from '../models/form-schema.model';
-import { FieldInputComponent } from '../components/field-input/field-input.component';
-import { FieldTextareaComponent } from '../components/field-textarea/field-textarea.component';
-import { FieldSelectComponent } from '../components/field-select/field-select.component';
-import { FieldMultiselectComponent } from '../components/field-multiselect/field-multiselect.component';
-import { FieldCheckboxGridComponent } from '../components/field-checkbox-grid/field-checkbox-grid.component';
-import { FieldFileComponent } from '../components/field-file/field-file.component';
+import {
+  FieldArrayObjectComponent,
+  FieldArrayCheckboxGroupComponent,
+  FieldArrayPrimitiveComponent,
+  FieldCheckboxGridComponent,
+  FieldFileComponent,
+  FieldInputComponent,
+  FieldOpeningHoursComponent,
+  FieldMultiselectComponent,
+  FieldSelectComponent,
+  FieldTextareaComponent
+} from '../components';
 
-type FieldDisplayType = 'text' | 'textarea' | 'select' | 'multiselect' | 'checkbox-grid' | 'file' | 'checkbox';
-type BlockField = FormField & { type: FieldDisplayType; colSpan: number };
+type FieldDisplayType =
+  | 'text'
+  | 'textarea'
+  | 'select'
+  | 'multiselect'
+  | 'checkbox-grid'
+  | 'array-checkbox-grid'
+  | 'file'
+  | 'opening-hours'
+  | 'checkbox'
+  | 'array-object'
+  | 'array-primitive';
+type BlockField = FormField & {
+  type: FieldDisplayType;
+  colSpan: number;
+  itemKeys?: string[];
+  itemType?: FormField['type'];
+};
 type RowView = { num: number; fields: BlockField[] };
 type FormValueParser = (value: unknown) => unknown;
-type OptionValue = OptionItem['value'];
 type Primitive = string | number | boolean | null;
 interface BlockView {
   code: string;
   title: string;
   description?: string;
   ui?: BlockUI;
+  optionSets?: Record<string, OptionSet>;
   rows: RowView[];
   fieldCount: number;
 }
@@ -43,7 +74,11 @@ interface BlockView {
     FieldSelectComponent,
     FieldMultiselectComponent,
     FieldCheckboxGridComponent,
-    FieldFileComponent
+    FieldFileComponent,
+    FieldArrayCheckboxGroupComponent,
+    FieldArrayObjectComponent,
+    FieldArrayPrimitiveComponent,
+    FieldOpeningHoursComponent
   ],
   templateUrl: './dynamic-form.component.html',
   styleUrl: './dynamic-form.component.scss'
@@ -56,6 +91,7 @@ export class DynamicFormComponent implements OnChanges {
   blocks: BlockView[] = [];
   optionsMap: Record<string, OptionItem[]> = {};
   valueParsers: Record<string, FormValueParser> = {};
+  getControl = getControl;
 
   constructor(private fb: FormBuilder) {}
 
@@ -84,6 +120,7 @@ export class DynamicFormComponent implements OnChanges {
           title: block.name || this.formatBlockLabel(block.code, index),
           description: block.description,
           ui: block.ui,
+          optionSets: block.optionSets,
           rows,
           fieldCount
         };
@@ -94,11 +131,11 @@ export class DynamicFormComponent implements OnChanges {
 
   private buildBlock(block: BusinessFormBlock): {
     rows: RowView[];
-    controls: Record<string, FormControl>;
+    controls: Record<string, AbstractControl>;
     fieldCount: number;
   } {
     const rows: RowView[] = [];
-    const controls: Record<string, FormControl> = {};
+    const controls: Record<string, AbstractControl> = {};
 
     const rowsSource: FormRow[] = block.rows && block.rows.length > 0 ? block.rows : this.buildLegacyRows(block);
     const sortedRows = rowsSource.slice().sort((a, b) => (a.num ?? 0) - (b.num ?? 0));
@@ -113,10 +150,10 @@ export class DynamicFormComponent implements OnChanges {
         controls[field.name] = control;
 
         if (options) {
-          this.optionsMap[this.optionKey(block.code, field.name)] = options;
+          this.optionsMap[optionKey(block.code, field.name)] = options;
         }
         if (parser) {
-          this.valueParsers[this.optionKey(block.code, field.name)] = parser;
+          this.valueParsers[optionKey(block.code, field.name)] = parser;
         }
 
         return field;
@@ -138,12 +175,72 @@ export class DynamicFormComponent implements OnChanges {
     fieldDef: FormField,
     rawValue: unknown,
     defaultColSpan: number
-  ): { field: BlockField; control: FormControl; options?: OptionItem[]; parser?: FormValueParser } {
-    let displayType = this.resolveDisplayType(fieldDef.type);
-    if (fieldDef.collection === 'array' && displayType === 'text') {
-      displayType = 'textarea';
+  ): { field: BlockField; control: AbstractControl; options?: OptionItem[]; parser?: FormValueParser } {
+    const isObjectArrayField = this.isObjectArrayField(fieldDef);
+    const isPrimitiveArrayField = this.isPrimitiveArrayField(fieldDef);
+    let displayType: FieldDisplayType;
+
+    if (fieldDef.collection === 'array' && fieldDef.type === 'checkbox-group') {
+      displayType = 'array-checkbox-grid';
+    } else if (isObjectArrayField) {
+      displayType = 'array-object';
+    } else if (isPrimitiveArrayField) {
+      displayType = 'array-primitive';
+    } else {
+      displayType = this.resolveDisplayType(fieldDef.type);
+      if (fieldDef.collection === 'array' && displayType === 'text') displayType = 'textarea';
     }
+
     const colSpan = Math.min(12, Math.max(1, fieldDef.colSpan ?? defaultColSpan));
+
+    if (fieldDef.collection === 'array' && fieldDef.type === 'checkbox-group') {
+      const control = this.fb.control(Array.isArray(rawValue) ? rawValue : []);
+      const options = this.resolveOptions(block, fieldDef, rawValue, displayType);
+      if (options) {
+        this.optionsMap[optionKey(block.code, fieldDef.name)] = options;
+      }
+      const field: BlockField = {
+        ...fieldDef,
+        type: displayType,
+        colSpan,
+        label: fieldDef.label || this.toLabel(fieldDef.name)
+      };
+
+      return { field, control };
+    }
+
+    if (isObjectArrayField) {
+      const { control, itemKeys } = this.buildArrayObjectControl(fieldDef, rawValue);
+      const field: BlockField = {
+        ...fieldDef,
+        type: displayType,
+        colSpan,
+        itemKeys,
+        label: fieldDef.label || this.toLabel(fieldDef.name)
+      };
+
+      return { field, control };
+    }
+
+    if (isPrimitiveArrayField) {
+      const control = this.buildPrimitiveArrayControl(fieldDef, rawValue);
+      const itemType = fieldDef.type;
+      const itemDisplayType = this.resolveDisplayType(itemType);
+      const options = this.resolveOptions(block, fieldDef, rawValue, itemDisplayType);
+      if (options) {
+        this.optionsMap[optionKey(block.code, fieldDef.name)] = options;
+      }
+      const field: BlockField = {
+        ...fieldDef,
+        type: displayType,
+        itemType,
+        colSpan,
+        label: fieldDef.label || this.toLabel(fieldDef.name)
+      };
+
+      return { field, control };
+    }
+
     const { value, parser } = this.normalizeValue(block.code, fieldDef, rawValue, displayType);
     const options = this.resolveOptions(block, fieldDef, rawValue, displayType);
 
@@ -161,7 +258,8 @@ export class DynamicFormComponent implements OnChanges {
   }
 
   private resolveDisplayType(type: string): FieldDisplayType {
-    if (type === 'object' || type === 'opening_hours') return 'textarea';
+    if (type === 'object') return 'textarea';
+    if (type === 'opening_hours') return 'opening-hours';
     if (type === 'checkbox-group') return 'checkbox-grid';
     if (type === 'file') return 'file';
     if (type === 'textarea') return 'textarea';
@@ -200,6 +298,10 @@ export class DynamicFormComponent implements OnChanges {
   ): { value: unknown; parser?: FormValueParser } {
     const isArrayCollection = field.collection === 'array';
 
+    if (field.type === 'opening_hours') {
+      return { value: this.normalizeOpeningHours(field, rawValue) };
+    }
+
     // Arrays for checkbox groups
     if (displayType === 'checkbox-grid') {
       const value = Array.isArray(rawValue) ? rawValue : [];
@@ -222,11 +324,7 @@ export class DynamicFormComponent implements OnChanges {
     }
 
     // Objects/arrays rendered como texto JSON
-    if (
-      field.type === 'object' ||
-      field.type === 'opening_hours' ||
-      (rawValue && typeof rawValue === 'object')
-    ) {
+    if (field.type === 'object' || (rawValue && typeof rawValue === 'object')) {
       const stringValue = this.stringifyValue(rawValue ?? (isArrayCollection ? [] : {}));
       return {
         value: stringValue,
@@ -247,12 +345,38 @@ export class DynamicFormComponent implements OnChanges {
     return { value: rawValue };
   }
 
+  private normalizeOpeningHours(field: FormField, rawValue: unknown): Record<string, Record<string, string>> {
+    const schema = field.schema as { dias?: string[]; campos?: string[] } | undefined;
+    const dias = schema?.dias ?? [];
+    const campos = schema?.campos ?? ['abre', 'cierra'];
+    const base: Record<string, Record<string, string>> = {};
+    dias.forEach((dia) => {
+      base[dia] = {};
+      campos.forEach((c) => {
+        base[dia][c] = '';
+      });
+    });
+
+    if (rawValue && typeof rawValue === 'object') {
+      const incoming = rawValue as Record<string, Record<string, string>>;
+      Object.keys(incoming).forEach((dia) => {
+        base[dia] = { ...base[dia], ...(incoming[dia] ?? {}) };
+      });
+    }
+
+    return base;
+  }
+
   private resolveOptions(
     block: BusinessFormBlock,
     field: FormField,
     rawValue: unknown,
     displayType: FieldDisplayType
   ): OptionItem[] | undefined {
+    if (displayType === 'array-primitive') {
+      return undefined;
+    }
+
     if (displayType === 'checkbox') {
       return [
         { value: true, label: 'Sí' },
@@ -301,6 +425,106 @@ export class DynamicFormComponent implements OnChanges {
     return [];
   }
 
+  private isObjectArrayField(field: FormField): boolean {
+    return field.collection === 'array' && field.type === 'object';
+  }
+
+  private isPrimitiveArrayField(field: FormField): boolean {
+    return field.collection === 'array' && field.type !== 'object' && field.type !== 'checkbox-group';
+  }
+
+  private buildArrayObjectControl(
+    field: FormField,
+    rawValue: unknown
+  ): { control: FormArray<FormGroup>; itemKeys: string[] } {
+    const { items, keys } = this.normalizeObjectArray(rawValue, field);
+    const groups = items.map((item) => this.buildObjectGroup(keys, field, item));
+    const control = this.fb.array(groups.length ? groups : [this.buildObjectGroup(keys, field, {})]);
+    return { control, itemKeys: keys };
+  }
+
+  private buildObjectGroup(keys: string[], field: FormField, value: Record<string, unknown>): FormGroup {
+    const schema = field.itemSchema ?? {};
+    const controls: Record<string, FormControl> = {};
+
+    keys.forEach((key) => {
+      const fieldSchema = schema[key];
+      const validators = fieldSchema?.required ? [Validators.required] : [];
+      controls[key] = this.fb.control(this.coercePrimitive(value?.[key]), validators);
+    });
+
+    return this.fb.group(controls);
+  }
+
+  private buildPrimitiveArrayControl(field: FormField, rawValue: unknown): FormArray<FormControl> {
+    const validators = field.required ? [Validators.required] : [];
+    const values: unknown[] = Array.isArray(rawValue) ? rawValue : [];
+    const controls = values.length
+      ? values.map((v) => this.fb.control(this.coercePrimitive(v), validators))
+      : [this.fb.control(this.defaultPrimitiveArrayValue(field), validators)];
+    return this.fb.array(controls);
+  }
+
+  private defaultPrimitiveArrayValue(field: FormField): Primitive | '' {
+    if (field.type === 'checkbox' || field.type === 'checkbox-group') return false;
+    return '';
+  }
+
+  private normalizeObjectArray(
+    rawValue: unknown,
+    field: FormField
+  ): {
+    items: Record<string, unknown>[];
+    keys: string[];
+  } {
+    let parsed: unknown = rawValue;
+
+    if (typeof rawValue === 'string') {
+      const trimmed = rawValue.trim();
+      if (trimmed) {
+        try {
+          parsed = JSON.parse(trimmed);
+        } catch {
+          parsed = [];
+        }
+      }
+    }
+
+    let items: unknown[] = [];
+    if (Array.isArray(parsed)) {
+      items = parsed;
+    } else if (parsed && typeof parsed === 'object') {
+      items = [parsed];
+    }
+
+    const safeItems = items
+      .map((item) => (item && typeof item === 'object' ? item : {}))
+      .map((item) => ({ ...(item as Record<string, unknown>) }));
+
+    const keySet = new Set<string>(Object.keys(field.itemSchema ?? {}));
+    safeItems.forEach((item) => {
+      Object.keys(item).forEach((k) => keySet.add(k));
+    });
+    if (keySet.size === 0) {
+      ['nombreSucursal', 'telefonoSucursal', 'direccionSucursal'].forEach((k) => keySet.add(k));
+    }
+    if (!safeItems.length) safeItems.push({});
+
+    return { items: safeItems, keys: Array.from(keySet) };
+  }
+
+  private coercePrimitive(value: unknown): string | number | boolean | null {
+    if (value === undefined) return '';
+    if (value === null) return null;
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number' || typeof value === 'boolean') return value;
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+
   private stringifyValue(value: unknown): string {
     try {
       return JSON.stringify(value, null, 2);
@@ -342,26 +566,20 @@ export class DynamicFormComponent implements OnChanges {
     return label || `Bloque ${index + 1}`;
   }
 
-  private optionKey(blockCode: string, fieldName: string): string {
-    return `${blockCode}.${fieldName}`;
-  }
-
   private isPrimitive(value: unknown): value is Primitive | undefined {
     return ['string', 'number', 'boolean', 'undefined'].includes(typeof value) || value === null;
   }
 
   onCheckboxToggle(blockCode: string, fieldName: string, payload: { value: OptionValue; checked: boolean }): void {
-    const control = this.form.get([blockCode, fieldName]);
-    if (!control) return;
-    const current: OptionValue[] = Array.isArray(control.value) ? control.value : [];
-    const next = payload.checked
-      ? [...current, payload.value]
-      : current.filter((v) => v !== payload.value);
-    control.setValue(next);
+    toggleOption(this.form.get([blockCode, fieldName]), payload);
   }
 
-  getControl(blockCode: string, name: string): FormControl {
-    return this.form.get([blockCode, name]) as FormControl;
+  getOptions(blockCode: string, fieldName: string): OptionItem[] {
+    return getFieldOptions(this.optionsMap, blockCode, fieldName);
+  }
+
+  getArrayControl(blockCode: string, name: string): FormArray {
+    return this.form.get([blockCode, name]) as FormArray;
   }
 
   onSubmit(): void {
@@ -383,7 +601,7 @@ export class DynamicFormComponent implements OnChanges {
       const parsedValues: Record<string, unknown> = {};
 
       Object.entries(rawValues).forEach(([name, value]) => {
-        const parser = this.valueParsers[this.optionKey(block.code, name)];
+        const parser = this.valueParsers[optionKey(block.code, name)];
         parsedValues[name] = parser ? parser(value) : value;
       });
 

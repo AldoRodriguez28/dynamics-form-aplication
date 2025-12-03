@@ -11,6 +11,36 @@
   border-radius: 1.5rem;
 }
 
+.page__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: linear-gradient(120deg, #e2e8f0, #cbd5e1);
+  color: #0f172a;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+
+.back-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  border-color: rgba(15, 23, 42, 0.14);
+}
+
+.back-button:active {
+  transform: translateY(0);
+}
+
 .page__header {
   display: flex;
   align-items: center;

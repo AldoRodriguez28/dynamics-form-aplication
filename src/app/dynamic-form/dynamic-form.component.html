@@ -23,29 +23,52 @@
           <div class="field-col" [style.gridColumn]="'span ' + field.colSpan">
             @switch (field.type) {
             @case ('textarea') {
-            <app-field-textarea [field]="field" [control]="getControl(block.code, field.name)" />
+            <app-field-textarea [field]="field" [control]="getControl(form, [block.code, field.name])" />
             }
             @case ('select') {
-            <app-field-select [field]="field" [control]="getControl(block.code, field.name)"
-              [options]="optionsMap[block.code + '.' + field.name] || []" />
+            <app-field-select [field]="field" [control]="getControl(form, [block.code, field.name])"
+              [options]="getOptions(block.code, field.name)" />
             }
             @case ('multiselect') {
-            <app-field-multiselect [field]="field" [control]="getControl(block.code, field.name)"
-              [options]="optionsMap[block.code + '.' + field.name] || []" />
+            <app-field-multiselect [field]="field" [control]="getControl(form, [block.code, field.name])"
+              [options]="getOptions(block.code, field.name)" />
             }
             @case ('checkbox-grid') {
-            <app-field-checkbox-grid [field]="field" [control]="getControl(block.code, field.name)"
-              [options]="optionsMap[block.code + '.' + field.name] || []"
+            <app-field-checkbox-grid [field]="field" [control]="getControl(form, [block.code, field.name])"
+              [options]="getOptions(block.code, field.name)"
+              (toggle)="onCheckboxToggle(block.code, field.name, $event)" />
+            }
+            @case ('array-checkbox-grid') {
+            <app-field-array-checkbox-group [field]="field"
+              [control]="getControl(form, [block.code, field.name])"
+              [options]="getOptions(block.code, field.name)"
               (toggle)="onCheckboxToggle(block.code, field.name, $event)" />
             }
             @case ('file') {
-            <app-field-file [field]="field" [control]="getControl(block.code, field.name)" />
+            <app-field-file [field]="field" [control]="getControl(form, [block.code, field.name])" />
+            }
+            @case ('opening-hours') {
+            <app-field-opening-hours [field]="field" [control]="getControl(form, [block.code, field.name])" />
             }
             @case ('checkbox') {
-            <app-field-input [field]="field" [control]="getControl(block.code, field.name)" />
+            <app-field-input [field]="field" [control]="getControl(form, [block.code, field.name])" />
+            }
+            @case ('array-object') {
+            <app-field-array-object
+              [field]="field"
+              [formArray]="getArrayControl(block.code, field.name)"
+              [optionSets]="block.optionSets || {}"
+            />
+            }
+            @case ('array-primitive') {
+            <app-field-array-primitive
+              [field]="field"
+              [formArray]="getArrayControl(block.code, field.name)"
+              [options]="getOptions(block.code, field.name)"
+            />
             }
             @default {
-            <app-field-input [field]="field" [control]="getControl(block.code, field.name)" />
+            <app-field-input [field]="field" [control]="getControl(form, [block.code, field.name])" />
             }
             }
           </div>
