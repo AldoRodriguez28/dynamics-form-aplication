@@ -26,6 +26,7 @@ import {
   FieldCheckboxGridComponent,
   FieldFileComponent,
   FieldInputComponent,
+  FieldDomainOptionComponent,
   FieldOpeningHoursComponent,
   FieldMultiselectComponent,
   FieldSelectComponent,
@@ -40,6 +41,7 @@ type FieldDisplayType =
   | 'checkbox-grid'
   | 'array-checkbox-grid'
   | 'file'
+  | 'domain-option'
   | 'opening-hours'
   | 'checkbox'
   | 'array-object'
@@ -75,6 +77,7 @@ interface BlockView {
     FieldMultiselectComponent,
     FieldCheckboxGridComponent,
     FieldFileComponent,
+    FieldDomainOptionComponent,
     FieldArrayCheckboxGroupComponent,
     FieldArrayObjectComponent,
     FieldArrayPrimitiveComponent,
@@ -178,6 +181,7 @@ export class DynamicFormComponent implements OnChanges {
   ): { field: BlockField; control: AbstractControl; options?: OptionItem[]; parser?: FormValueParser } {
     const isObjectArrayField = this.isObjectArrayField(fieldDef);
     const isPrimitiveArrayField = this.isPrimitiveArrayField(fieldDef);
+    const isDomainOption = this.isDomainOptionField(fieldDef);
     let displayType: FieldDisplayType;
 
     if (fieldDef.collection === 'array' && fieldDef.type === 'checkbox-group') {
@@ -186,6 +190,8 @@ export class DynamicFormComponent implements OnChanges {
       displayType = 'array-object';
     } else if (isPrimitiveArrayField) {
       displayType = 'array-primitive';
+    } else if (isDomainOption) {
+      displayType = 'domain-option';
     } else {
       displayType = this.resolveDisplayType(fieldDef.type);
       if (fieldDef.collection === 'array' && displayType === 'text') displayType = 'textarea';
@@ -431,6 +437,10 @@ export class DynamicFormComponent implements OnChanges {
 
   private isPrimitiveArrayField(field: FormField): boolean {
     return field.collection === 'array' && field.type !== 'object' && field.type !== 'checkbox-group';
+  }
+
+  private isDomainOptionField(field: FormField): boolean {
+    return field.collection !== 'array' && /^dominio\d*$/.test(field.name ?? '') && field.type === 'text';
   }
 
   private buildArrayObjectControl(

@@ -85,6 +85,10 @@
   overflow: hidden;
 }
 
+.array-card::before {
+  content: none;
+}
+
 .array-card__header {
   display: flex;
   align-items: center;

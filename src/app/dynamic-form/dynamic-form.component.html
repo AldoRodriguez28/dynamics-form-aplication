@@ -50,6 +50,9 @@
             @case ('opening-hours') {
             <app-field-opening-hours [field]="field" [control]="getControl(form, [block.code, field.name])" />
             }
+            @case ('domain-option') {
+            <app-field-domain-option [field]="field" [control]="getControl(form, [block.code, field.name])" />
+            }
             @case ('checkbox') {
             <app-field-input [field]="field" [control]="getControl(form, [block.code, field.name])" />
             }
