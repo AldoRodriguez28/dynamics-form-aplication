@@ -176,15 +176,15 @@
 }
 
 .array-card::after {
-  content: '';
-  position: absolute;
-  inset: 0 0 0 0;
-  border-left: 10px solid;
-  border-image: linear-gradient(135deg, #38bdf8, #2563eb) 1;
-  border-top: none;
-  border-right: none;
-  border-bottom: none;
-  pointer-events: none;
+  // content: '';
+  // position: absolute;
+  // inset: 0 0 0 0;
+  // border-left: 10px solid;
+  // border-image: linear-gradient(135deg, #38bdf8, #2563eb) 1;
+  // border-top: none;
+  // border-right: none;
+  // border-bottom: none;
+  // pointer-events: none;
 }
 
 .array-grid {
