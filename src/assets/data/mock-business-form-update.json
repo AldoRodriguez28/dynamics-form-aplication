@@ -8,7 +8,7 @@
       "schemaVersion": 1,
       "name": "Datos de contacto",
       "description": "Cómo se mostrará tu empresa en línea y a quién contactar.",
-      "order": 8,
+      "order": 1,
       "ui": {
         "icon": "contact_page",
         "collapsible": true,
@@ -1241,7 +1241,7 @@
       "schemaVersion": 1,
       "name": "Contenido Optimizado ",
       "description": "Pega los enlaces (Google Drive, Dropbox, etc.) a los documentos y textos útiles.",
-      "order": 1,
+      "order": 8,
       "ui": {
         "icon": "article",
         "collapsible": true,

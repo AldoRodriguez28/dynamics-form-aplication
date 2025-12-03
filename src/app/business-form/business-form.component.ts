@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable } from 'rxjs';
@@ -16,6 +16,7 @@ import { DynamicFormComponent } from '../dynamic-form/dynamic-form.component';
 export class BusinessFormComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly location = inject(Location);
   private readonly businessService = inject(BusinessService);
 
   clientId = this.route.snapshot.paramMap.get('idClient') ?? '';
@@ -73,5 +74,9 @@ export class BusinessFormComponent {
   handleSubmit(payload: Record<string, unknown>): void {
     // Placeholder: aquí podríamos postear al backend
     console.info('Payload a enviar:', payload);
+  }
+
+  goBack(): void {
+    this.location.back();
   }
 }

@@ -1,0 +1,81 @@
+<div class="field-wrapper">
+  <div class="field-label-row">
+    <div class="field-label">
+      <p class="eyebrow">Lista</p>
+      <div class="field-title-row">
+        <span class="field-title">{{ field.label }}</span>
+        @if (field.required) { <span class="required">Obligatorio</span> }
+      </div>
+      @if (field.placeholder) {
+        <p class="help">{{ field.placeholder }}</p>
+      }
+    </div>
+    <div class="label-actions">
+      <span class="pill">{{ formArray.length }} item(s)</span>
+      <button type="button" class="ghost-btn" (click)="addItem()">
+        + Añadir
+      </button>
+    </div>
+  </div>
+
+  <div class="array-list">
+    @for (control of formArray.controls; track trackByIndex($index); let idx = $index) {
+    <div class="array-card">
+      <div class="array-card__header">
+        <div class="array-card__lead">
+          <div class="avatar">{{ idx + 1 }}</div>
+          <div>
+            <p class="array-card__eyebrow">Item</p>
+            <p class="array-card__title">{{ field.label }} #{{ idx + 1 }}</p>
+          </div>
+        </div>
+        <button type="button" class="text-btn" (click)="removeItem(idx)" [disabled]="formArray.length <= 1">
+          Eliminar
+        </button>
+      </div>
+
+      @switch (itemType) {
+        @case ('select') {
+          <select class="field-control" [id]="field.name + '-' + idx" [formControl]="control">
+            <option value="">Seleccione una opción</option>
+            @for (opt of options; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        }
+        @case ('checkbox') {
+          <label class="checkbox-control">
+            <input
+              class="checkbox-input"
+              [id]="field.name + '-' + idx"
+              [type]="inputType()"
+              [formControl]="control"
+            />
+            <span>Seleccionado</span>
+          </label>
+        }
+        @case ('checkbox-group') {
+          <label class="checkbox-control">
+            <input
+              class="checkbox-input"
+              [id]="field.name + '-' + idx"
+              [type]="inputType()"
+              [formControl]="control"
+            />
+            <span>Seleccionado</span>
+          </label>
+        }
+        @default {
+          <input
+            class="field-control"
+            [id]="field.name + '-' + idx"
+            [type]="hasType() ? inputType() : 'text'"
+            [placeholder]="field.placeholder || ''"
+            [formControl]="control"
+          />
+        }
+      }
+    </div>
+    }
+  </div>
+</div>
