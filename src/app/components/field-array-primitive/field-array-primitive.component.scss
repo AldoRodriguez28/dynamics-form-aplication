@@ -121,7 +121,7 @@
   border-radius: 1rem;
   padding: 1rem;
   background: #fff;
-  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
 }
 
 .array-card__header {
@@ -164,12 +164,7 @@
 }
 
 .array-card::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 0 0;
-  background: linear-gradient(180deg, rgba(37, 99, 235, 0.18), rgba(37, 99, 235, 0));
-  opacity: 0.22;
-  pointer-events: none;
+  content: none;
 }
 
 .array-card::after {

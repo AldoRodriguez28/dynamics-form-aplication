@@ -1,0 +1,34 @@
+<nav class="sidebar">
+  <div class="sidebar__header">
+    <p class="sidebar__eyebrow">Avance</p>
+    <p class="sidebar__title">Formulario maestro</p>
+  </div>
+
+  <div class="sidebar__list">
+    @for (block of blocks; track block.code) {
+    <div class="sidebar__row">
+      <button type="button" class="sidebar__item" (click)="onSelect(block.code)">
+        <div class="sidebar__item-head">
+          <div class="sidebar__info">
+            <p class="sidebar__block-title">{{ block.title }}</p>
+            <p class="sidebar__meta">
+              {{ filledCount(block.code) }} / {{ block.fieldCount }} campos ·
+              {{ statusLabel(block.code, block.fieldCount) }}
+            </p>
+          </div>
+          <span class="sidebar__status" [ngClass]="statusClass(block.code, block.fieldCount)"></span>
+        </div>
+        <div class="sidebar__progress-row">
+          <div class="sidebar__progress-track">
+            <div
+              class="sidebar__progress-fill"
+              [style.width.%]="progressPercent(block.code, block.fieldCount)">
+            </div>
+          </div>
+          <span class="sidebar__percent">{{ progressPercent(block.code, block.fieldCount) }}%</span>
+        </div>
+      </button>
+    </div>
+    }
+  </div>
+</nav>

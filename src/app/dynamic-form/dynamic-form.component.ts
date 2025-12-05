@@ -21,16 +21,18 @@ import {
 } from '../models/form-schema.model';
 import {
   FieldArrayObjectComponent,
-  FieldArrayCheckboxGroupComponent,
   FieldArrayPrimitiveComponent,
-  FieldCheckboxGridComponent,
   FieldFileComponent,
   FieldInputComponent,
+  FieldDomainOptionComponent,
   FieldOpeningHoursComponent,
+  FieldPillMultiselectComponent,
+  FieldProductosServiciosComponent,
   FieldMultiselectComponent,
   FieldSelectComponent,
   FieldTextareaComponent
 } from '../components';
+import { FormSidebarComponent } from '../components/form-sidebar/form-sidebar.component';
 
 type FieldDisplayType =
   | 'text'
@@ -40,7 +42,10 @@ type FieldDisplayType =
   | 'checkbox-grid'
   | 'array-checkbox-grid'
   | 'file'
+  | 'domain-option'
   | 'opening-hours'
+  | 'pill-multiselect'
+  | 'productos-servicios'
   | 'checkbox'
   | 'array-object'
   | 'array-primitive';
@@ -73,12 +78,14 @@ interface BlockView {
     FieldTextareaComponent,
     FieldSelectComponent,
     FieldMultiselectComponent,
-    FieldCheckboxGridComponent,
     FieldFileComponent,
-    FieldArrayCheckboxGroupComponent,
+    FieldDomainOptionComponent,
+    FieldPillMultiselectComponent,
+    FieldProductosServiciosComponent,
     FieldArrayObjectComponent,
     FieldArrayPrimitiveComponent,
-    FieldOpeningHoursComponent
+    FieldOpeningHoursComponent,
+    FormSidebarComponent
   ],
   templateUrl: './dynamic-form.component.html',
   styleUrl: './dynamic-form.component.scss'
@@ -178,14 +185,21 @@ export class DynamicFormComponent implements OnChanges {
   ): { field: BlockField; control: AbstractControl; options?: OptionItem[]; parser?: FormValueParser } {
     const isObjectArrayField = this.isObjectArrayField(fieldDef);
     const isPrimitiveArrayField = this.isPrimitiveArrayField(fieldDef);
+    const isDomainOption = this.isDomainOptionField(fieldDef);
     let displayType: FieldDisplayType;
 
     if (fieldDef.collection === 'array' && fieldDef.type === 'checkbox-group') {
       displayType = 'array-checkbox-grid';
     } else if (isObjectArrayField) {
       displayType = 'array-object';
+    } else if (this.isProductosServiciosField(fieldDef)) {
+      displayType = 'productos-servicios';
+    } else if (this.isPillMultiselectField(fieldDef)) {
+      displayType = 'pill-multiselect';
     } else if (isPrimitiveArrayField) {
       displayType = 'array-primitive';
+    } else if (isDomainOption) {
+      displayType = 'domain-option';
     } else {
       displayType = this.resolveDisplayType(fieldDef.type);
       if (fieldDef.collection === 'array' && displayType === 'text') displayType = 'textarea';
@@ -199,6 +213,18 @@ export class DynamicFormComponent implements OnChanges {
       if (options) {
         this.optionsMap[optionKey(block.code, fieldDef.name)] = options;
       }
+      const field: BlockField = {
+        ...fieldDef,
+        type: displayType,
+        colSpan,
+        label: fieldDef.label || this.toLabel(fieldDef.name)
+      };
+
+      return { field, control };
+    }
+
+    if (this.isProductosServiciosField(fieldDef)) {
+      const control = this.buildPrimitiveArrayControl(fieldDef, rawValue);
       const field: BlockField = {
         ...fieldDef,
         type: displayType,
@@ -430,7 +456,25 @@ export class DynamicFormComponent implements OnChanges {
   }
 
   private isPrimitiveArrayField(field: FormField): boolean {
-    return field.collection === 'array' && field.type !== 'object' && field.type !== 'checkbox-group';
+    return (
+      field.collection === 'array' &&
+      field.type !== 'object' &&
+      field.type !== 'checkbox-group' &&
+      !this.isPillMultiselectField(field) &&
+      !this.isProductosServiciosField(field)
+    );
+  }
+
+  private isDomainOptionField(field: FormField): boolean {
+    return field.collection !== 'array' && /^dominio\d*$/.test(field.name ?? '') && field.type === 'text';
+  }
+
+  private isPillMultiselectField(field: FormField): boolean {
+    return field.collection === 'array' && field.type === 'checkbox-group' && field.name !== 'productosServicios';
+  }
+
+  private isProductosServiciosField(field: FormField): boolean {
+    return field.name === 'productosServicios' && field.collection === 'array';
   }
 
   private buildArrayObjectControl(
@@ -460,14 +504,20 @@ export class DynamicFormComponent implements OnChanges {
     const validators = field.required ? [Validators.required] : [];
     const values: unknown[] = Array.isArray(rawValue) ? rawValue : [];
     const controls = values.length
-      ? values.map((v) => this.fb.control(this.coercePrimitive(v), validators))
+      ? values.map((v) => this.fb.control(this.coercePrimitiveArrayValue(field, v), validators))
       : [this.fb.control(this.defaultPrimitiveArrayValue(field), validators)];
     return this.fb.array(controls);
   }
 
   private defaultPrimitiveArrayValue(field: FormField): Primitive | '' {
     if (field.type === 'checkbox' || field.type === 'checkbox-group') return false;
+    if (field.type === 'file') return null;
     return '';
+  }
+
+  private coercePrimitiveArrayValue(field: FormField, value: unknown): unknown {
+    if (field.type === 'file') return value ?? null;
+    return this.coercePrimitive(value);
   }
 
   private normalizeObjectArray(

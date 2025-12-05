@@ -65,6 +65,9 @@
             <span>Seleccionado</span>
           </label>
         }
+        @case ('file') {
+          <app-field-file [field]="field" [control]="control" />
+        }
         @default {
           <input
             class="field-control"

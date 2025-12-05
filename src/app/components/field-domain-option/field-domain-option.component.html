@@ -1,0 +1,45 @@
+<div class="field-wrapper">
+  <div class="field-label-row">
+    <div class="field-label">
+      <p class="eyebrow">Dominio</p>
+      <div class="field-title-row">
+        <span class="field-title">{{ field.label }}</span>
+        @if (field.required) { <span class="required">Obligatorio</span> }
+      </div>
+      @if (field.placeholder) {
+        <p class="help">{{ field.placeholder }}</p>
+      }
+    </div>
+    <div class="label-actions">
+      <span class="pill" [class.success]="status === 'available'" [class.error]="status === 'taken'">
+        @switch (status) {
+          @case ('checking') { Verificando... }
+          @case ('available') { Disponible }
+          @case ('taken') { No disponible }
+          @default { Sin verificar }
+        }
+      </span>
+    </div>
+  </div>
+
+  <div class="domain-card">
+    <div class="domain-input">
+      <input
+        class="field-control"
+        [id]="field.name"
+        type="text"
+        [value]="value"
+        [placeholder]="field.placeholder || 'ej. midominio.com'"
+        (input)="onInput($any($event.target).value)"
+      />
+      <button type="button" class="check-btn" (click)="checkAvailability()">Verificar</button>
+    </div>
+
+    <div class="domain-status" [class.available]="status === 'available'" [class.taken]="status === 'taken'">
+      <div class="status-text">{{ message }}</div>
+      @if (status === 'available' && price !== null) {
+        <div class="price">Precio estimado: ${{ price }} MXN / año</div>
+      }
+    </div>
+  </div>
+</div>

@@ -1,0 +1,27 @@
+<div class="field-wrapper">
+  <div class="chrisdo-header">
+    <div class="badge">TAGS</div>
+    <div class="title-block">
+      <div class="title-row">
+        <span class="title">{{ field.label }}</span>
+        @if (field.required) { <span class="required">Obligatorio</span> }
+      </div>
+      @if (field.placeholder) {
+        <p class="subtitle">{{ field.placeholder }}</p>
+      }
+    </div>
+    <div class="cta">Items: {{ selectedCount }}</div>
+  </div>
+
+  <div class="pill-grid">
+    @for (opt of pillOptions; track trackByVal($index, opt.value)) {
+    <button
+      type="button"
+      class="pill"
+      [class.selected]="isSelected(opt.value)"
+      (click)="toggle(opt.value)">
+      {{ opt.label }}
+    </button>
+    }
+  </div>
+</div>

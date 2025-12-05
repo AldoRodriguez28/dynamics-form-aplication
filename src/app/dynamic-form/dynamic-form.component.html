@@ -1,91 +1,111 @@
 @if (form) {
-<form class="dyn-form" novalidate (ngSubmit)="onSubmit()" [formGroup]="form">
-  @for (block of blocks; track block.code; let idx = $index) {
-  <details class="section" [open]="block.ui?.startOpen ?? true">
-    <summary class="section__summary">
-      <div class="section__lead">
-        <span class="section__tag">#{{ idx + 1 }}</span>
-        <div>
-          <p class="eyebrow">Bloque</p>
-          <p class="section__title">{{ block.title }}</p>
-          <p class="section__subtitle">
-            {{ block.description || 'Completa los campos requeridos en este bloque.' }}
-          </p>
-        </div>
-      </div>
-      <span class="pill">{{ block.fieldCount }} campos</span>
-    </summary>
+<div class="df-shell">
+  <aside class="df-sidebar">
+    <app-form-sidebar [blocks]="blocks" [form]="form"></app-form-sidebar>
+  </aside>
 
-    <div class="section__content" [formGroupName]="block.code">
-      @for (row of block.rows; track row.num) {
-        <div class="field-grid">
-          @for (field of row.fields; track field.name) {
-          <div class="field-col" [style.gridColumn]="'span ' + field.colSpan">
-            @switch (field.type) {
-            @case ('textarea') {
-            <app-field-textarea [field]="field" [control]="getControl(form, [block.code, field.name])" />
-            }
-            @case ('select') {
-            <app-field-select [field]="field" [control]="getControl(form, [block.code, field.name])"
-              [options]="getOptions(block.code, field.name)" />
-            }
-            @case ('multiselect') {
-            <app-field-multiselect [field]="field" [control]="getControl(form, [block.code, field.name])"
-              [options]="getOptions(block.code, field.name)" />
-            }
-            @case ('checkbox-grid') {
-            <app-field-checkbox-grid [field]="field" [control]="getControl(form, [block.code, field.name])"
-              [options]="getOptions(block.code, field.name)"
-              (toggle)="onCheckboxToggle(block.code, field.name, $event)" />
-            }
-            @case ('array-checkbox-grid') {
-            <app-field-array-checkbox-group [field]="field"
-              [control]="getControl(form, [block.code, field.name])"
-              [options]="getOptions(block.code, field.name)"
-              (toggle)="onCheckboxToggle(block.code, field.name, $event)" />
-            }
-            @case ('file') {
-            <app-field-file [field]="field" [control]="getControl(form, [block.code, field.name])" />
-            }
-            @case ('opening-hours') {
-            <app-field-opening-hours [field]="field" [control]="getControl(form, [block.code, field.name])" />
-            }
-            @case ('checkbox') {
-            <app-field-input [field]="field" [control]="getControl(form, [block.code, field.name])" />
-            }
-            @case ('array-object') {
-            <app-field-array-object
-              [field]="field"
-              [formArray]="getArrayControl(block.code, field.name)"
-              [optionSets]="block.optionSets || {}"
-            />
-            }
-            @case ('array-primitive') {
-            <app-field-array-primitive
-              [field]="field"
-              [formArray]="getArrayControl(block.code, field.name)"
-              [options]="getOptions(block.code, field.name)"
-            />
-            }
-            @default {
-            <app-field-input [field]="field" [control]="getControl(form, [block.code, field.name])" />
-            }
-            }
+  <div class="df-main">
+    <form class="dyn-form" novalidate (ngSubmit)="onSubmit()" [formGroup]="form">
+      @for (block of blocks; track block.code; let idx = $index) {
+      <details class="section" [open]="block.ui?.startOpen ?? true" [attr.data-block]="block.code">
+        <summary class="section__summary">
+          <div class="section__lead">
+            <span class="section__tag">#{{ idx + 1 }}</span>
+            <div>
+              <p class="eyebrow">Bloque</p>
+              <p class="section__title">{{ block.title }}</p>
+              <p class="section__subtitle">
+                {{ block.description || 'Completa los campos requeridos en este bloque.' }}
+              </p>
+            </div>
           </div>
+          <span class="pill">{{ block.fieldCount }} campos</span>
+        </summary>
+
+        <div class="section__content" [formGroupName]="block.code">
+          @for (row of block.rows; track row.num) {
+            <div class="field-grid">
+              @for (field of row.fields; track field.name) {
+              <div class="field-col" [style.gridColumn]="'span ' + field.colSpan">
+                @switch (field.type) {
+                @case ('textarea') {
+                <app-field-textarea [field]="field" [control]="getControl(form, [block.code, field.name])" />
+                }
+                @case ('select') {
+                <app-field-select [field]="field" [control]="getControl(form, [block.code, field.name])"
+                  [options]="getOptions(block.code, field.name)" />
+                }
+                @case ('multiselect') {
+                <app-field-multiselect [field]="field" [control]="getControl(form, [block.code, field.name])"
+                  [options]="getOptions(block.code, field.name)" />
+                }
+                @case ('checkbox-grid') {
+                <app-field-pill-multiselect [field]="field"
+                  [control]="getControl(form, [block.code, field.name])"
+                  [options]="getOptions(block.code, field.name)" />
+                }
+                @case ('array-checkbox-grid') {
+                <app-field-pill-multiselect [field]="field"
+                  [control]="getControl(form, [block.code, field.name])"
+                  [options]="getOptions(block.code, field.name)" />
+                }
+                @case ('file') {
+                <app-field-file [field]="field" [control]="getControl(form, [block.code, field.name])" />
+                }
+                @case ('opening-hours') {
+                <app-field-opening-hours [field]="field" [control]="getControl(form, [block.code, field.name])" />
+                }
+                @case ('domain-option') {
+                <app-field-domain-option [field]="field" [control]="getControl(form, [block.code, field.name])" />
+                }
+                @case ('pill-multiselect') {
+                <app-field-pill-multiselect [field]="field" [control]="getControl(form, [block.code, field.name])" />
+                }
+                @case ('productos-servicios') {
+                <app-field-productos-servicios
+                  [field]="field"
+                  [formArray]="getArrayControl(block.code, field.name)"
+                />
+                }
+                @case ('checkbox') {
+                <app-field-input [field]="field" [control]="getControl(form, [block.code, field.name])" />
+                }
+                @case ('array-object') {
+                <app-field-array-object
+                  [field]="field"
+                  [formArray]="getArrayControl(block.code, field.name)"
+                  [optionSets]="block.optionSets || {}"
+                />
+                }
+                @case ('array-primitive') {
+                <app-field-array-primitive
+                  [field]="field"
+                  [formArray]="getArrayControl(block.code, field.name)"
+                  [options]="getOptions(block.code, field.name)"
+                />
+                }
+                @default {
+                <app-field-input [field]="field" [control]="getControl(form, [block.code, field.name])" />
+                }
+                }
+              </div>
+              }
+            </div>
           }
         </div>
+      </details>
+      <hr class="df-divider" />
       }
-    </div>
-  </details>
-  }
 
-  <div class="actions">
-    <button type="button" class="btn ghost" (click)="emitDraft()">
-      Guardar avance
-    </button>
-    <button type="submit" class="btn primary">
-      Completar tarea
-    </button>
+      <div class="actions">
+        <button type="button" class="btn ghost" (click)="emitDraft()">
+          Guardar avance
+        </button>
+        <button type="submit" class="btn primary">
+          Completar tarea
+        </button>
+      </div>
+    </form>
   </div>
-</form>
+</div>
 }
