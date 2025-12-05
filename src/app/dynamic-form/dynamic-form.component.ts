@@ -31,6 +31,7 @@ import {
   FieldSelectComponent,
   FieldTextareaComponent
 } from '../components';
+import { FormSidebarComponent } from '../components/form-sidebar/form-sidebar.component';
 
 type FieldDisplayType =
   | 'text'
@@ -80,7 +81,8 @@ interface BlockView {
     FieldPillMultiselectComponent,
     FieldArrayObjectComponent,
     FieldArrayPrimitiveComponent,
-    FieldOpeningHoursComponent
+    FieldOpeningHoursComponent,
+    FormSidebarComponent
   ],
   templateUrl: './dynamic-form.component.html',
   styleUrl: './dynamic-form.component.scss'

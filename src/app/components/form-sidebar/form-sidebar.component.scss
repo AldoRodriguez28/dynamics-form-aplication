@@ -1,0 +1,131 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
+.sidebar__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.sidebar__eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  color: #6b7280;
+  font-weight: 700;
+}
+
+.sidebar__title {
+  margin: 0;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.sidebar__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.sidebar__row {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar__item {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+  border-radius: 0.85rem;
+  padding: 0.75rem 0.85rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease, transform 120ms ease;
+}
+
+.sidebar__item:hover {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  box-shadow: 0 6px 12px rgba(15, 23, 42, 0.06);
+  transform: translateY(-1px);
+}
+
+.sidebar__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  text-align: left;
+}
+
+.sidebar__code {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.sidebar__block-title {
+  margin: 0;
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 0.95rem;
+}
+
+.sidebar__meta {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #475569;
+}
+
+.sidebar__status {
+  width: 14px;
+  min-width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 2px solid #cbd5e1;
+  background: #e5e7eb;
+}
+
+.sidebar__status.--progress {
+  border-color: #f59e0b;
+  background: #fef3c7;
+}
+
+.sidebar__status.--done {
+  border-color: #22c55e;
+  background: #bbf7d0;
+}
+
+.sidebar__item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.sidebar__progress-track {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  overflow: hidden;
+}
+
+.sidebar__progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #38bdf8, #2563eb);
+  transition: width 160ms ease;
+}

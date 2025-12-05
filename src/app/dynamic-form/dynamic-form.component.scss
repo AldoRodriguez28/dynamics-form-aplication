@@ -1,3 +1,39 @@
+.df-shell {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1rem;
+}
+
+.df-sidebar {
+  position: sticky;
+  top: 90px;
+  height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.df-main {
+  min-width: 0;
+}
+
+@media (max-width: 1023px) {
+  .df-shell {
+    grid-template-columns: 260px 1fr;
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .df-shell {
+    display: block;
+  }
+  .df-sidebar {
+    display: none;
+  }
+  .df-main {
+    margin: 0;
+  }
+}
+
 .dyn-form {
   display: flex;
   flex-direction: column;
@@ -41,6 +77,8 @@
 
 .pill {
   display: inline-flex;
+  min-width: 7rem;
+  height: 2rem;
   align-items: center;
   justify-content: center;
   padding: 0.1rem 0.65rem;
@@ -102,6 +140,12 @@
   grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: 1rem;
   margin-bottom: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .field-grid {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
 }
 
 .field-col {
