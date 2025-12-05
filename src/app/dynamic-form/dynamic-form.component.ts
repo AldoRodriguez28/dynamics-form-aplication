@@ -21,13 +21,12 @@ import {
 } from '../models/form-schema.model';
 import {
   FieldArrayObjectComponent,
-  FieldArrayCheckboxGroupComponent,
   FieldArrayPrimitiveComponent,
-  FieldCheckboxGridComponent,
   FieldFileComponent,
   FieldInputComponent,
   FieldDomainOptionComponent,
   FieldOpeningHoursComponent,
+  FieldPillMultiselectComponent,
   FieldMultiselectComponent,
   FieldSelectComponent,
   FieldTextareaComponent
@@ -43,6 +42,7 @@ type FieldDisplayType =
   | 'file'
   | 'domain-option'
   | 'opening-hours'
+  | 'pill-multiselect'
   | 'checkbox'
   | 'array-object'
   | 'array-primitive';
@@ -75,10 +75,9 @@ interface BlockView {
     FieldTextareaComponent,
     FieldSelectComponent,
     FieldMultiselectComponent,
-    FieldCheckboxGridComponent,
     FieldFileComponent,
     FieldDomainOptionComponent,
-    FieldArrayCheckboxGroupComponent,
+    FieldPillMultiselectComponent,
     FieldArrayObjectComponent,
     FieldArrayPrimitiveComponent,
     FieldOpeningHoursComponent
@@ -188,6 +187,8 @@ export class DynamicFormComponent implements OnChanges {
       displayType = 'array-checkbox-grid';
     } else if (isObjectArrayField) {
       displayType = 'array-object';
+    } else if (this.isPillMultiselectField(fieldDef)) {
+      displayType = 'pill-multiselect';
     } else if (isPrimitiveArrayField) {
       displayType = 'array-primitive';
     } else if (isDomainOption) {
@@ -436,11 +437,21 @@ export class DynamicFormComponent implements OnChanges {
   }
 
   private isPrimitiveArrayField(field: FormField): boolean {
-    return field.collection === 'array' && field.type !== 'object' && field.type !== 'checkbox-group';
+    return (
+      field.collection === 'array' &&
+      field.type !== 'object' &&
+      field.type !== 'checkbox-group' &&
+      !this.isPillMultiselectField(field)
+    );
   }
 
   private isDomainOptionField(field: FormField): boolean {
     return field.collection !== 'array' && /^dominio\d*$/.test(field.name ?? '') && field.type === 'text';
+  }
+
+  private isPillMultiselectField(field: FormField): boolean {
+    console.log('name:',field.name)
+    return field.name === 'productosServicios' && field.collection === 'array';
   }
 
   private buildArrayObjectControl(

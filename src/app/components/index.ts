@@ -9,3 +9,4 @@ export * from './field-array-object/field-array-object.component';
 export * from './field-array-primitive/field-array-primitive.component';
 export * from './field-opening-hours/field-opening-hours.component';
 export * from './field-domain-option/field-domain-option.component';
+export * from './field-pill-multiselect/field-pill-multiselect.component';

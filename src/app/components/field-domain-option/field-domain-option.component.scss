@@ -10,9 +10,9 @@
   justify-content: space-between;
   gap: 0.75rem;
   padding: 1rem 1.25rem;
-  border: 1px dashed rgba(37, 99, 235, 0.25);
+  border: 1px solid #e2e8f0;
   border-radius: 1rem;
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.05), rgba(255, 255, 255, 0.8));
+  background: #f8fafc;
 }
 
 .field-label {
@@ -88,7 +88,7 @@
   border-radius: 1rem;
   padding: 1rem;
   background: #fff;
-  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.15);
   border: 1px solid #e2e8f0;
   display: flex;
   flex-direction: column;
@@ -120,8 +120,8 @@
   padding: 0.72rem 1rem;
   border-radius: 0.85rem;
   border: 1px solid #0ea5e9;
-  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-  color: #fff;
+  background: #ffffff;
+  color: #0ea5e9;
   font-weight: 700;
   cursor: pointer;
   transition: transform 0.14s ease, box-shadow 0.14s ease;
@@ -129,7 +129,8 @@
 
 .check-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 12px 20px rgba(14, 165, 233, 0.25);
+  box-shadow: 0 10px 18px rgba(14, 165, 233, 0.2);
+  background: #f0f9ff;
 }
 
 .domain-status {

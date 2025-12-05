@@ -34,15 +34,14 @@
               [options]="getOptions(block.code, field.name)" />
             }
             @case ('checkbox-grid') {
-            <app-field-checkbox-grid [field]="field" [control]="getControl(form, [block.code, field.name])"
-              [options]="getOptions(block.code, field.name)"
-              (toggle)="onCheckboxToggle(block.code, field.name, $event)" />
+            <app-field-pill-multiselect [field]="field"
+              [control]="getControl(form, [block.code, field.name])"
+              [options]="getOptions(block.code, field.name)" />
             }
             @case ('array-checkbox-grid') {
-            <app-field-array-checkbox-group [field]="field"
+            <app-field-pill-multiselect [field]="field"
               [control]="getControl(form, [block.code, field.name])"
-              [options]="getOptions(block.code, field.name)"
-              (toggle)="onCheckboxToggle(block.code, field.name, $event)" />
+              [options]="getOptions(block.code, field.name)" />
             }
             @case ('file') {
             <app-field-file [field]="field" [control]="getControl(form, [block.code, field.name])" />
@@ -52,6 +51,9 @@
             }
             @case ('domain-option') {
             <app-field-domain-option [field]="field" [control]="getControl(form, [block.code, field.name])" />
+            }
+              @case ('pill-multiselect') {
+            <app-field-pill-multiselect [field]="field" [control]="getControl(form, [block.code, field.name])" />
             }
             @case ('checkbox') {
             <app-field-input [field]="field" [control]="getControl(form, [block.code, field.name])" />
