@@ -61,6 +61,12 @@
                 @case ('pill-multiselect') {
                 <app-field-pill-multiselect [field]="field" [control]="getControl(form, [block.code, field.name])" />
                 }
+                @case ('productos-servicios') {
+                <app-field-productos-servicios
+                  [field]="field"
+                  [formArray]="getArrayControl(block.code, field.name)"
+                />
+                }
                 @case ('checkbox') {
                 <app-field-input [field]="field" [control]="getControl(form, [block.code, field.name])" />
                 }
@@ -88,6 +94,7 @@
           }
         </div>
       </details>
+      <hr class="df-divider" />
       }
 
       <div class="actions">

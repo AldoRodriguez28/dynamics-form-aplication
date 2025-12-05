@@ -61,6 +61,12 @@
   transform: translateY(-1px);
 }
 
+.sidebar__item:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  border-color: #2563eb;
+}
+
 .sidebar__info {
   display: flex;
   flex-direction: column;
@@ -115,9 +121,15 @@
   gap: 0.75rem;
 }
 
+.sidebar__progress-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .sidebar__progress-track {
   width: 100%;
-  height: 6px;
+  height: 8px;
   border-radius: 999px;
   background: #e5e7eb;
   overflow: hidden;
@@ -128,4 +140,10 @@
   border-radius: 999px;
   background: linear-gradient(135deg, #38bdf8, #2563eb);
   transition: width 160ms ease;
+}
+
+.sidebar__percent {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0ea5e9;
 }

@@ -12,16 +12,20 @@
           <div class="sidebar__info">
             <p class="sidebar__block-title">{{ block.title }}</p>
             <p class="sidebar__meta">
-              {{ filledCount(block.code) }} / {{ block.fieldCount }} campos
+              {{ filledCount(block.code) }} / {{ block.fieldCount }} campos ·
+              {{ statusLabel(block.code, block.fieldCount) }}
             </p>
           </div>
           <span class="sidebar__status" [ngClass]="statusClass(block.code, block.fieldCount)"></span>
         </div>
-        <div class="sidebar__progress-track">
-          <div
-            class="sidebar__progress-fill"
-            [style.width.%]="block.fieldCount ? (filledCount(block.code) / block.fieldCount) * 100 : 0">
+        <div class="sidebar__progress-row">
+          <div class="sidebar__progress-track">
+            <div
+              class="sidebar__progress-fill"
+              [style.width.%]="progressPercent(block.code, block.fieldCount)">
+            </div>
           </div>
+          <span class="sidebar__percent">{{ progressPercent(block.code, block.fieldCount) }}%</span>
         </div>
       </button>
     </div>

@@ -27,6 +27,7 @@ import {
   FieldDomainOptionComponent,
   FieldOpeningHoursComponent,
   FieldPillMultiselectComponent,
+  FieldProductosServiciosComponent,
   FieldMultiselectComponent,
   FieldSelectComponent,
   FieldTextareaComponent
@@ -44,6 +45,7 @@ type FieldDisplayType =
   | 'domain-option'
   | 'opening-hours'
   | 'pill-multiselect'
+  | 'productos-servicios'
   | 'checkbox'
   | 'array-object'
   | 'array-primitive';
@@ -79,6 +81,7 @@ interface BlockView {
     FieldFileComponent,
     FieldDomainOptionComponent,
     FieldPillMultiselectComponent,
+    FieldProductosServiciosComponent,
     FieldArrayObjectComponent,
     FieldArrayPrimitiveComponent,
     FieldOpeningHoursComponent,
@@ -189,6 +192,8 @@ export class DynamicFormComponent implements OnChanges {
       displayType = 'array-checkbox-grid';
     } else if (isObjectArrayField) {
       displayType = 'array-object';
+    } else if (this.isProductosServiciosField(fieldDef)) {
+      displayType = 'productos-servicios';
     } else if (this.isPillMultiselectField(fieldDef)) {
       displayType = 'pill-multiselect';
     } else if (isPrimitiveArrayField) {
@@ -208,6 +213,18 @@ export class DynamicFormComponent implements OnChanges {
       if (options) {
         this.optionsMap[optionKey(block.code, fieldDef.name)] = options;
       }
+      const field: BlockField = {
+        ...fieldDef,
+        type: displayType,
+        colSpan,
+        label: fieldDef.label || this.toLabel(fieldDef.name)
+      };
+
+      return { field, control };
+    }
+
+    if (this.isProductosServiciosField(fieldDef)) {
+      const control = this.buildPrimitiveArrayControl(fieldDef, rawValue);
       const field: BlockField = {
         ...fieldDef,
         type: displayType,
@@ -443,7 +460,8 @@ export class DynamicFormComponent implements OnChanges {
       field.collection === 'array' &&
       field.type !== 'object' &&
       field.type !== 'checkbox-group' &&
-      !this.isPillMultiselectField(field)
+      !this.isPillMultiselectField(field) &&
+      !this.isProductosServiciosField(field)
     );
   }
 
@@ -452,7 +470,10 @@ export class DynamicFormComponent implements OnChanges {
   }
 
   private isPillMultiselectField(field: FormField): boolean {
-    console.log('name:',field.name)
+    return field.collection === 'array' && field.type === 'checkbox-group' && field.name !== 'productosServicios';
+  }
+
+  private isProductosServiciosField(field: FormField): boolean {
     return field.name === 'productosServicios' && field.collection === 'array';
   }
 

@@ -6,8 +6,8 @@
 
 .df-sidebar {
   position: sticky;
-  top: 90px;
-  height: calc(100vh - 120px);
+  top: 10px;
+  height: calc(100vh - 40px);
   overflow-y: auto;
 }
 
@@ -183,6 +183,13 @@
   background: linear-gradient(135deg, #38bdf8, #2563eb);
   color: #ffffff;
   box-shadow: 0 12px 24px rgba(37, 99, 235, 0.2);
+}
+
+.df-divider {
+  border: none;
+  height: 1px;
+  margin: 1rem 0 0;
+  background: linear-gradient(90deg, transparent, #cbd5e1, transparent);
 }
 
 .btn.ghost {

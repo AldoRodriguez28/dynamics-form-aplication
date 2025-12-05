@@ -37,6 +37,19 @@ export class FormSidebarComponent {
     return 'sidebar__status --pending';
   }
 
+  statusLabel(code: string, total: number): string {
+    const filled = this.filledCount(code);
+    if (filled >= total && total > 0) return 'Completo';
+    if (filled > 0) return 'En curso';
+    return 'Pendiente';
+  }
+
+  progressPercent(code: string, total: number): number {
+    const filled = this.filledCount(code);
+    if (!total) return 0;
+    return Math.min(100, Math.round((filled / total) * 100));
+  }
+
   private isFilled(value: unknown): boolean {
     if (value === null || value === undefined) return false;
     if (typeof value === 'string') return value.trim().length > 0;

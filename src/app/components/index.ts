@@ -11,3 +11,4 @@ export * from './field-opening-hours/field-opening-hours.component';
 export * from './field-domain-option/field-domain-option.component';
 export * from './field-pill-multiselect/field-pill-multiselect.component';
 export * from './form-sidebar/form-sidebar.component';
+export * from './field-productos-servicios/field-productos-servicios.component';
