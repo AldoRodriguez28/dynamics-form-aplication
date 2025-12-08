@@ -3,18 +3,34 @@
     {{ field.label }}
     @if (field.required) { <span class="required">*</span> }
   </label>
-  <select
-    class="field-control"
-    [id]="field.name"
-    [formControl]="control"
-    [attr.required]="field.required || null"
-  >
-    <option value="">Selecciona...</option>
-    @for (opt of options; track opt.value) {
-      <option [ngValue]="opt.value">{{ opt.label }}</option>
+
+  @if (!field.multiple) {
+  <select class="field-control" [id]="field.name" [formControl]="control" [attr.required]="field.required ? '' : null"
+    [attr.aria-required]="field.required" [attr.aria-invalid]="control.invalid && control.touched ? 'true' : null"
+    (blur)="markTouched()">
+    <option value="">{{ emptyText }}</option>
+
+    @for (opt of options; track trackByValue($index, opt)) {
+    <option [ngValue]="opt.value">{{ opt.label }}</option>
     }
   </select>
+  }
+
+  @if (field.multiple) {
+  <select class="field-control" [id]="field.name" multiple [formControl]="control"
+    [attr.required]="field.required ? '' : null" [attr.aria-required]="field.required"
+    [attr.aria-invalid]="control.invalid && control.touched ? 'true' : null" (blur)="markTouched()">
+    @for (opt of options; track trackByValue($index, opt)) {
+    <option [ngValue]="opt.value">{{ opt.label }}</option>
+    }
+  </select>
+  }
+
   @if (field.placeholder) {
-    <p class="help">{{ field.placeholder }}</p>
+  <p class="help">{{ field.placeholder }}</p>
+  }
+
+  @if (control.touched && control.hasError('required')) {
+  <small style="color:#ef4444">Este campo es obligatorio.</small>
   }
 </div>

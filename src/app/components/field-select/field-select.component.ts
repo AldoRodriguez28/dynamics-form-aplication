@@ -1,17 +1,27 @@
-import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { FormField, OptionItem } from '../../models/form-schema.model';
+import { FieldConfig} from './Interface/field-config.interface';
+import { SelectOption} from './Interface/select-option.interface';
+import { CommonModule } from '@angular/common';
+
 
 @Component({
   selector: 'app-field-select',
-  standalone: true,
+   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './field-select.component.html',
-  styleUrl: './field-select.component.scss'
+  styleUrls: ['./field-select.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class FieldSelectComponent {
-  @Input({ required: true }) field!: FormField & { name: string };
-  @Input({ required: true }) control!: FormControl;
-  @Input() options: OptionItem[] = [];
+export class FieldSelectComponent<T = any> {
+  @Input({ required: true }) field!: FieldConfig & { name: string };
+  @Input({ required: true }) control!: FormControl<T | T[] | null>;
+  @Input() options: SelectOption<T>[] = [];
+  @Input() emptyText = 'Selecciona...';
+
+  trackByValue = (_: number, opt: SelectOption<T>) => opt.value;
+
+  markTouched(): void {
+    this.control.markAsTouched();
+  }
 }
