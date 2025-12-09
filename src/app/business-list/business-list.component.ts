@@ -1,9 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, catchError, of, tap } from 'rxjs';
-import { ClientData, Business } from '../models/business.model';
+import { EMPTY, map, Observable, of, switchMap } from 'rxjs';
+import { Business } from '../models/business.model';
 import { BusinessService } from '../services/business.service';
+import { TokenStorageService } from '../services/shared/token-storage.service';
+import { BusinessMapping } from '../mapping/business/business.map';
+import { LegacyBusinessInterface } from '../Interfaces/business/response/legacy-business.interface';
 import { ClientNotFoundComponent } from '../components/client-not-found/client-not-found.component';
 
 @Component({
@@ -17,10 +20,12 @@ export class BusinessListComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly businessService = inject(BusinessService);
   private readonly router = inject(Router);
+  private readonly tokenStore = inject(TokenStorageService);
 
-  clientId = this.route.snapshot.paramMap.get('idClient') ?? '';
-  clientData$!: Observable<ClientData | null>;
+  clientId: string | null = null;
   errorCode: '' | 'CLIENT_NOT_FOUND' | 'GENERIC' = '';
+
+  clientData$: Observable<LegacyBusinessInterface | null> = EMPTY;
 
   constructor() {
     this.loadClientData();
@@ -40,32 +45,30 @@ export class BusinessListComponent {
     this.loadClientData();
   }
 
-  statusLabel(status: Business['formStatus']): string {
-    const labels: Record<string, string> = {
-      IN_PROGRESS: 'En progreso',
-      PENDING: 'Pendiente',
-      COMPLETED: 'Completado'
-    };
-
-    return labels[status] ?? status;
+  statusLabel(status: string | null | undefined): string {
+    return status ?? 'Sin estado';
   }
 
   loadClientData(): void {
-    this.clientData$ = this.businessService.getClientBusinesses(this.clientId).pipe(
-      tap(() => (this.errorCode = '')),
-      catchError((error) => {
-        const code = error?.code === 'CLIENT_NOT_FOUND' || error?.status === 404 ? 'CLIENT_NOT_FOUND' : 'GENERIC';
-        this.errorCode = code;
-        return of(null);
+
+    this.clientData$ = this.route.paramMap.pipe(
+      map(() => {
+
+        this.clientId = this.tokenStore.getAdvertiserId();
+        return this.clientId;
+      }),
+      switchMap(clientId => {
+        if (!clientId) return of(null);
+
+        return this.businessService
+          .getLegacy(clientId)
+          .pipe(map(BusinessMapping.MapLegacyResponseToLegacyInterface));
       })
-    );
+    );    
   }
 
-  formatDate(dateIso: string | null): string {
-    if (!dateIso) {
-      return 'Sin actualización';
-    }
-
+  formatDate(dateIso: string | Date | null): string {
+    if (!dateIso) return 'Sin actualización';
     const date = new Date(dateIso);
     return date.toLocaleDateString('es-MX', {
       year: 'numeric',

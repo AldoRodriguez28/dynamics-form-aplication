@@ -26,7 +26,7 @@ export class BusinessService {
    * Devuelve la respuesta sin modificar (usa el token de AuthHeaderService).
   */
   getLegacy(businessId: string | number): Observable<LegacyBusinessResponse> {
-    const url = `${this.baseUrl}/api/business/legacy/${businessId}`;
+    const url = `${this.baseUrl}/business/legacy/${businessId}`;
     return this.http.get<LegacyBusinessResponse>(url, {
       headers: this.authHeader.build()
     });
@@ -44,7 +44,7 @@ export class BusinessService {
    * Retorna: boolean
    */
   saveBlocks(businessId: string | number, request: SaveBlocksRequest): Observable<boolean> {
-    const url = `${this.baseUrl}/api/business/${businessId}/blocks`;
+    const url = `${this.baseUrl}/business/${businessId}/blocks`;
     return this.http.put<boolean>(url, request, {
       headers: this.authHeader.build()
     });
@@ -56,7 +56,7 @@ export class BusinessService {
    * ResolveTokenRequest para request espera: { token: 'ssssss'}.
    */
   initialize(request: ResolveTokenRequest): Observable<CreateBusinesessResponse> {
-    const url = `${this.baseUrl}/api/business/initialize`;
+    const url = `${this.baseUrl}/business/initialize`;
     return this.http.post<CreateBusinesessResponse>(url, request, {
       headers: this.authHeader.build()
     });
@@ -68,7 +68,7 @@ export class BusinessService {
    * Retorna: CreateBusinesessResponse
    */
   initializeToken(request: ResolveTokenRequest): Observable<CreateBusinesessResponse> {
-    const url = `${this.baseUrl}/api/business/initialize-token`;
+    const url = `${this.baseUrl}/business/initialize-token`;
     return this.http.post<CreateBusinesessResponse>(url, request, {
       headers: this.authHeader.build()
     });

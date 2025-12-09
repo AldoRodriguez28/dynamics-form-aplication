@@ -3,11 +3,15 @@
   <header class="page__header">
     <div>
       <p class="eyebrow">Cliente</p>
-      <h1 class="bussine-name">{{ clientData.advertiserName }}</h1>
-      <p class="meta">Advertiser ID: {{ clientData.advertiserId }}</p>
+      <!-- En legacy no viene nombre; mostramos '-' -->
+      <h1 class="bussine-name">{{ '-' }}</h1>
+
+      <!-- ID desde legacy; si faltara, usa this.clientId -->
+      <p class="meta">Advertiser ID: {{ clientData.legacyAdvertiserId || clientId || '-' }}</p>
     </div>
+
     <div class="badge">
-      Negocios: {{ clientData.businesses.length }}
+      Negocios: {{ clientData.businesses?.length || 0 }}
     </div>
   </header>
 
@@ -18,7 +22,7 @@
       </div>
     </div>
 
-    @if (clientData.businesses.length > 0) {
+    @if (clientData.businesses?.length) {
     <div class="table">
       <div class="table__header">
         <span>Negocio</span>
@@ -27,23 +31,26 @@
         <span class="actions-col">Acciones</span>
       </div>
 
-      @for (business of clientData.businesses; track business.businessId) {
+      @for (business of (clientData.businesses || []); track (business?.businessId ?? $index)) {
       <div class="table__row">
         <div>
-          <p class="title">{{ business.commercialName }}</p>
-          <p class="sub">ID negocio: {{ business.businessId }}</p>
+          <p class="title">{{ business?.commercialName || '-' }}</p>
+          <p class="sub">ID negocio: {{ business?.businessId || '-' }}</p>
         </div>
 
         <div>
-          <span class="status" [attr.data-variant]="business.formStatus">
-            {{ statusLabel(business.formStatus) }}
+          <span class="status" [attr.data-variant]="business.state">
+            {{ statusLabel(business.state) }}
           </span>
         </div>
+
         <div>
-          <p>{{ formatDate(business.lastUpdate) }}</p>
+          <p>{{ formatDate(business?.lastUpdate ?? null) }}</p>
         </div>
+
         <div class="actions-col">
-          <button type="button" (click)="goToForm(clientData.advertiserId, business,  clientData.advertiserName)">
+          <button type="button"
+            (click)="goToForm((clientId ?? clientData.legacyAdvertiserId) ?? '', $any(business), '')">
             Ver formulario
           </button>
         </div>
@@ -73,7 +80,7 @@
 </section>
 } @else if (errorCode === 'CLIENT_NOT_FOUND') {
 <section class="page page--centered hero-style">
-  <app-client-not-found [clientId]="clientId" (home)="goHome()" (retry)="retry()" />
+  <app-client-not-found [clientId]="clientId ?? '' " (home)="goHome()" (retry)="retry()" />
 </section>
 } @else if (errorCode) {
 <section class="page page--centered">
