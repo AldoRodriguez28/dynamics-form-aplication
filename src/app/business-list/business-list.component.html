@@ -1,5 +1,5 @@
+@if (clientData$ | async; as clientData) {
 <section class="page">
-  @if (clientData$ | async; as clientData) {
   <header class="page__header">
     <div>
       <p class="eyebrow">Cliente</p>
@@ -18,6 +18,7 @@
       </div>
     </div>
 
+    @if (clientData.businesses.length > 0) {
     <div class="table">
       <div class="table__header">
         <span>Negocio</span>
@@ -49,8 +50,43 @@
       </div>
       }
     </div>
+    } @else {
+    <div class="empty-state">
+      <div class="empty-state__pill">Negocio no encontrado</div>
+      <h2 class="empty-state__title">No encontramos negocios vinculados a este enlace</h2>
+      <p class="empty-state__hint">
+        Verifica el identificador o regresa al listado principal. Si crees que es un error, reintenta la carga o
+        contáctanos.
+      </p>
+      <ul class="empty-state__list">
+        <li>Comprueba el ID de cliente o negocio.</li>
+        <li>Regresa al dashboard del cliente para seleccionar otro negocio.</li>
+      </ul>
+      <div class="empty-state__actions">
+        <button type="button" (click)="goHome()">Ir al inicio</button>
+        <button type="button" class="ghost" (click)="retry()">Reintentar</button>
+      </div>
+      <p class="empty-state__support">¿Sigues sin verlo? Escríbenos y comparte el ID que intentas abrir.</p>
+    </div>
+    }
   </div>
-  } @else {
-  <p class="loading">Cargando negocios...</p>
-  }
 </section>
+} @else if (errorCode === 'CLIENT_NOT_FOUND') {
+<section class="page page--centered hero-style">
+  <app-client-not-found [clientId]="clientId" (home)="goHome()" (retry)="retry()" />
+</section>
+} @else if (errorCode) {
+<section class="page page--centered">
+  <div class="empty-state empty-state--error">
+    <div class="empty-state__pill">Error</div>
+    <h2 class="empty-state__title">No pudimos cargar los datos</h2>
+    <p class="empty-state__hint">Intenta de nuevo en unos segundos o vuelve al inicio.</p>
+    <div class="empty-state__actions">
+      <button type="button" (click)="retry()">Reintentar</button>
+      <button type="button" class="ghost" (click)="goHome()">Ir al inicio</button>
+    </div>
+  </div>
+</section>
+} @else {
+<p class="loading">Cargando negocios...</p>
+}

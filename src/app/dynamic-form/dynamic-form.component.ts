@@ -50,7 +50,7 @@ type FieldDisplayType =
   | 'array-object'
   | 'array-primitive';
 type BlockField = FormField & {
-  type: FieldDisplayType;
+  displayType: FieldDisplayType;
   colSpan: number;
   itemKeys?: string[];
   itemType?: FormField['type'];
@@ -215,7 +215,7 @@ export class DynamicFormComponent implements OnChanges {
       }
       const field: BlockField = {
         ...fieldDef,
-        type: displayType,
+        displayType,
         colSpan,
         label: fieldDef.label || this.toLabel(fieldDef.name)
       };
@@ -227,7 +227,7 @@ export class DynamicFormComponent implements OnChanges {
       const control = this.buildPrimitiveArrayControl(fieldDef, rawValue);
       const field: BlockField = {
         ...fieldDef,
-        type: displayType,
+        displayType,
         colSpan,
         label: fieldDef.label || this.toLabel(fieldDef.name)
       };
@@ -239,7 +239,7 @@ export class DynamicFormComponent implements OnChanges {
       const { control, itemKeys } = this.buildArrayObjectControl(fieldDef, rawValue);
       const field: BlockField = {
         ...fieldDef,
-        type: displayType,
+        displayType,
         colSpan,
         itemKeys,
         label: fieldDef.label || this.toLabel(fieldDef.name)
@@ -258,7 +258,7 @@ export class DynamicFormComponent implements OnChanges {
       }
       const field: BlockField = {
         ...fieldDef,
-        type: displayType,
+        displayType,
         itemType,
         colSpan,
         label: fieldDef.label || this.toLabel(fieldDef.name)
@@ -272,7 +272,7 @@ export class DynamicFormComponent implements OnChanges {
 
     const field: BlockField = {
       ...fieldDef,
-      type: displayType,
+      displayType,
       colSpan,
       rows: displayType === 'textarea' ? fieldDef.rows ?? this.textAreaRows(rawValue) : fieldDef.rows,
       label: fieldDef.label || this.toLabel(fieldDef.name)

@@ -27,7 +27,7 @@
             <div class="field-grid">
               @for (field of row.fields; track field.name) {
               <div class="field-col" [style.gridColumn]="'span ' + field.colSpan">
-                @switch (field.type) {
+                @switch (field.displayType) {
                 @case ('textarea') {
                 <app-field-textarea [field]="field" [control]="getControl(form, [block.code, field.name])" />
                 }
