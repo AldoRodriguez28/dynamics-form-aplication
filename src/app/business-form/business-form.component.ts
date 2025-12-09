@@ -1,7 +1,7 @@
 import { CommonModule, Location } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { BusinessService } from '../services/business.service';
 import { BusinessForm, FormStatus } from '../models/form-schema.model';
 import { DynamicFormComponent } from '../dynamic-form/dynamic-form.component';
@@ -21,7 +21,9 @@ export class BusinessFormComponent {
 
   clientId = this.route.snapshot.paramMap.get('idClient') ?? '';
   businessId = this.route.snapshot.paramMap.get('businessId') ?? '';
-  formSchema$: Observable<BusinessForm> = this.businessService.getBusinessForm(this.businessId);
+  formSchema$: Observable<BusinessForm> = this.businessService
+    .getBusinessForm(this.businessId)
+    .pipe(tap(data => console.log('Business form response:', data)));
   commercialName =
     this.router.getCurrentNavigation()?.extras.state?.['commercialName'] ??
     history.state?.commercialName ??

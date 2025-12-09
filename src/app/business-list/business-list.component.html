@@ -58,23 +58,7 @@
       }
     </div>
     } @else {
-    <div class="empty-state">
-      <div class="empty-state__pill">Negocio no encontrado</div>
-      <h2 class="empty-state__title">No encontramos negocios vinculados a este enlace</h2>
-      <p class="empty-state__hint">
-        Verifica el identificador o regresa al listado principal. Si crees que es un error, reintenta la carga o
-        contáctanos.
-      </p>
-      <ul class="empty-state__list">
-        <li>Comprueba el ID de cliente o negocio.</li>
-        <li>Regresa al dashboard del cliente para seleccionar otro negocio.</li>
-      </ul>
-      <div class="empty-state__actions">
-        <button type="button" (click)="goHome()">Ir al inicio</button>
-        <button type="button" class="ghost" (click)="retry()">Reintentar</button>
-      </div>
-      <p class="empty-state__support">¿Sigues sin verlo? Escríbenos y comparte el ID que intentas abrir.</p>
-    </div>
+    <app-business-empty-state (home)="goHome()" (retry)="retry()" />
     }
   </div>
 </section>

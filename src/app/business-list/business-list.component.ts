@@ -1,18 +1,19 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { EMPTY, map, Observable, of, switchMap } from 'rxjs';
+import { EMPTY, map, Observable, of, switchMap, tap } from 'rxjs';
 import { Business } from '../models/business.model';
 import { BusinessService } from '../services/business.service';
 import { TokenStorageService } from '../services/shared/token-storage.service';
 import { BusinessMapping } from '../mapping/business/business.map';
 import { LegacyBusinessInterface } from '../Interfaces/business/response/legacy-business.interface';
 import { ClientNotFoundComponent } from '../components/client-not-found/client-not-found.component';
+import { BusinessEmptyStateComponent } from '../components/business-empty-state/business-empty-state.component';
 
 @Component({
   selector: 'app-business-list',
   standalone: true,
-  imports: [CommonModule, ClientNotFoundComponent],
+  imports: [CommonModule, ClientNotFoundComponent, BusinessEmptyStateComponent],
   templateUrl: './business-list.component.html',
   styleUrl: './business-list.component.scss'
 })
@@ -62,7 +63,10 @@ export class BusinessListComponent {
 
         return this.businessService
           .getLegacy(clientId)
-          .pipe(map(BusinessMapping.MapLegacyResponseToLegacyInterface));
+          .pipe(
+            tap(response => console.log('dataClient', response)),
+            map(BusinessMapping.MapLegacyResponseToLegacyInterface)
+          );
       })
     );    
   }

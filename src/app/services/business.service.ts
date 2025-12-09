@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, mergeMap, of, throwError, map } from 'rxjs';
+import { Observable, mergeMap, of } from 'rxjs';
 import { ClientData } from '../models/business.model';
 import { BusinessForm } from '../models/form-schema.model';
 import { environment } from '../../environments/environment';
@@ -21,10 +21,7 @@ export class BusinessService {
     private authHeader: AuthHeaderService
   ) { }
 
-  /**
-   * GET /api/business/legacy/{businessId}
-   * Devuelve la respuesta sin modificar (usa el token de AuthHeaderService).
-  */
+
   getLegacy(businessId: string | number): Observable<LegacyBusinessResponse> {
     const url = `${this.baseUrl}/business/legacy/${businessId}`;
     return this.http.get<LegacyBusinessResponse>(url, {
@@ -95,15 +92,10 @@ export class BusinessService {
   /**
    * Obtiene el esquema de formulario para un negocio específico (mock local).
    */
-  getBusinessForm(_businessId: string): Observable<BusinessForm> {
-    return this.http
-      .get<BusinessForm>('assets/data/mock-business-form-update.json')
-      .pipe(
-        map((data: BusinessForm) => ({
-          actorType: data.actorType || 'AGENT',
-          actorId: data.actorId || _businessId || 'demo',
-          ...data
-        }))
-      );
+  getBusinessForm(businessId: string | number): Observable<BusinessForm> {
+    const url = `${this.baseUrl}/business/${businessId}/blocks`;
+    return this.http.get<BusinessForm>(url, {
+      headers: this.authHeader.build()
+    });
   }
 }
