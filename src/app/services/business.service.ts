@@ -17,10 +17,9 @@ export class BusinessService {
   getClientBusinesses(idClient: string): Observable<ClientData> {
     return this.http.get<ClientData>('assets/data/mock-client.json').pipe(
       mergeMap((data) => {
-        if (idClient && idClient !== data.advertiserId) {
-          return throwError(() => ({ code: 'CLIENT_NOT_FOUND', message: 'Cliente no encontrado', status: 404 }));
-        }
-
+        // if (idClient && idClient !== data.advertiserId) {
+        //   return throwError(() => ({ code: 'CLIENT_NOT_FOUND', message: 'Cliente no encontrado', status: 404 }));
+        // }
         return of({
           ...data,
           advertiserId: idClient || data.advertiserId
