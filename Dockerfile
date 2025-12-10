@@ -22,6 +22,6 @@ COPY default.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist/formularios-dinamicos-angular-20 /usr/share/nginx/html
 
 
-EXPOSE 80
+EXPOSE 4210
 # Correr ng serve
 CMD ["nginx", "-g", "daemon off;"]
