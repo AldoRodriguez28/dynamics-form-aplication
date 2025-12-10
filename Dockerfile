@@ -11,5 +11,5 @@ FROM nginx:alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Angular application builder coloca los artefactos SPA en dist/<app>/browser
 COPY --from=builder /app/dist/formularios-dinamicos-angular-20/browser /usr/share/nginx/html
-EXPOSE 80
+EXPOSE 4210
 CMD ["nginx", "-g", "daemon off;"]
