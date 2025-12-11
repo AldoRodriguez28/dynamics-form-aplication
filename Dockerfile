@@ -1,27 +1,24 @@
 FROM node:20-alpine AS build
-
-# Crear carpeta de trabajo
 WORKDIR /app
 
-# Copiar dependencias e instalar
 COPY package*.json ./
 RUN npm install
 
-# Copiar todo el código fuente
 COPY . .
 RUN npx ng build
 
-
-# ===== Stage 2: Nginx =====
 FROM nginx:alpine
 
-# Config SPA
 COPY default.conf /etc/nginx/conf.d/default.conf
 
-# Copia artefactos (SIN /browser)
-COPY --from=build /app/dist/formularios-dinamicos-angular-20 /usr/share/nginx/html
+COPY --from=build /app/dist/formularios-dinamicos-angular-20/browser/ /usr/share/nginx/html/
 
-
-EXPOSE 4210
-# Correr ng serve
+EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
+
+#docker formularios-dinamicos-angular-20 .
+
+#docker rm -f sa-bcm-ui 2> $null
+#docker rmi -f sa-bcm-content-ui:angular20 2> $null
+#docker build --no-cache -t sa-bcm-content-ui:angular20 .
+#docker run -d --name sa-bcm-ui -p 4210:80 sa-bcm-content-ui:angular20
