@@ -11,6 +11,8 @@ import { SaveBlocksRequest } from './request/save-blocks.request';
 import { CreateBusinesessResponse } from './response/business/create-businesses.response';
 import { ResolveTokenRequest } from './request/resolve-token.request';
 
+export type DomainCheckResponse = string | string[] | { message?: string };
+
 @Injectable({
   providedIn: 'root'
 })
@@ -94,5 +96,19 @@ export class BusinessService {
     return this.http.get<BusinessForm>(url, {
       headers: this.authHeader.build()
     });
+  }
+
+  /**
+   * POST /api/domain
+   * Body: { domain: string }
+   * Respuesta: "Dominio disponible." o array de sugerencias.
+   */
+  checkDomainAvailability(domain: string): Observable<DomainCheckResponse> {
+    const url = `${this.baseUrl}/domain`;
+    return this.http.post<DomainCheckResponse>(
+      url,
+      { domain },
+      { headers: this.authHeader.build() }
+    );
   }
 }
