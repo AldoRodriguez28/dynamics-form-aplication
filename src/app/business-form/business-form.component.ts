@@ -2,6 +2,7 @@ import { CommonModule, Location } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
+import Swal from 'sweetalert2';
 import { BusinessService } from '../services/business.service';
 import { BusinessForm, FormStatus } from '../models/form-schema.model';
 import { DynamicFormComponent } from '../dynamic-form/dynamic-form.component';
@@ -82,7 +83,14 @@ export class BusinessFormComponent {
     }
 
     this.businessService.saveBlocks(this.businessId, request).subscribe({
-      next: () => console.info('Bloques guardados exitosamente'),
+      next: () => {
+        console.info('Bloques guardados exitosamente');
+        Swal.fire({
+          icon: 'success',
+          title: 'Guardado exitoso',
+          text: 'Los cambios se guardaron correctamente.'
+        });
+      },
       error: (error) => console.error('Error al guardar bloques', error)
     });
   }
