@@ -10,6 +10,7 @@ import {
   Validators
 } from '@angular/forms';
 import { getControl, getFieldOptions, optionKey, OptionValue, toggleOption } from '../utils';
+import { SaveBlocksRequest } from '../services/request/save-blocks.request';
 import {
   BlockUI,
   BusinessForm,
@@ -92,9 +93,11 @@ interface BlockView {
 })
 export class DynamicFormComponent implements OnChanges {
   @Input({ required: true }) schema!: BusinessForm;
-  @Output() submitForm = new EventEmitter<Record<string, unknown>>();
+  @Output() submitForm = new EventEmitter<SaveBlocksRequest>();
 
   form!: FormGroup;
+  private readonly fallbackActorType = 'AGENT';
+  private readonly fallbackActorId = 'usuario.demo';
   blocks: BlockView[] = [];
   optionsMap: Record<string, OptionItem[]> = {};
   valueParsers: Record<string, FormValueParser> = {};
@@ -172,7 +175,8 @@ export class DynamicFormComponent implements OnChanges {
       });
     });
 
-    const fieldCount = rows.reduce((acc, row) => acc + row.fields.length, 0);
+    // Use unique control names to avoid over-counting repeated fields (e.g., the same checkbox twice in the UI)
+    const fieldCount = Object.keys(controls).length;
 
     return { rows, controls, fieldCount };
   }
@@ -645,7 +649,7 @@ export class DynamicFormComponent implements OnChanges {
     this.submitForm.emit(this.buildPayload());
   }
 
-  private buildPayload(): Record<string, unknown> {
+  private buildPayload(): SaveBlocksRequest {
     const blocks = this.blocks.map((block) => {
       const rawValues = (this.form.get(block.code) as FormGroup)?.value ?? {};
       const parsedValues: Record<string, unknown> = {};
@@ -662,8 +666,8 @@ export class DynamicFormComponent implements OnChanges {
     });
 
     return {
-      actorType: this.schema.actorType,
-      actorId: this.schema.actorId,
+      actorType: this.schema.actorType || this.fallbackActorType,
+      actorId: this.schema.actorId || this.fallbackActorId,
       blocks
     };
   }
