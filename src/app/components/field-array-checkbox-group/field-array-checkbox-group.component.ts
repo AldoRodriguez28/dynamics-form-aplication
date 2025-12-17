@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { FormField, OptionItem } from '../../models/form-schema.model';
+import { FormField } from '../../models/form-schema.model';
+import { OptionItemInterface } from '../../dynamic-form/interface/OptionItem.intreface';
 
 @Component({
   selector: 'app-field-array-checkbox-group',
@@ -13,16 +14,16 @@ import { FormField, OptionItem } from '../../models/form-schema.model';
 export class FieldArrayCheckboxGroupComponent {
   @Input({ required: true }) field!: FormField & { name: string };
   @Input({ required: true }) control!: FormControl;
-  @Input() options: OptionItem[] = [];
-  @Output() toggle = new EventEmitter<{ value: OptionItem['value']; checked: boolean }>();
+  @Input() options: OptionItemInterface[] = [];
+  @Output() toggle = new EventEmitter<{ value: OptionItemInterface['value']; checked: boolean }>();
 
-  onChange(event: Event, value: OptionItem['value']): void {
+  onChange(event: Event, value: OptionItemInterface['value']): void {
     const target = event.target as HTMLInputElement;
     this.toggle.emit({ value, checked: target.checked });
   }
 
-  isChecked(value: OptionItem['value']): boolean {
-    const current = (this.control.value as OptionItem['value'][]) || [];
+  isChecked(value: OptionItemInterface['value']): boolean {
+    const current = (this.control.value as OptionItemInterface['value'][]) || [];
     return current.includes(value);
   }
 }

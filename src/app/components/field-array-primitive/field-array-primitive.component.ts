@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { FormField, OptionItem } from '../../models/form-schema.model';
+import { FormField} from '../../models/form-schema.model';
 import { FieldFileComponent } from '../field-file/field-file.component';
+import { OptionItemInterface } from '../../dynamic-form/interface/OptionItem.intreface';
 
 @Component({
   selector: 'app-field-array-primitive',
@@ -14,7 +15,7 @@ import { FieldFileComponent } from '../field-file/field-file.component';
 export class FieldArrayPrimitiveComponent {
   @Input({ required: true }) field!: FormField & { name: string; itemType?: FormField['type'] };
   @Input({ required: true }) formArray!: FormArray<FormControl>;
-  @Input() options: OptionItem[] = [];
+  @Input() options: OptionItemInterface[] = [];
 
   constructor(private fb: FormBuilder) {}
 

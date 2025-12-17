@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { FormField, OptionItem } from '../../models/form-schema.model';
+import { FormField } from '../../models/form-schema.model';
+import { OptionItemInterface } from '../../dynamic-form/interface/OptionItem.intreface';
 
-type PillValue = OptionItem['value'];
+type PillValue = OptionItemInterface['value'];
 type PillOption = { value: PillValue; label: string };
 
 @Component({
@@ -16,7 +17,7 @@ type PillOption = { value: PillValue; label: string };
 export class FieldPillMultiselectComponent {
   @Input({ required: true }) field!: FormField & { name: string };
   @Input({ required: true }) control!: FormControl<PillValue[]>;
-  @Input() options: OptionItem[] = [];
+  @Input() options: OptionItemInterface[] = [];
 
   get items(): PillValue[] {
     const value = this.control?.value;

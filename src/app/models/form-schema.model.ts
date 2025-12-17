@@ -1,3 +1,5 @@
+import { OptionItemInterface } from "../dynamic-form/interface/OptionItem.intreface";
+
 export type FieldType =
   | 'text'
   | 'textarea'
@@ -16,10 +18,6 @@ export type FieldType =
 
 export type FieldCollection = 'single' | 'array';
 
-export interface OptionItem {
-  value: string | number | boolean | null;
-  label: string;
-}
 
 export interface OptionSetSource {
   type: string;
@@ -32,7 +30,7 @@ export interface OptionSetSource {
 
 export interface OptionSet {
   mode: 'static' | 'api';
-  items?: OptionItem[];
+  items?: OptionItemInterface[];
   source?: OptionSetSource;
 }
 

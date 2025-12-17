@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { FormField, OptionItem } from '../../models/form-schema.model';
+import { FormField } from '../../models/form-schema.model';
+import { OptionItemInterface } from '../../dynamic-form/interface/OptionItem.intreface';
 
 @Component({
   selector: 'app-field-multiselect',
@@ -13,7 +14,7 @@ import { FormField, OptionItem } from '../../models/form-schema.model';
 export class FieldMultiselectComponent {
   @Input({ required: true }) field!: FormField & { name: string };
   @Input({ required: true }) control!: FormControl;
-  @Input() options: OptionItem[] = [];
+  @Input() options: OptionItemInterface[] = [];
 
   get size(): number {
     const base = this.options?.length ?? 4;

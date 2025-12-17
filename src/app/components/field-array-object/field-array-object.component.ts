@@ -9,8 +9,9 @@ import {
   ReactiveFormsModule,
   Validators
 } from '@angular/forms';
-import { FormField, OptionItem, OptionSet } from '../../models/form-schema.model';
+import { FormField, OptionSet } from '../../models/form-schema.model';
 import { getControl } from '../../utils';
+import { OptionItemInterface } from '../../dynamic-form/interface/OptionItem.intreface';
 @Component({
   selector: 'app-field-array-object',
   standalone: true,
@@ -65,7 +66,7 @@ export class FieldArrayObjectComponent {
     return schema[key]?.type;
   }
 
-  optionsForKey(key: string): OptionItem[] {
+  optionsForKey(key: string): OptionItemInterface[] {
     const type = this.fieldTypeForKey(key);
     if (type !== 'select') return [];
     const schema = this.field.itemSchema ?? {};

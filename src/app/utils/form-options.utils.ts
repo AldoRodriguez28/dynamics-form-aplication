@@ -1,17 +1,17 @@
 import { AbstractControl } from '@angular/forms';
-import { OptionItem } from '../models/form-schema.model';
+import { OptionItemInterface } from '../dynamic-form/interface/OptionItem.intreface';
 
-export type OptionValue = OptionItem['value'];
+export type OptionValue = OptionItemInterface['value'];
 
 export function optionKey(blockCode: string, fieldName: string): string {
   return `${blockCode}.${fieldName}`;
 }
 
 export function getFieldOptions(
-  optionsMap: Record<string, OptionItem[]>,
+  optionsMap: Record<string, OptionItemInterface[]>,
   blockCode: string,
   fieldName: string
-): OptionItem[] {
+): OptionItemInterface[] {
   return optionsMap[optionKey(blockCode, fieldName)] ?? [];
 }
 
