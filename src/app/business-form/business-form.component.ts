@@ -2,9 +2,11 @@ import { CommonModule, Location } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
+import Swal from 'sweetalert2';
 import { BusinessService } from '../services/business.service';
 import { BusinessForm, FormStatus } from '../models/form-schema.model';
 import { DynamicFormComponent } from '../dynamic-form/dynamic-form.component';
+import { SaveBlocksRequest } from '../services/request/save-blocks.request';
 
 @Component({
   selector: 'app-business-form',
@@ -73,9 +75,24 @@ export class BusinessFormComponent {
     return 'status status--draft';
   }
 
-  handleSubmit(payload: Record<string, unknown>): void {
-    // Placeholder: aquí podríamos postear al backend
-    console.info('Payload a enviar:', payload);
+  handleSubmit(payload: SaveBlocksRequest): void {
+    const request = payload;
+    if (!request.actorId || !request.actorType) {
+      console.warn('Payload incompleto: falta actorId o actorType', request);
+      return;
+    }
+
+    this.businessService.saveBlocks(this.businessId, request).subscribe({
+      next: () => {
+        console.info('Bloques guardados exitosamente');
+        Swal.fire({
+          icon: 'success',
+          title: 'Guardado exitoso',
+          text: 'Los cambios se guardaron correctamente.'
+        });
+      },
+      error: (error) => console.error('Error al guardar bloques', error)
+    });
   }
 
   goBack(): void {

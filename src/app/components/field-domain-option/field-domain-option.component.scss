@@ -162,6 +162,22 @@
   font-weight: 600;
 }
 
+.suggestions {
+  margin-top: 0.5rem;
+  color: #0f172a;
+}
+
+.suggestions ul {
+  margin: 0.35rem 0 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.suggestions li {
+  list-style: disc;
+}
+
 @media (max-width: 640px) {
   .domain-input {
     flex-direction: column;

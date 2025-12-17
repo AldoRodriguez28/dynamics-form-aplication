@@ -11,6 +11,8 @@ import { SaveBlocksRequest } from './request/save-blocks.request';
 import { CreateBusinesessResponse } from './response/business/create-businesses.response';
 import { ResolveTokenRequest } from './request/resolve-token.request';
 
+export type DomainCheckResponse = string | string[] | { message?: string };
+
 @Injectable({
   providedIn: 'root'
 })
@@ -78,9 +80,6 @@ export class BusinessService {
   getClientBusinesses(idClient: string): Observable<ClientData> {
     return this.http.get<ClientData>('assets/data/mock-client.json').pipe(
       mergeMap((data) => {
-        // if (idClient && idClient !== data.advertiserId) {
-        //   return throwError(() => ({ code: 'CLIENT_NOT_FOUND', message: 'Cliente no encontrado', status: 404 }));
-        // }
         return of({
           ...data,
           advertiserId: idClient || data.advertiserId
@@ -97,5 +96,19 @@ export class BusinessService {
     return this.http.get<BusinessForm>(url, {
       headers: this.authHeader.build()
     });
+  }
+
+  /**
+   * POST /api/domain
+   * Body: { domain: string }
+   * Respuesta: "Dominio disponible." o array de sugerencias.
+   */
+  checkDomainAvailability(domain: string): Observable<DomainCheckResponse> {
+    const url = `${this.baseUrl}/domain`;
+    return this.http.post<DomainCheckResponse>(
+      url,
+      { domain },
+      { headers: this.authHeader.build() }
+    );
   }
 }

@@ -37,8 +37,15 @@
 
     <div class="domain-status" [class.available]="status === 'available'" [class.taken]="status === 'taken'">
       <div class="status-text">{{ message }}</div>
-      @if (status === 'available' && price !== null) {
-        <div class="price">Precio estimado: ${{ price }} MXN / año</div>
+      @if (status === 'taken' && suggestions.length) {
+        <div class="suggestions">
+          <p>Prueba con:</p>
+          <ul>
+            @for (suggestion of suggestions; track suggestion) {
+              <li>{{ suggestion }}</li>
+            }
+          </ul>
+        </div>
       }
     </div>
   </div>

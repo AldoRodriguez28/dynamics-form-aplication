@@ -10,6 +10,7 @@ import {
   Validators
 } from '@angular/forms';
 import { getControl, getFieldOptions, optionKey, OptionValue, toggleOption } from '../utils';
+import { SaveBlocksRequest } from '../services/request/save-blocks.request';
 import {
   BlockUI,
   BusinessForm,
@@ -33,6 +34,8 @@ import {
   FieldTextareaComponent
 } from '../components';
 import { FormSidebarComponent } from '../components/form-sidebar/form-sidebar.component';
+import { collectRequiredFields, findMissingRequiredFields } from '../utils';
+import Swal from 'sweetalert2';
 
 type FieldDisplayType =
   | 'text'
@@ -92,9 +95,11 @@ interface BlockView {
 })
 export class DynamicFormComponent implements OnChanges {
   @Input({ required: true }) schema!: BusinessForm;
-  @Output() submitForm = new EventEmitter<Record<string, unknown>>();
+  @Output() submitForm = new EventEmitter<SaveBlocksRequest>();
 
   form!: FormGroup;
+  private readonly fallbackActorType = 'AGENT';
+  private readonly fallbackActorId = 'usuario.demo';
   blocks: BlockView[] = [];
   optionsMap: Record<string, OptionItem[]> = {};
   valueParsers: Record<string, FormValueParser> = {};
@@ -132,6 +137,10 @@ export class DynamicFormComponent implements OnChanges {
           fieldCount
         };
       });
+
+    // Solo para pruebas: imprimir los campos requeridos detectados en el esquema
+    const requiredFieldsSnapshot = collectRequiredFields(this.schema.blocks);
+    console.info('Campos requeridos detectados:', requiredFieldsSnapshot);
 
     this.form = this.fb.group(group);
   }
@@ -172,7 +181,8 @@ export class DynamicFormComponent implements OnChanges {
       });
     });
 
-    const fieldCount = rows.reduce((acc, row) => acc + row.fields.length, 0);
+    // Use unique control names to avoid over-counting repeated fields (e.g., the same checkbox twice in the UI)
+    const fieldCount = Object.keys(controls).length;
 
     return { rows, controls, fieldCount };
   }
@@ -635,6 +645,23 @@ export class DynamicFormComponent implements OnChanges {
   onSubmit(): void {
     if (!this.form) return;
     this.form.markAllAsTouched();
+
+    const missingRequired = findMissingRequiredFields(this.getBlocksWithCurrentValues());
+    if (missingRequired.length) {
+      const detail = missingRequired
+        .map((item) => `${item.blockName || item.blockCode}: ${item.label || item.fieldName}`)
+        .join('<br>');
+
+      Swal.fire({
+        icon: 'warning',
+        title: 'Faltan campos obligatorios',
+        html: detail,
+        confirmButtonText: 'Entendido'
+      });
+
+      return;
+    }
+
     if (this.form.valid) {
       this.submitForm.emit(this.buildPayload());
     }
@@ -645,8 +672,23 @@ export class DynamicFormComponent implements OnChanges {
     this.submitForm.emit(this.buildPayload());
   }
 
-  private buildPayload(): Record<string, unknown> {
-    const blocks = this.blocks.map((block) => {
+  private buildPayload(): SaveBlocksRequest {
+    const blocks = this.getBlocksWithCurrentValues().map((block) => ({
+      code: block.code,
+      values: block.values ?? {}
+    }));
+
+    return {
+      actorType: this.schema.actorType || this.fallbackActorType,
+      actorId: this.schema.actorId || this.fallbackActorId,
+      blocks
+    };
+  }
+
+  private getBlocksWithCurrentValues(): BusinessFormBlock[] {
+    if (!this.schema?.blocks || !this.form) return [];
+
+    return this.schema.blocks.map((block) => {
       const rawValues = (this.form.get(block.code) as FormGroup)?.value ?? {};
       const parsedValues: Record<string, unknown> = {};
 
@@ -656,15 +698,9 @@ export class DynamicFormComponent implements OnChanges {
       });
 
       return {
-        code: block.code,
+        ...block,
         values: parsedValues
       };
     });
-
-    return {
-      actorType: this.schema.actorType,
-      actorId: this.schema.actorId,
-      blocks
-    };
   }
 }
