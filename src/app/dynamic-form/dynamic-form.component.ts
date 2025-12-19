@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import {
   AbstractControl,
   FormArray,
@@ -17,7 +17,6 @@ import {
   BusinessFormBlock,
   FormField,
   FormRow,
-  OptionItem,
   OptionSet
 } from '../models/form-schema.model';
 import {
@@ -36,6 +35,10 @@ import {
 import { FormSidebarComponent } from '../components/form-sidebar/form-sidebar.component';
 import { collectRequiredFields, findMissingRequiredFields } from '../utils';
 import Swal from 'sweetalert2';
+import { CatalogService } from '../services/catalog.service';
+import { EMPTY, map, Observable, shareReplay, take, tap } from 'rxjs';
+import { OptionItemInterface } from './interface/OptionItem.intreface';
+import { CatalogMapping } from '../mapping/catalog/catalog.map';
 
 type FieldDisplayType =
   | 'text'
@@ -94,6 +97,8 @@ interface BlockView {
   styleUrl: './dynamic-form.component.scss'
 })
 export class DynamicFormComponent implements OnChanges {
+  private readonly catalogService = inject(CatalogService);
+
   @Input({ required: true }) schema!: BusinessForm;
   @Output() submitForm = new EventEmitter<SaveBlocksRequest>();
 
@@ -101,16 +106,61 @@ export class DynamicFormComponent implements OnChanges {
   private readonly fallbackActorType = 'AGENT';
   private readonly fallbackActorId = 'usuario.demo';
   blocks: BlockView[] = [];
-  optionsMap: Record<string, OptionItem[]> = {};
+  optionsMap: Record<string, OptionItemInterface[]> = {};
+  apiOptionsCache: Record<string, Observable<OptionItemInterface[]>> = {};
+  categoriasNegocio$: Observable<OptionItemInterface[]> = EMPTY;
   valueParsers: Record<string, FormValueParser> = {};
+  private pendingSelectValues: Record<string, unknown> = {};
   getControl = getControl;
 
-  constructor(private fb: FormBuilder) {}
+  constructor(private fb: FormBuilder) { }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['schema']?.currentValue) {
       this.setupForm();
     }
+  }
+
+  onCheckboxToggle(blockCode: string, fieldName: string, payload: { value: OptionValue; checked: boolean }): void {
+    toggleOption(this.form.get([blockCode, fieldName]), payload);
+  }
+
+  getOptions(blockCode: string, fieldName: string): OptionItemInterface[] {
+    return getFieldOptions(this.optionsMap, blockCode, fieldName);
+  }
+
+  getArrayControl(blockCode: string, name: string): FormArray {
+    return this.form.get([blockCode, name]) as FormArray;
+  }
+
+  onSubmit(): void {
+    if (!this.form) return;
+    this.form.markAllAsTouched();
+
+    const missingRequired = findMissingRequiredFields(this.getBlocksWithCurrentValues());
+    if (missingRequired.length) {
+      const detail = missingRequired
+        .map((item) => `${item.blockName || item.blockCode}: ${item.label || item.fieldName}`)
+        .join('<br>');
+
+      Swal.fire({
+        icon: 'warning',
+        title: 'Faltan campos obligatorios',
+        html: detail,
+        confirmButtonText: 'Entendido'
+      });
+
+      return;
+    }
+
+    if (this.form.valid) {
+      this.submitForm.emit(this.buildPayload());
+    }
+  }
+
+  emitDraft(): void {
+    if (!this.form) return;
+    this.submitForm.emit(this.buildPayload());
   }
 
   private setupForm(): void {
@@ -143,6 +193,8 @@ export class DynamicFormComponent implements OnChanges {
     console.info('Campos requeridos detectados:', requiredFieldsSnapshot);
 
     this.form = this.fb.group(group);
+
+    this.loadApiOptionsForBlocks();
   }
 
   private buildBlock(block: BusinessFormBlock): {
@@ -192,7 +244,7 @@ export class DynamicFormComponent implements OnChanges {
     fieldDef: FormField,
     rawValue: unknown,
     defaultColSpan: number
-  ): { field: BlockField; control: AbstractControl; options?: OptionItem[]; parser?: FormValueParser } {
+  ): { field: BlockField; control: AbstractControl; options?: OptionItemInterface[]; parser?: FormValueParser } {
     const isObjectArrayField = this.isObjectArrayField(fieldDef);
     const isPrimitiveArrayField = this.isPrimitiveArrayField(fieldDef);
     const isDomainOption = this.isDomainOptionField(fieldDef);
@@ -408,7 +460,7 @@ export class DynamicFormComponent implements OnChanges {
     field: FormField,
     rawValue: unknown,
     displayType: FieldDisplayType
-  ): OptionItem[] | undefined {
+  ): OptionItemInterface[] | undefined {
     if (displayType === 'array-primitive') {
       return undefined;
     }
@@ -439,7 +491,7 @@ export class DynamicFormComponent implements OnChanges {
     return optionSet?.items ?? this.toOptionsFromValue(rawValue);
   }
 
-  private toOptionsFromValue(value: unknown): OptionItem[] {
+  private toOptionsFromValue(value: unknown): OptionItemInterface[] {
     if (Array.isArray(value)) {
       return value
         .filter((v) => this.isPrimitive(v))
@@ -630,48 +682,6 @@ export class DynamicFormComponent implements OnChanges {
     return ['string', 'number', 'boolean', 'undefined'].includes(typeof value) || value === null;
   }
 
-  onCheckboxToggle(blockCode: string, fieldName: string, payload: { value: OptionValue; checked: boolean }): void {
-    toggleOption(this.form.get([blockCode, fieldName]), payload);
-  }
-
-  getOptions(blockCode: string, fieldName: string): OptionItem[] {
-    return getFieldOptions(this.optionsMap, blockCode, fieldName);
-  }
-
-  getArrayControl(blockCode: string, name: string): FormArray {
-    return this.form.get([blockCode, name]) as FormArray;
-  }
-
-  onSubmit(): void {
-    if (!this.form) return;
-    this.form.markAllAsTouched();
-
-    const missingRequired = findMissingRequiredFields(this.getBlocksWithCurrentValues());
-    if (missingRequired.length) {
-      const detail = missingRequired
-        .map((item) => `${item.blockName || item.blockCode}: ${item.label || item.fieldName}`)
-        .join('<br>');
-
-      Swal.fire({
-        icon: 'warning',
-        title: 'Faltan campos obligatorios',
-        html: detail,
-        confirmButtonText: 'Entendido'
-      });
-
-      return;
-    }
-
-    if (this.form.valid) {
-      this.submitForm.emit(this.buildPayload());
-    }
-  }
-
-  emitDraft(): void {
-    if (!this.form) return;
-    this.submitForm.emit(this.buildPayload());
-  }
-
   private buildPayload(): SaveBlocksRequest {
     const blocks = this.getBlocksWithCurrentValues().map((block) => ({
       code: block.code,
@@ -703,4 +713,55 @@ export class DynamicFormComponent implements OnChanges {
       };
     });
   }
+
+  private loadApiOptionsForBlocks(): void {
+    if (!this.schema?.blocks?.length || !this.form) return;
+
+    this.schema.blocks.forEach((block) => {
+      const categoriasSet = block.optionSets?.['categoriasNegocio'];
+      if (!categoriasSet || categoriasSet.mode !== 'api') return;
+
+      const fieldsUsingCategorias =
+        (block.rows ?? [])
+          .flatMap(r => r.fields ?? [])
+          .filter(f => f.type === 'select' && f.optionsRef === 'categoriasNegocio');
+
+      if (fieldsUsingCategorias.length === 0) return;
+
+      const cacheKey = 'categoriasNegocio';
+
+      if (!this.apiOptionsCache[cacheKey]) {
+        this.apiOptionsCache[cacheKey] = this.catalogService.getCategoriasNegocio().pipe(
+          map(CatalogMapping.MapCategoryResponseToOptionItems),
+          shareReplay(1)
+        );
+      }
+
+      fieldsUsingCategorias.forEach((field) => {
+        const key = optionKey(block.code, field.name);
+
+        const control = this.form.get([block.code, field.name]);
+        const currentValue = control?.value;
+
+        if (currentValue !== null && currentValue !== undefined && currentValue !== '') {
+          this.pendingSelectValues[key] = currentValue;
+          control?.setValue(null, { emitEvent: false });
+        }
+
+        this.apiOptionsCache[cacheKey].pipe(take(1)).subscribe({
+          next: (options) => {
+            this.optionsMap[key] = options;
+
+            const pending = this.pendingSelectValues[key];
+            if (pending !== undefined) {
+              control?.setValue(pending, { emitEvent: false });
+              delete this.pendingSelectValues[key];
+            }
+          },
+          error: (err) => console.error('Error cargando categoriasNegocio', err)
+        });
+      });
+    });
+  }
 }
+

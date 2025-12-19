@@ -1,11 +1,19 @@
 import { Injectable } from '@angular/core';
-import { OptionItem } from '../models/form-schema.model';
+import { HttpClient } from '@angular/common/http';
+import { map, Observable } from 'rxjs';
+import { CategoryResponse } from './response/catalog/category.response';
+import { environment } from '../../environments/environment';
+import { OptionItemInterface } from '../dynamic-form/interface/OptionItem.intreface';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CatalogService {
-  private readonly sources: Record<string, OptionItem[]> = {
+  private readonly baseUrl = environment.API_CATALOGS_URL;
+
+  constructor(private http: HttpClient) { }
+
+  private readonly sources: Record<string, OptionItemInterface[]> = {
     REF_CATEGORY: [
       { value: 'retail', label: 'Retail' },
       { value: 'services', label: 'Servicios' },
@@ -36,7 +44,7 @@ export class CatalogService {
     ]
   };
 
-  private readonly subcategoryMap: Record<string, OptionItem[]> = {
+  private readonly subcategoryMap: Record<string, OptionItemInterface[]> = {
     retail: [
       { value: 'groceries', label: 'Abarrotes' },
       { value: 'clothing', label: 'Ropa y Calzado' },
@@ -69,12 +77,17 @@ export class CatalogService {
     ]
   };
 
-  getOptions(sourceKey?: string): OptionItem[] {
+  getOptions(sourceKey?: string): OptionItemInterface[] {
     if (!sourceKey) return [];
     return this.sources[sourceKey] ?? [];
   }
 
-  getSubcategories(categoryValue: string): OptionItem[] {
+  getSubcategories(categoryValue: string): OptionItemInterface[] {
     return this.subcategoryMap[categoryValue] ?? this.getOptions('REF_SUB_CATEGORY');
+  }
+
+  getCategoriasNegocio(): Observable<CategoryResponse> {
+    const url = `${this.baseUrl}/Category`
+    return this.http.get<CategoryResponse>(url);
   }
 }
