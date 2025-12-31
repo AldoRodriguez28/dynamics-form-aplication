@@ -1,0 +1,41 @@
+<div class="loc-card">
+  <header class="loc-header">
+    <div class="icon">📍</div>
+    <div>
+      <p class="eyebrow">Ubicación</p>
+      <h3 class="title">{{ 'Dirección del local o negocio (incluye coordenadas si aplica)'  }}</h3>
+      <p class="subtitle">{{'(incluye coordenadas si aplica)'}}</p>
+    </div>
+  </header>
+
+  <div class="loc-body">
+    <label class="label">Dirección</label>
+    <input
+      class="input"
+      type="text"
+      [placeholder]="field.placeholder || 'Ej. Insurgentes Norte 123, Juárez, Ciudad de México'"
+      [formControl]="addressControl"
+    />
+
+    <div class="coords-grid">
+      <div class="coord">
+        <label class="label">Lat</label>
+        <input class="input" type="text" placeholder="19.4326" [value]="lat" (input)="onLatChange($any($event.target).value)" />
+      </div>
+      <div class="coord">
+        <label class="label">Lng</label>
+        <input class="input" type="text" placeholder="-99.1332" [value]="lng" (input)="onLngChange($any($event.target).value)" />
+      </div>
+    </div>
+
+    @if (mapUrl) {
+    <div class="map-frame">
+      <iframe [src]="mapUrl | safeUrl" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+    } @else {
+    <div class="map-placeholder">
+      <p>Ingresa dirección o coordenadas para mostrar el mapa.</p>
+    </div>
+    }
+  </div>
+</div>

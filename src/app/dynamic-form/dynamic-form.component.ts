@@ -28,6 +28,7 @@ import {
   FieldDomainOptionComponent,
   FieldOpeningHoursComponent,
   FieldOpeningHoursAdvancedComponent,
+  FieldLocationMapComponent,
   FieldPillMultiselectComponent,
   FieldProductosServiciosComponent,
   FieldMultiselectComponent,
@@ -53,6 +54,7 @@ type FieldDisplayType =
   | 'domain-option'
   | 'opening-hours'
   | 'opening-hours-advanced'
+  | 'location-map'
   | 'pill-multiselect'
   | 'productos-servicios'
   | 'checkbox'
@@ -89,6 +91,7 @@ interface BlockView {
     FieldMultiselectComponent,
     FieldFileComponent,
     FieldDomainOptionComponent,
+    FieldLocationMapComponent,
     FieldPillMultiselectComponent,
     FieldProductosServiciosComponent,
     FieldArrayObjectComponent,
@@ -211,6 +214,7 @@ export class DynamicFormComponent implements OnChanges {
 
     const rowsSource: FormRow[] = block.rows && block.rows.length > 0 ? block.rows : this.buildLegacyRows(block);
     const sortedRows = rowsSource.slice().sort((a, b) => (a.num ?? 0) - (b.num ?? 0));
+    const hasLocationMap = sortedRows.some((row) => (row.fields ?? []).some((f) => this.isLocationMapField(f)));
 
     sortedRows.forEach((row) => {
       const defaultColSpan =
@@ -218,6 +222,7 @@ export class DynamicFormComponent implements OnChanges {
       const rowFields: BlockField[] = (row.fields ?? []).map((fieldDef) => {
         const rawValue = (block.values ?? {})[fieldDef.name];
         const { field, control, options, parser } = this.buildField(block, fieldDef, rawValue, defaultColSpan);
+        const skipRender = hasLocationMap && this.isDireccionField(fieldDef);
 
         controls[field.name] = control;
 
@@ -228,8 +233,8 @@ export class DynamicFormComponent implements OnChanges {
           this.valueParsers[optionKey(block.code, field.name)] = parser;
         }
 
-        return field;
-      });
+        return skipRender ? null : field;
+      }).filter((f): f is BlockField => !!f);
 
       rows.push({
         num: row.num,
@@ -253,10 +258,13 @@ export class DynamicFormComponent implements OnChanges {
     const isPrimitiveArrayField = this.isPrimitiveArrayField(fieldDef);
     const isDomainOption = this.isDomainOptionField(fieldDef);
     const isAdvancedOpening = this.isAdvancedOpeningHoursField(fieldDef);
+    const isLocationMap = this.isLocationMapField(fieldDef);
     let displayType: FieldDisplayType;
 
     if (isAdvancedOpening) {
       displayType = 'opening-hours-advanced';
+    } else if (isLocationMap) {
+      displayType = 'location-map';
     } else if (fieldDef.collection === 'array' && fieldDef.type === 'checkbox-group') {
       displayType = 'array-checkbox-grid';
     } else if (isObjectArrayField) {
@@ -274,7 +282,12 @@ export class DynamicFormComponent implements OnChanges {
       if (fieldDef.collection === 'array' && displayType === 'text') displayType = 'textarea';
     }
 
-    const colSpan = Math.min(12, Math.max(1, fieldDef.colSpan ?? defaultColSpan));
+    let colSpanSource = fieldDef.colSpan ?? defaultColSpan;
+    if (isLocationMap) {
+      colSpanSource = this.getDireccionColSpan(block) ?? colSpanSource;
+    }
+
+    const colSpan = Math.min(12, Math.max(1, colSpanSource));
 
     if (fieldDef.collection === 'array' && fieldDef.type === 'checkbox-group') {
       const control = this.fb.control(Array.isArray(rawValue) ? rawValue : []);
@@ -360,6 +373,7 @@ export class DynamicFormComponent implements OnChanges {
   private resolveDisplayType(type: string): FieldDisplayType {
     if (type === 'object') return 'textarea';
     if (type === 'opening_hours') return 'opening-hours';
+    if (type === 'location-map') return 'location-map';
     if (type === 'checkbox-group') return 'checkbox-grid';
     if (type === 'file') return 'file';
     if (type === 'textarea') return 'textarea';
@@ -405,6 +419,11 @@ export class DynamicFormComponent implements OnChanges {
     // Arrays for checkbox groups
     if (displayType === 'checkbox-grid') {
       const value = Array.isArray(rawValue) ? rawValue : [];
+      return { value };
+    }
+
+    if (displayType === 'location-map') {
+      const value = typeof rawValue === 'string' ? rawValue : '';
       return { value };
     }
 
@@ -564,6 +583,25 @@ export class DynamicFormComponent implements OnChanges {
 
   private isAdvancedOpeningHoursField(field: FormField): boolean {
     return field.name === 'horariosPersonalizados' && field.collection === 'array' && field.type === 'object';
+  }
+
+  private isLocationMapField(field: FormField): boolean {
+    return field.name === 'coordenadas' && field.type === 'text' && field.collection !== 'array';
+  }
+
+  private isDireccionField(field: FormField): boolean {
+    return field.name === 'direccion';
+  }
+
+  private getDireccionColSpan(block: BusinessFormBlock): number | undefined {
+    for (const row of block.rows || []) {
+      for (const field of row.fields || []) {
+        if (field.name === 'direccion' && field.colSpan) {
+          return field.colSpan;
+        }
+      }
+    }
+    return undefined;
   }
 
   private buildArrayObjectControl(

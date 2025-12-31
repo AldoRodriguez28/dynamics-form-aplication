@@ -62,6 +62,14 @@
                   [optionSets]="block.optionSets || {}"
                 />
                 }
+                @case ('location-map') {
+                <app-field-location-map
+                  [field]="field"
+                  [coordsControl]="getControl(form, [block.code, field.name])"
+                  [addressControl]="getControl(form, [block.code, 'direccion'])"
+                  [blockName]="block.title"
+                />
+                }
                 @case ('domain-option') {
                 <app-field-domain-option [field]="field" [control]="getControl(form, [block.code, field.name])" />
                 }
