@@ -1,0 +1,31 @@
+{
+  "legacyAdvertiserId": "2009786718",
+  "businesses": [
+    {
+      "businessId": 12600020,
+      "businessVersion": 1,
+      "BusinessVersion": 1,
+      "commercialName": "Tortillería Doña Luz Puebla",
+      "categoryCode": "156988",
+      "townCode": "105687",
+      "externalData": "{\"contractId\":\"500123456\",\"products\":[{\"productId\":\"1236265\",\"productCode\":\"SAINICIA\",\"productName\":\"Website Starter\"},{\"productId\":\"1236266\",\"productCode\":\"SAACELE\",\"productName\":\"Social Media Campaign\"}]}",
+      "ExternalData": "{\"contractId\":\"500123456\",\"products\":[{\"productId\":\"1236265\",\"productCode\":\"SAINICIA\",\"productName\":\"Website Starter\"},{\"productId\":\"1236266\",\"productCode\":\"SAACELE\",\"productName\":\"Social Media Campaign\"}]}",
+      "externalReferences": [],
+      "state": "DRAFT",
+      "lastUpdate": "2025-12-17T13:16:16.054043"
+    },
+    {
+      "businessId": 12600025,
+      "businessVersion": 1,
+      "BusinessVersion": 1,
+      "commercialName": "Tortillería Doña Luz CDMX",
+      "categoryCode": "6987452",
+      "townCode": "65987400",
+      "externalData": "{\"contractId\":\"500123456\",\"products\":[{\"productId\":\"2236265\",\"productCode\":\"SAINICIA\",\"productName\":\"Website Starter\"}]}",
+      "ExternalData": "{\"contractId\":\"500123456\",\"products\":[{\"productId\":\"2236265\",\"productCode\":\"SAINICIA\",\"productName\":\"Website Starter\"}]}",
+      "externalReferences": [],
+      "state": "DRAFT",
+      "lastUpdate": "2025-12-16T09:24:54.359936"
+    }
+  ]
+}

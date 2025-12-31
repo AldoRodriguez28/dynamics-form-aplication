@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input, OnDestroy } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { FormField } from '../../models/form-schema.model';
+import { BusinessService } from '../../services/business.service';
 
 @Component({
   selector: 'app-field-file',
@@ -14,6 +16,14 @@ export class FieldFileComponent implements OnDestroy {
   @Input({ required: true }) field!: FormField & { name: string };
   @Input({ required: true }) control!: FormControl;
   private fileObjectUrl: string | null = null;
+  uploading = false;
+  uploadError: string | null = null;
+  uploadSuccess = false;
+
+  constructor(
+    private businessService: BusinessService,
+    private route: ActivatedRoute
+  ) {}
 
   get acceptFormats(): string | null {
     if (!this.field?.allowedFormats?.length) return null;
@@ -23,7 +33,12 @@ export class FieldFileComponent implements OnDestroy {
   onFileChange(event: Event): void {
     const target = event.target as HTMLInputElement;
     const file = target?.files?.item(0) ?? null;
+    if (!file) {
+      this.setFileValue(null);
+      return;
+    }
     this.setFileValue(file);
+    this.uploadFile(file);
   }
 
   get currentName(): string | null {
@@ -60,6 +75,8 @@ export class FieldFileComponent implements OnDestroy {
   private setFileValue(file: File | null): void {
     this.revokeObjectUrl();
     this.control.setValue(file);
+    this.uploadSuccess = false;
+    this.uploadError = null;
     if (file) {
       this.fileObjectUrl = URL.createObjectURL(file);
     }
@@ -70,5 +87,39 @@ export class FieldFileComponent implements OnDestroy {
       URL.revokeObjectURL(this.fileObjectUrl);
       this.fileObjectUrl = null;
     }
+  }
+
+  private uploadFile(file: File): void {
+    const businessId = this.route.snapshot.paramMap.get('businessId');
+    if (!businessId) {
+      this.uploadError = 'No se pudo obtener el BusinessId.';
+      this.control.setErrors({ ...(this.control.errors || {}), upload: true });
+      return;
+    }
+
+    this.uploading = true;
+    this.uploadError = null;
+    this.uploadSuccess = false;
+
+    this.businessService
+      .uploadFiles({
+        files: file,
+        businessId,
+        versionNumber: 1,
+        fieldName: this.field.name,
+        usage: (this.field as any).usage || ''
+      })
+      .subscribe({
+        next: () => {
+          this.uploading = false;
+          this.uploadSuccess = true;
+          this.control.setErrors(null);
+        },
+        error: () => {
+          this.uploading = false;
+          this.uploadError = 'Error al subir el archivo. Intenta de nuevo.';
+          this.control.setErrors({ ...(this.control.errors || {}), upload: true });
+        }
+      });
   }
 }

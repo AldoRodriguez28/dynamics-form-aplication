@@ -55,6 +55,13 @@
                 @case ('opening-hours') {
                 <app-field-opening-hours [field]="field" [control]="getControl(form, [block.code, field.name])" />
                 }
+                @case ('opening-hours-advanced') {
+                <app-field-opening-hours-advanced
+                  [field]="field"
+                  [formArray]="getArrayControl(block.code, field.name)"
+                  [optionSets]="block.optionSets || {}"
+                />
+                }
                 @case ('domain-option') {
                 <app-field-domain-option [field]="field" [control]="getControl(form, [block.code, field.name])" />
                 }

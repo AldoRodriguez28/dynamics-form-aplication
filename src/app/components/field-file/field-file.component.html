@@ -10,6 +10,15 @@
     [attr.accept]="acceptFormats"
     (change)="onFileChange($event)"
   />
+  @if (uploading) {
+    <p class="status info">Subiendo archivo...</p>
+  }
+  @if (uploadSuccess) {
+    <p class="status success">Archivo subido correctamente.</p>
+  }
+  @if (uploadError) {
+    <p class="status error">{{ uploadError }}</p>
+  }
   @if (currentName) {
     <p class="file-hint">Archivo actual: {{ currentName }}</p>
   }

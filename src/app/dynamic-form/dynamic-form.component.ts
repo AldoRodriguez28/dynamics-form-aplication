@@ -6,6 +6,7 @@ import {
   FormBuilder,
   FormControl,
   FormGroup,
+  ValidatorFn,
   ReactiveFormsModule,
   Validators
 } from '@angular/forms';
@@ -26,6 +27,7 @@ import {
   FieldInputComponent,
   FieldDomainOptionComponent,
   FieldOpeningHoursComponent,
+  FieldOpeningHoursAdvancedComponent,
   FieldPillMultiselectComponent,
   FieldProductosServiciosComponent,
   FieldMultiselectComponent,
@@ -50,6 +52,7 @@ type FieldDisplayType =
   | 'file'
   | 'domain-option'
   | 'opening-hours'
+  | 'opening-hours-advanced'
   | 'pill-multiselect'
   | 'productos-servicios'
   | 'checkbox'
@@ -91,6 +94,7 @@ interface BlockView {
     FieldArrayObjectComponent,
     FieldArrayPrimitiveComponent,
     FieldOpeningHoursComponent,
+    FieldOpeningHoursAdvancedComponent,
     FormSidebarComponent
   ],
   templateUrl: './dynamic-form.component.html',
@@ -248,9 +252,12 @@ export class DynamicFormComponent implements OnChanges {
     const isObjectArrayField = this.isObjectArrayField(fieldDef);
     const isPrimitiveArrayField = this.isPrimitiveArrayField(fieldDef);
     const isDomainOption = this.isDomainOptionField(fieldDef);
+    const isAdvancedOpening = this.isAdvancedOpeningHoursField(fieldDef);
     let displayType: FieldDisplayType;
 
-    if (fieldDef.collection === 'array' && fieldDef.type === 'checkbox-group') {
+    if (isAdvancedOpening) {
+      displayType = 'opening-hours-advanced';
+    } else if (fieldDef.collection === 'array' && fieldDef.type === 'checkbox-group') {
       displayType = 'array-checkbox-grid';
     } else if (isObjectArrayField) {
       displayType = 'array-object';
@@ -340,7 +347,12 @@ export class DynamicFormComponent implements OnChanges {
       label: fieldDef.label || this.toLabel(fieldDef.name)
     };
 
-    const control = this.fb.control(value, fieldDef.required ? Validators.required : []);
+    const validators: ValidatorFn[] = [];
+    if (fieldDef.required) {
+      validators.push(fieldDef.type === 'opening_hours' ? this.openingHoursRequiredValidator() : Validators.required);
+    }
+
+    const control = this.fb.control(value, validators);
 
     return { field, control, options, parser };
   }
@@ -513,6 +525,17 @@ export class DynamicFormComponent implements OnChanges {
     return [];
   }
 
+  private openingHoursRequiredValidator(): ValidatorFn {
+    return (control: AbstractControl) => {
+      const value = control.value as Record<string, Record<string, string>> | null | undefined;
+      if (!value) return { required: true };
+      const hasValue = Object.values(value).some((dia) =>
+        Object.values(dia || {}).some((v) => (typeof v === 'string' ? v.trim() !== '' : !!v))
+      );
+      return hasValue ? null : { required: true };
+    };
+  }
+
   private isObjectArrayField(field: FormField): boolean {
     return field.collection === 'array' && field.type === 'object';
   }
@@ -537,6 +560,10 @@ export class DynamicFormComponent implements OnChanges {
 
   private isProductosServiciosField(field: FormField): boolean {
     return field.name === 'productosServicios' && field.collection === 'array';
+  }
+
+  private isAdvancedOpeningHoursField(field: FormField): boolean {
+    return field.name === 'horariosPersonalizados' && field.collection === 'array' && field.type === 'object';
   }
 
   private buildArrayObjectControl(
