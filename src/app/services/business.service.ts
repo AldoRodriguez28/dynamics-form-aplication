@@ -12,6 +12,13 @@ import { CreateBusinesessResponse } from './response/business/create-businesses.
 import { ResolveTokenRequest } from './request/resolve-token.request';
 
 export type DomainCheckResponse = string | string[] | { message?: string };
+export interface UploadFilesPayload {
+  files: File | File[];
+  businessId: string | number;
+  versionNumber: number;
+  fieldName: string;
+  usage?: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -110,5 +117,23 @@ export class BusinessService {
       { domain },
       { headers: this.authHeader.build() }
     );
+  }
+
+  uploadFiles(payload: UploadFilesPayload): Observable<unknown> {
+    const { businessId, files, versionNumber, fieldName, usage } = payload;
+    const url = `${this.baseUrl}/business/${businessId}/files`;
+    const formData = new FormData();
+    const filesArray = Array.isArray(files) ? files : [files];
+
+    filesArray.forEach((file) => formData.append('files', file));
+    formData.append('versionNumber', versionNumber.toString());
+    formData.append('fieldName', fieldName);
+    if (usage !== undefined && usage !== null) {
+      formData.append('usage', usage);
+    }
+
+    return this.http.post(url, formData, {
+      headers: this.authHeader.build({ contentType: 'form-data' })
+    });
   }
 }

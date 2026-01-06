@@ -36,6 +36,24 @@
   color: #6b7280;
 }
 
+.status {
+  margin: 0.15rem 0 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.status.info {
+  color: #0ea5e9;
+}
+
+.status.success {
+  color: #10b981;
+}
+
+.status.error {
+  color: #ef4444;
+}
+
 .file-hint {
   margin: 0.2rem 0 0;
   font-size: 0.9rem;

@@ -6,8 +6,13 @@ import { TokenStorageService } from './token-storage.service';
 export class AuthHeaderService {
   constructor(private tokenStore: TokenStorageService) {}
 
-  build(): HttpHeaders {
-    let headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+  build(options?: { contentType?: 'json' | 'form-data' }): HttpHeaders {
+    let headers = new HttpHeaders();
+
+    if (options?.contentType !== 'form-data') {
+      headers = headers.set('Content-Type', 'application/json');
+    }
+
     const token = this.tokenStore.getToken();
 
     if (token && token.trim().length > 0) {

@@ -6,11 +6,14 @@ import {
   FormBuilder,
   FormControl,
   FormGroup,
+  ValidatorFn,
   ReactiveFormsModule,
   Validators
 } from '@angular/forms';
+import { FieldValidatorFactory } from '../utils/field-validator.factory';
 import { getControl, getFieldOptions, optionKey, OptionValue, toggleOption } from '../utils';
 import { SaveBlocksRequest } from '../services/request/save-blocks.request';
+import { PayloadBuilder } from '../utils/payload.builder';
 import {
   BlockUI,
   BusinessForm,
@@ -26,6 +29,8 @@ import {
   FieldInputComponent,
   FieldDomainOptionComponent,
   FieldOpeningHoursComponent,
+  FieldOpeningHoursAdvancedComponent,
+  FieldLocationMapComponent,
   FieldPillMultiselectComponent,
   FieldProductosServiciosComponent,
   FieldMultiselectComponent,
@@ -50,6 +55,8 @@ type FieldDisplayType =
   | 'file'
   | 'domain-option'
   | 'opening-hours'
+  | 'opening-hours-advanced'
+  | 'location-map'
   | 'pill-multiselect'
   | 'productos-servicios'
   | 'checkbox'
@@ -86,11 +93,13 @@ interface BlockView {
     FieldMultiselectComponent,
     FieldFileComponent,
     FieldDomainOptionComponent,
+    FieldLocationMapComponent,
     FieldPillMultiselectComponent,
     FieldProductosServiciosComponent,
     FieldArrayObjectComponent,
     FieldArrayPrimitiveComponent,
     FieldOpeningHoursComponent,
+    FieldOpeningHoursAdvancedComponent,
     FormSidebarComponent
   ],
   templateUrl: './dynamic-form.component.html',
@@ -113,7 +122,14 @@ export class DynamicFormComponent implements OnChanges {
   private pendingSelectValues: Record<string, unknown> = {};
   getControl = getControl;
 
+<<<<<<< HEAD
   constructor(private fb: FormBuilder) { }
+=======
+  constructor(
+    private fb: FormBuilder,
+    private validatorFactory: FieldValidatorFactory
+  ) {}
+>>>>>>> 1e31f03 (implmentando pattrones de diseño)
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['schema']?.currentValue) {
@@ -207,6 +223,7 @@ export class DynamicFormComponent implements OnChanges {
 
     const rowsSource: FormRow[] = block.rows && block.rows.length > 0 ? block.rows : this.buildLegacyRows(block);
     const sortedRows = rowsSource.slice().sort((a, b) => (a.num ?? 0) - (b.num ?? 0));
+    const hasLocationMap = sortedRows.some((row) => (row.fields ?? []).some((f) => this.isLocationMapField(f)));
 
     sortedRows.forEach((row) => {
       const defaultColSpan =
@@ -214,6 +231,7 @@ export class DynamicFormComponent implements OnChanges {
       const rowFields: BlockField[] = (row.fields ?? []).map((fieldDef) => {
         const rawValue = (block.values ?? {})[fieldDef.name];
         const { field, control, options, parser } = this.buildField(block, fieldDef, rawValue, defaultColSpan);
+        const skipRender = hasLocationMap && this.isDireccionField(fieldDef);
 
         controls[field.name] = control;
 
@@ -224,8 +242,8 @@ export class DynamicFormComponent implements OnChanges {
           this.valueParsers[optionKey(block.code, field.name)] = parser;
         }
 
-        return field;
-      });
+        return skipRender ? null : field;
+      }).filter((f): f is BlockField => !!f);
 
       rows.push({
         num: row.num,
@@ -248,9 +266,15 @@ export class DynamicFormComponent implements OnChanges {
     const isObjectArrayField = this.isObjectArrayField(fieldDef);
     const isPrimitiveArrayField = this.isPrimitiveArrayField(fieldDef);
     const isDomainOption = this.isDomainOptionField(fieldDef);
+    const isAdvancedOpening = this.isAdvancedOpeningHoursField(fieldDef);
+    const isLocationMap = this.isLocationMapField(fieldDef);
     let displayType: FieldDisplayType;
 
-    if (fieldDef.collection === 'array' && fieldDef.type === 'checkbox-group') {
+    if (isAdvancedOpening) {
+      displayType = 'opening-hours-advanced';
+    } else if (isLocationMap) {
+      displayType = 'location-map';
+    } else if (fieldDef.collection === 'array' && fieldDef.type === 'checkbox-group') {
       displayType = 'array-checkbox-grid';
     } else if (isObjectArrayField) {
       displayType = 'array-object';
@@ -267,7 +291,12 @@ export class DynamicFormComponent implements OnChanges {
       if (fieldDef.collection === 'array' && displayType === 'text') displayType = 'textarea';
     }
 
-    const colSpan = Math.min(12, Math.max(1, fieldDef.colSpan ?? defaultColSpan));
+    let colSpanSource = fieldDef.colSpan ?? defaultColSpan;
+    if (isLocationMap) {
+      colSpanSource = this.getDireccionColSpan(block) ?? colSpanSource;
+    }
+
+    const colSpan = Math.min(12, Math.max(1, colSpanSource));
 
     if (fieldDef.collection === 'array' && fieldDef.type === 'checkbox-group') {
       const control = this.fb.control(Array.isArray(rawValue) ? rawValue : []);
@@ -340,7 +369,11 @@ export class DynamicFormComponent implements OnChanges {
       label: fieldDef.label || this.toLabel(fieldDef.name)
     };
 
-    const control = this.fb.control(value, fieldDef.required ? Validators.required : []);
+    const validators = this.validatorFactory.build(fieldDef, {
+      requiredValidator: fieldDef.type === 'opening_hours' ? this.openingHoursRequiredValidator() : undefined
+    });
+
+    const control = this.fb.control(value, validators);
 
     return { field, control, options, parser };
   }
@@ -348,6 +381,7 @@ export class DynamicFormComponent implements OnChanges {
   private resolveDisplayType(type: string): FieldDisplayType {
     if (type === 'object') return 'textarea';
     if (type === 'opening_hours') return 'opening-hours';
+    if (type === 'location-map') return 'location-map';
     if (type === 'checkbox-group') return 'checkbox-grid';
     if (type === 'file') return 'file';
     if (type === 'textarea') return 'textarea';
@@ -393,6 +427,11 @@ export class DynamicFormComponent implements OnChanges {
     // Arrays for checkbox groups
     if (displayType === 'checkbox-grid') {
       const value = Array.isArray(rawValue) ? rawValue : [];
+      return { value };
+    }
+
+    if (displayType === 'location-map') {
+      const value = typeof rawValue === 'string' ? rawValue : '';
       return { value };
     }
 
@@ -513,6 +552,17 @@ export class DynamicFormComponent implements OnChanges {
     return [];
   }
 
+  private openingHoursRequiredValidator(): ValidatorFn {
+    return (control: AbstractControl) => {
+      const value = control.value as Record<string, Record<string, string>> | null | undefined;
+      if (!value) return { required: true };
+      const hasValue = Object.values(value).some((dia) =>
+        Object.values(dia || {}).some((v) => (typeof v === 'string' ? v.trim() !== '' : !!v))
+      );
+      return hasValue ? null : { required: true };
+    };
+  }
+
   private isObjectArrayField(field: FormField): boolean {
     return field.collection === 'array' && field.type === 'object';
   }
@@ -537,6 +587,29 @@ export class DynamicFormComponent implements OnChanges {
 
   private isProductosServiciosField(field: FormField): boolean {
     return field.name === 'productosServicios' && field.collection === 'array';
+  }
+
+  private isAdvancedOpeningHoursField(field: FormField): boolean {
+    return field.name === 'horariosPersonalizados' && field.collection === 'array' && field.type === 'object';
+  }
+
+  private isLocationMapField(field: FormField): boolean {
+    return field.name === 'coordenadas' && field.type === 'text' && field.collection !== 'array';
+  }
+
+  private isDireccionField(field: FormField): boolean {
+    return field.name === 'direccion';
+  }
+
+  private getDireccionColSpan(block: BusinessFormBlock): number | undefined {
+    for (const row of block.rows || []) {
+      for (const field of row.fields || []) {
+        if (field.name === 'direccion' && field.colSpan) {
+          return field.colSpan;
+        }
+      }
+    }
+    return undefined;
   }
 
   private buildArrayObjectControl(
@@ -683,16 +756,12 @@ export class DynamicFormComponent implements OnChanges {
   }
 
   private buildPayload(): SaveBlocksRequest {
-    const blocks = this.getBlocksWithCurrentValues().map((block) => ({
-      code: block.code,
-      values: block.values ?? {}
-    }));
+    const builder = new PayloadBuilder(
+      this.schema.actorType || this.fallbackActorType,
+      this.schema.actorId || this.fallbackActorId
+    );
 
-    return {
-      actorType: this.schema.actorType || this.fallbackActorType,
-      actorId: this.schema.actorId || this.fallbackActorId,
-      blocks
-    };
+    return builder.withBlocks(this.getBlocksWithCurrentValues()).build();
   }
 
   private getBlocksWithCurrentValues(): BusinessFormBlock[] {

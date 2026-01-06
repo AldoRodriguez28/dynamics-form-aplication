@@ -82,9 +82,9 @@ export class BusinessFormComponent {
       return;
     }
 
+
     this.businessService.saveBlocks(this.businessId, request).subscribe({
       next: () => {
-        console.info('Bloques guardados exitosamente');
         Swal.fire({
           icon: 'success',
           title: 'Guardado exitoso',

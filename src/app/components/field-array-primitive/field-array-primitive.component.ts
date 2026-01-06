@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { FormField} from '../../models/form-schema.model';
-import { FieldFileComponent } from '../field-file/field-file.component';
+import { FormField } from '../../models/form-schema.model';
+import { FieldValidatorFactory } from '../../utils/field-validator.factory';
 import { OptionItemInterface } from '../../dynamic-form/interface/OptionItem.intreface';
+import { FieldFileComponent } from '../field-file/field-file.component';
 
 @Component({
   selector: 'app-field-array-primitive',
@@ -17,7 +18,10 @@ export class FieldArrayPrimitiveComponent {
   @Input({ required: true }) formArray!: FormArray<FormControl>;
   @Input() options: OptionItemInterface[] = [];
 
-  constructor(private fb: FormBuilder) {}
+  constructor(
+    private fb: FormBuilder,
+    private validatorFactory: FieldValidatorFactory
+  ) {}
 
   addItem(): void {
     this.formArray.push(this.fb.control(this.defaultValue(), this.controlValidators()));
@@ -74,6 +78,11 @@ export class FieldArrayPrimitiveComponent {
   }
 
   private controlValidators() {
-    return this.field.required ? [Validators.required] : [];
+    const type = this.itemType || this.field.type;
+    const fieldForItem = { ...this.field, type };
+    return this.validatorFactory.build(fieldForItem, {
+      requiredValidator: this.field.required ? Validators.required : null,
+      skipRequired: !this.field.required
+    });
   }
 }

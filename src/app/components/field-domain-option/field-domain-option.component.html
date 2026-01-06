@@ -28,8 +28,9 @@
         class="field-control"
         [id]="field.name"
         type="text"
-        [value]="value"
+        [formControl]="control"
         [placeholder]="field.placeholder || 'ej. midominio.com'"
+        [attr.aria-invalid]="control.invalid && control.touched ? 'true' : null"
         (input)="onInput($any($event.target).value)"
       />
       <button type="button" class="check-btn" (click)="checkAvailability()">Verificar</button>

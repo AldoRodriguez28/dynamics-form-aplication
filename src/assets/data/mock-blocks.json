@@ -1,0 +1,1426 @@
+{
+  "blocks": [
+    {
+      "code": "datos_contacto",
+      "schemaVersion": 1,
+      "name": "Datos de contacto",
+      "description": "Cómo se mostrará tu empresa en línea y a quién contactar.",
+      "order": 1,
+      "ui": {
+        "icon": "contact_page",
+        "collapsible": true,
+        "startOpen": true
+      },
+      "optionSets": {},
+      "rows": [
+        {
+          "num": 1,
+          "fields": [
+            {
+              "name": "nombreTitular",
+              "label": "Nombre del contacto asignado para Sección Amarilla",
+              "type": "text",
+              "required": false,
+              "placeholder": "Nombre y apellidos",
+              "colSpan": 6,
+              "collection": "single"
+            },
+            {
+              "name": "telWA",
+              "label": "Teléfono de contacto para Sección Amarilla",
+              "type": "tel",
+              "required": false,
+              "placeholder": "Teléfono o WhatsApp para recibir notificaciones. No es público",
+              "colSpan": 6,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 2,
+          "fields": [
+            {
+              "name": "correoTitular",
+              "label": "Correo electrónico del contacto asignado para Sección Amarilla",
+              "type": "email",
+              "required": false,
+              "placeholder": "nombre@empresa.com",
+              "colSpan": 6,
+              "collection": "single"
+            }
+          ]
+        }
+      ],
+      "visibility": {
+        "IC_OPERATOR": true,
+        "IC_EDITOR": true,
+        "CLIENT": true,
+        "AGENT": true,
+        "SUPERVISOR_TELEMARKETING": true
+      },
+      "values": {
+        "nombreTitular": "aldo",
+        "telWA": "5522334455",
+        "correoTitular": "ana.lopez@empresa.com"
+      }
+    },
+    {
+      "code": "observaciones_internas",
+      "schemaVersion": 1,
+      "name": "Observaciones adicionales (Interno ADSA NO LO RECIBE CLIENTE)",
+      "description": "Detalles extra, restricciones o instrucciones internas.",
+      "order": 2,
+      "ui": {
+        "icon": "note_alt",
+        "collapsible": true,
+        "startOpen": false
+      },
+      "optionSets": {},
+      "rows": [
+        {
+          "num": 1,
+          "fields": [
+            {
+              "name": "observaciones",
+              "label": "Observaciones generales",
+              "type": "textarea",
+              "required": false,
+              "placeholder": "Notas adicionales¿",
+              "colSpan": 12,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 2,
+          "fields": [
+            {
+              "name": "notasAgente",
+              "label": "Notas Consultor/Agente",
+              "type": "textarea",
+              "required": false,
+              "placeholder": "Uso interno del equipo comercial.",
+              "colSpan": 12,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 3,
+          "fields": [
+            {
+              "name": "archivosObservaciones",
+              "label": "Archivos Adjuntos (URL)",
+              "type": "url",
+              "required": false,
+              "placeholder": "Pega el enlace a una carpeta de Drive, Dropbox, etc.",
+              "colSpan": 12,
+              "collection": "single"
+            }
+          ]
+        }
+      ],
+      "visibility": {
+        "IC_OPERATOR": true,
+        "IC_EDITOR": true,
+        "CLIENT": false,
+        "AGENT": true,
+        "SUPERVISOR_TELEMARKETING": true
+      },
+      "values": {
+        "observaciones": "Cliente solicita entrega de sitio antes del 15 de marzo.",
+        "notasAgente": "Pendiente confirmar redes oficiales.",
+        "archivosObservaciones": "https://drive.google.com/folder/observaciones123"
+      }
+    },
+    {
+      "code": "contacto_negocio",
+      "schemaVersion": 1,
+      "name": "Información de contacto del negocio",
+      "description": "Información a publicar en todas tus propiedades digitales.",
+      "order": 3,
+      "ui": {
+        "icon": "location_on",
+        "collapsible": true,
+        "startOpen": false
+      },
+      "optionSets": {
+        "categoriasNegocio": {
+          "mode": "api",
+          "source": {
+            "type": "api",
+            "method": "GET",
+            "endpoint": "/api/catalogs/categories",
+            "auth": {
+              "type": "BearerSecret",
+              "secretName": "CATALOG_API_TOKEN"
+            },
+            "valuePath": "$[*].id",
+            "labelPath": "$[*].name"
+          }
+        },
+        "tipoTelefono": {
+          "mode": "static",
+          "items": [
+            {
+              "value": "Fijo",
+              "label": "Fijo"
+            },
+            {
+              "value": "Celular",
+              "label": "Celular"
+            }
+          ]
+        },
+        "formasPago": {
+          "mode": "static",
+          "items": [
+            {
+              "value": "EFECTIVO",
+              "label": "Efectivo"
+            },
+            {
+              "value": "DEPOSITO",
+              "label": "Depósito bancario"
+            },
+            {
+              "value": "VALES",
+              "label": "Vales"
+            },
+            {
+              "value": "CHEQUES",
+              "label": "Cheques"
+            },
+            {
+              "value": "VISA",
+              "label": "Visa"
+            },
+            {
+              "value": "MC",
+              "label": "Master card"
+            },
+            {
+              "value": "AMEX",
+              "label": "Amex"
+            },
+            {
+              "value": "PAYPAL",
+              "label": "Paypal"
+            },
+            {
+              "value": "TRANSFERENCIA",
+              "label": "Transferencia bancaria"
+            },
+            {
+              "value": "OXXO",
+              "label": "Oxxo"
+            },
+            {
+              "value": "SEVEN",
+              "label": "Seven"
+            },
+            {
+              "value": "MERCADO_PAGO",
+              "label": "Mercado pago"
+            }
+          ]
+        },
+        "diasSemana": {
+          "mode": "static",
+          "items": [
+            {
+              "value": "Lunes",
+              "label": "Lunes"
+            },
+            {
+              "value": "Martes",
+              "label": "Martes"
+            },
+            {
+              "value": "Miércoles",
+              "label": "Miércoles"
+            },
+            {
+              "value": "Jueves",
+              "label": "Jueves"
+            },
+            {
+              "value": "Viernes",
+              "label": "Viernes"
+            },
+            {
+              "value": "Sábado",
+              "label": "Sábado"
+            },
+            {
+              "value": "Domingo",
+              "label": "Domingo"
+            }
+          ]
+        }
+      },
+      "rows": [
+        {
+          "num": 1,
+          "fields": [
+            {
+              "name": "nombreNegocio",
+              "label": "Nombre del negocio",
+              "type": "text",
+              "required": true,
+              "placeholder": "Ej. Panadería La Estrella",
+              "colSpan": 6,
+              "collection": "single"
+            },
+            {
+              "name": "categoriaNegocio",
+              "label": "Categoría del negocio",
+              "type": "select",
+              "required": true,
+              "optionsRef": "categoriasNegocio",
+              "placeholder": "Ej. Panadería, Consultoría, Clínica",
+              "colSpan": 6,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 2,
+          "fields": [
+            {
+              "name": "direccion",
+              "label": "Dirección del local o negocio",
+              "type": "text",
+              "required": false,
+              "placeholder": "Comienza a escribir tu dirección para autocompletar...",
+              "colSpan": 12,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 3,
+          "fields": [
+            {
+              "name": "coordenadas",
+              "label": "Coordenadas",
+              "type": "text",
+              "required": false,
+              "placeholder": "Ej. 19.4326, -99.1332",
+              "colSpan": 6,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 4,
+          "fields": [
+            {
+              "name": "noPublicarDireccion",
+              "label": "No quiero publicar mi dirección",
+              "type": "checkbox",
+              "required": false,
+              "placeholder": "",
+              "colSpan": 6,
+              "collection": "single"
+            },
+            {
+              "name": "localidad",
+              "label": "Localidad (para mostrar si la dirección está oculta)",
+              "type": "text",
+              "required": false,
+              "placeholder": "Ej. Colonia Roma, CDMX",
+              "colSpan": 12,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 5,
+          "fields": [
+            {
+              "name": "sucursales",
+              "label": "Sucursales adicionales",
+              "type": "object",
+              "required": false,
+              "placeholder": "",
+              "colSpan": 12,
+              "collection": "array",
+              "itemSchema": {
+                "nombreSucursal": {
+                  "label": "Nombre de la sucursal",
+                  "type": "text",
+                  "required": false,
+                  "placeholder": ""
+                },
+                "telefonoSucursal": {
+                  "label": "Teléfono de la sucursal",
+                  "type": "tel",
+                  "required": false,
+                  "placeholder": ""
+                },
+                "direccionSucursal": {
+                  "label": "Dirección de la sucursal",
+                  "type": "text",
+                  "required": false,
+                  "placeholder": ""
+                }
+              }
+            }
+          ]
+        },
+        {
+          "num": 6,
+          "fields": [
+            {
+              "name": "telsNegocio",
+              "label": "Teléfonos del negocio",
+              "type": "object",
+              "required": false,
+              "placeholder": "",
+              "colSpan": 12,
+              "collection": "array",
+              "itemSchema": {
+                "tipo": {
+                  "label": "Tipo",
+                  "type": "select",
+                  "optionsRef": "tipoTelefono",
+                  "required": false,
+                  "placeholder": ""
+                },
+                "numero": {
+                  "label": "Número",
+                  "type": "tel",
+                  "required": false,
+                  "placeholder": "Ej. 55xxxxxxx"
+                }
+              }
+            },
+            {
+              "name": "waAtencion",
+              "label": "WhatsApp de atención al cliente",
+              "type": "tel",
+              "required": false,
+              "placeholder": "Número para soporte/ventas",
+              "colSpan": 12,
+              "collection": "array"
+            }
+          ]
+        },
+        {
+          "num": 7,
+          "fields": [
+            {
+              "name": "noPublicarDireccion",
+              "label": "No quiero publicar mi dirección",
+              "type": "checkbox",
+              "required": false,
+              "placeholder": "",
+              "colSpan": 12,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 8,
+          "fields": [
+            {
+              "name": "dominioPropio",
+              "label": "Cuento con un dominio propio.",
+              "type": "checkbox",
+              "required": false,
+              "placeholder": "",
+              "colSpan": 4,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 9,
+          "fields": [
+            {
+              "name": "dominio1",
+              "label": "Opción de dominio 1",
+              "type": "text",
+              "required": false,
+              "placeholder": "Opción 1: www.ejemplo.com",
+              "colSpan": 12,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 10,
+          "fields": [
+            {
+              "name": "dominio2",
+              "label": "Opción de dominio 2",
+              "type": "text",
+              "required": false,
+              "placeholder": "Opción 2",
+              "colSpan": 6,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 11,
+          "fields": [
+            {
+              "name": "dominio3",
+              "label": "Opción de dominio 3",
+              "type": "text",
+              "required": false,
+              "placeholder": "Opción 3",
+              "colSpan": 6,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 12,
+          "fields": [
+            {
+              "name": "activarCorreoPersonalizado",
+              "label": "¿Activar correo electrónico personalizado?",
+              "type": "checkbox",
+              "required": false,
+              "placeholder": "",
+              "colSpan": 4,
+              "collection": "single"
+            },
+            {
+              "name": "etiquetaCorreo",
+              "label": "Etiqueta Correo",
+              "type": "text",
+              "required": false,
+              "placeholder": "contacto@",
+              "colSpan": 8,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 13,
+          "fields": [
+            {
+              "name": "horarioGeneral",
+              "label": "Horario de atención (general)",
+              "type": "opening_hours",
+              "required": false,
+              "placeholder": "",
+              "widget": "opening_hours_compact",
+              "schema": {
+                "dias": ["Lunes a Viernes", "Sábado", "Domingo"],
+                "campos": ["abre", "cierra"]
+              },
+              "colSpan": 12,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 14,
+          "fields": [
+            {
+              "name": "horariosPersonalizados",
+              "label": "Horario personalizado",
+              "type": "object",
+              "required": false,
+              "placeholder": "",
+              "colSpan": 12,
+              "collection": "array",
+              "itemSchema": {
+                "dia": {
+                  "label": "Día",
+                  "type": "select",
+                  "optionsRef": "diasSemana",
+                  "required": false,
+                  "placeholder": ""
+                },
+                "abre": {
+                  "label": "Apertura",
+                  "type": "time",
+                  "required": false,
+                  "placeholder": ""
+                },
+                "comidaSale": {
+                  "label": "Comida salida",
+                  "type": "time",
+                  "required": false,
+                  "placeholder": ""
+                },
+                "comidaRegresa": {
+                  "label": "Comida regreso",
+                  "type": "time",
+                  "required": false,
+                  "placeholder": ""
+                },
+                "cierra": {
+                  "label": "Cierre",
+                  "type": "time",
+                  "required": false,
+                  "placeholder": ""
+                }
+              }
+            }
+          ]
+        },
+        {
+          "num": 15,
+          "fields": [
+            {
+              "name": "formasPago",
+              "label": "Formas de pago",
+              "type": "checkbox-group",
+              "required": false,
+              "optionsRef": "formasPago",
+              "placeholder": "",
+              "colSpan": 12,
+              "collection": "array"
+            }
+          ]
+        }
+      ],
+      "visibility": {
+        "IC_OPERATOR": true,
+        "IC_EDITOR": true,
+        "CLIENT": true,
+        "AGENT": true,
+        "SUPERVISOR_TELEMARKETING": true
+      },
+      "values": {
+        "nombreNegocio": "",
+        "categoriaNegocio": "gcid:afghani_restaurant",
+        "direccion": "Av. Reforma 123, Col. Roma Norte, CDMX",
+        "coordenadas": "19.4326,-99.1332",
+        "noPublicarDireccion": false,
+        "localidad": "Roma Norte, CDMX",
+        "sucursales": [
+          {
+            "nombreSucursal": "Sucursal Centro",
+            "telefonoSucursal": "5511223344",
+            "direccionSucursal": "Av. Juárez 55, Centro, CDMX"
+          },
+          {
+            "nombreSucursal": "Sucursal Polanco",
+            "telefonoSucursal": "5544556677",
+            "direccionSucursal": "Ejército Nacional 234, Polanco"
+          }
+        ],
+        "telsNegocio": [
+          {
+            "tipo": "Fijo",
+            "numero": "5555123456"
+          },
+          {
+            "tipo": "Celular",
+            "numero": "5512345678"
+          }
+        ],
+        "waAtencion": ["5512345678", "5599988877"],
+        "dominioPropio": true,
+        "dominio1": "laestrella.com.mx",
+        "dominio2": "panaderialaestrella.com",
+        "dominio3": "",
+        "activarCorreoPersonalizado": true,
+        "etiquetaCorreo": "contacto@",
+        "horarioGeneral": {
+          "Lunes a Viernes": {
+            "abre": "08:00",
+            "cierra": "19:00"
+          },
+          "Sábado": {
+            "abre": "08:00",
+            "cierra": "14:00"
+          },
+          "Domingo": {
+            "abre": "",
+            "cierra": ""
+          }
+        },
+        "horariosPersonalizados": [
+          {
+            "dia": "Lunes",
+            "abre": "08:00",
+            "comidaSale": "14:00",
+            "comidaRegresa": "15:00",
+            "cierra": "19:00"
+          },
+          {
+            "dia": "Viernes",
+            "abre": "08:00",
+            "comidaSale": "14:30",
+            "comidaRegresa": "15:30",
+            "cierra": "18:00"
+          }
+        ],
+        "formasPago": ["EFECTIVO", "VISA", "MC", "AMEX", "TRANSFERENCIA"]
+      }
+    },
+    {
+      "code": "presencia_digital",
+      "schemaVersion": 1,
+      "name": "Presencia digital",
+      "description": "Comparte tus canales actuales y tu preferencia de dominio.",
+      "order": 4,
+      "ui": {
+        "icon": "public",
+        "collapsible": true,
+        "startOpen": false
+      },
+      "optionSets": {
+        "otrasRedes": {
+          "mode": "static",
+          "items": [
+            {
+              "value": "Sitioweb",
+              "label": "Sitio web"
+            },
+            {
+              "value": "YouTube",
+              "label": "YouTube"
+            },
+            {
+              "value": "TikTok",
+              "label": "TikTok"
+            },
+            {
+              "value": "TwitterX",
+              "label": "Twitter / X"
+            },
+            {
+              "value": "Linkedin",
+              "label": "LinkedIn"
+            },
+            {
+              "value": "Telegram",
+              "label": "Telegram"
+            },
+            {
+              "value": "Otro",
+              "label": "Otro"
+            }
+          ]
+        }
+      },
+      "rows": [
+        {
+          "num": 1,
+          "fields": [
+            {
+              "name": "fanpage",
+              "label": "Link Fanpage",
+              "type": "url",
+              "required": false,
+              "placeholder": "https://facebook.com/tu-pagina",
+              "colSpan": 6,
+              "collection": "single"
+            },
+            {
+              "name": "instagram",
+              "label": "Link Instagram",
+              "type": "url",
+              "required": false,
+              "placeholder": "https://instagram.com/tu-cuenta",
+              "colSpan": 6,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 2,
+          "fields": [
+            {
+              "name": "gbp",
+              "label": "Link Google Business Profile (Mapa)",
+              "type": "url",
+              "required": false,
+              "placeholder": "URL de tu negocio en Google Maps",
+              "colSpan": 6,
+              "collection": "single"
+            },
+            {
+              "name": "gmail",
+              "label": "Cuenta Gmail",
+              "type": "email",
+              "required": false,
+              "placeholder": "tuusuario@gmail.com",
+              "colSpan": 6,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 5,
+          "fields": [
+            {
+              "name": "otrasRedes",
+              "label": "Otras Redes Sociales",
+              "type": "object",
+              "required": false,
+              "placeholder": "",
+              "colSpan": 12,
+              "collection": "array",
+              "itemSchema": {
+                "tipo": {
+                  "label": "Red social",
+                  "type": "select",
+                  "optionsRef": "otrasRedes",
+                  "required": false,
+                  "placeholder": ""
+                },
+                "url": {
+                  "label": "URL",
+                  "type": "url",
+                  "required": false,
+                  "placeholder": "Pega la URL completa (https://...)"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "visibility": {
+        "IC_OPERATOR": true,
+        "IC_EDITOR": true,
+        "CLIENT": true,
+        "AGENT": true,
+        "SUPERVISOR_TELEMARKETING": true
+      },
+      "values": {
+        "fanpage": "https://facebook.com/panaderialaestrella",
+        "instagram": "https://instagram.com/panaderialaestrella",
+        "gbp": "https://goo.gl/maps/negocio123",
+        "gmail": "contacto.laestrella@gmail.com",
+        "otrasRedes": [
+          {
+            "tipo": "YouTube",
+            "url": "https://youtube.com/c/LaEstrella"
+          },
+          {
+            "tipo": "TikTok",
+            "url": "https://www.tiktok.com/@laestrella"
+          },
+          {
+            "tipo": "Linkedin",
+            "url": "https://linkedin.com/company/laestrella"
+          }
+        ]
+      }
+    },
+    {
+      "code": "informacion_contenido",
+      "schemaVersion": 1,
+      "name": "Información para contenido",
+      "description": "Datos para generar copys y contenido del negocio.",
+      "order": 5,
+      "ui": {
+        "icon": "description",
+        "collapsible": true,
+        "startOpen": false
+      },
+      "optionSets": {},
+      "rows": [
+        {
+          "num": 1,
+          "fields": [
+            {
+              "name": "descripcionnegocio",
+              "label": "Descripción del negocio",
+              "type": "textarea",
+              "required": false,
+              "placeholder": "¿Cómo describirías tu negocio en una frase corta y clara?",
+              "colSpan": 12,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 2,
+          "fields": [
+            {
+              "name": "infoGeneralNegocio",
+              "label": "Productos o servicios que ofreces (entrada)",
+              "type": "textarea",
+              "required": false,
+              "placeholder": "Escribe un servicio y presiona coma (,) para agregarlo.",
+              "colSpan": 12,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 3,
+          "fields": [
+            {
+              "name": "productosServicios",
+              "label": "Productos y servicios (tags)",
+              "type": "string",
+              "required": false,
+              "placeholder": "",
+              "colSpan": 12,
+              "collection": "array"
+            }
+          ]
+        },
+        {
+          "num": 4,
+          "fields": [
+            {
+              "name": "productoslistado",
+              "label": "¿Cuál es el servicio o producto que quieres destacar?",
+              "type": "textarea",
+              "required": false,
+              "placeholder": "¿Cuál es tu producto/servicio estrella (más solicitado o rentable)?          ¿Cómo crees que hoy te buscan en internet tus clientes?",
+              "colSpan": 12,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 5,
+          "fields": [
+            {
+              "name": "infoLocalidadNegocio",
+              "label": "Localidad en donde brindas tus servicios",
+              "type": "textarea",
+              "required": false,
+              "placeholder": "Ej. Cobertura: CDMX y EdoMex; si es regional, indica localidad principal y alcance",
+              "colSpan": 12,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 6,
+          "fields": [
+            {
+              "name": "infoadicionaldeNegocio",
+              "label": "Información adicional de tu Negocio",
+              "type": "textarea",
+              "required": false,
+              "placeholder": "Ej. Misión y visión, Marcas, Testimoniales, Historia",
+              "colSpan": 12,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 7,
+          "fields": [
+            {
+              "name": "infoTonomensaje",
+              "label": "Tono y mensaje",
+              "type": "textarea",
+              "required": false,
+              "placeholder": "Describe cómo te gustaría comunicarte: formal, divertido, casual, informativo, emocional, etc.",
+              "colSpan": 12,
+              "collection": "single"
+            }
+          ]
+        }
+      ],
+      "visibility": {
+        "IC_OPERATOR": true,
+        "IC_EDITOR": true,
+        "CLIENT": true,
+        "AGENT": true,
+        "SUPERVISOR_TELEMARKETING": true
+      },
+      "values": {
+        "descripcionnegocio": "Panadería artesanal con más de 20 años de tradición, especializada en pan dulce y salado.",
+        "infoGeneralNegocio": "Panaderia artesanal, pasteles personalizados, pan de temporada.",
+        "productosServicios": [
+          "Conchas",
+          "Cuernitos",
+          "Roles de canela",
+          "Baguettes",
+          "Pasteles personalizados"
+        ],
+        "productoslistado": "Concha tradicional, roles de canela, pasteles personalizados.",
+        "infoLocalidadNegocio": "Col. Roma, Condesa, Del Valle y alrededores.",
+        "infoadicionaldeNegocio": "Todos los productos se hornean diariamente. Contamos con reparto y pedidos especiales.",
+        "infoTonomensaje": "Cordial, cercano, familiar y artesanal."
+      }
+    },
+    {
+      "code": "configuracion_redes",
+      "schemaVersion": 1,
+      "name": "Configuración Redes Sociales",
+      "description": "Perfil de audiencia y estrategia de publicación.",
+      "order": 6,
+      "ui": {
+        "icon": "share",
+        "collapsible": true,
+        "startOpen": false
+      },
+      "optionSets": {
+        "redesActivas": {
+          "mode": "static",
+          "items": [
+            {
+              "value": "Facebook",
+              "label": "Facebook"
+            },
+            {
+              "value": "Instagram",
+              "label": "Instagram"
+            }
+          ]
+        },
+        "ctaPreferido": {
+          "mode": "static",
+          "items": [
+            {
+              "value": "WhatsApp",
+              "label": "WhatsApp"
+            },
+            {
+              "value": "Formulario",
+              "label": "Formulario"
+            },
+            {
+              "value": "Llamada",
+              "label": "Llamada"
+            },
+            {
+              "value": "Reserva",
+              "label": "Reserva"
+            },
+            {
+              "value": "Compra",
+              "label": "Compra"
+            }
+          ]
+        },
+        "activarAgenda": {
+          "mode": "static",
+          "items": [
+            {
+              "value": "no",
+              "label": "No"
+            },
+            {
+              "value": "si_google",
+              "label": "Sí (Google Calendar)"
+            },
+            {
+              "value": "si_calendly",
+              "label": "Sí (Calendly)"
+            },
+            {
+              "value": "si_otro",
+              "label": "Sí (Otro sistema)"
+            }
+          ]
+        }
+      },
+      "rows": [
+        {
+          "num": 1,
+          "fields": [
+            {
+              "name": "bioSocial",
+              "label": "Descripción breve para Instagram, Facebook y listados",
+              "type": "textarea",
+              "required": false,
+              "placeholder": "Máx. 150¿160 caracteres. Incluye palabras clave locales y un CTA claro.",
+              "colSpan": 12,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 2,
+          "fields": [
+            {
+              "name": "publicoObjetivo",
+              "label": "Público objetivo",
+              "type": "textarea",
+              "required": false,
+              "placeholder": "Ej. Empresas, Construcción sostenible, Energías renovables¿ (separa por comas)",
+              "colSpan": 12,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 3,
+          "fields": [
+            {
+              "name": "intereses",
+              "label": "Intereses",
+              "type": "textarea",
+              "required": false,
+              "placeholder": "Describe los intereses o temas afines de tu público. Ej. decoración, salud, deportes, educación",
+              "colSpan": 12,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 4,
+          "fields": [
+            {
+              "name": "temasPosteo",
+              "label": "Temas principales de los posteos",
+              "type": "textarea",
+              "required": false,
+              "placeholder": "Comparte los temas clave: consejos, promociones, productos destacados, historias de clientes¿",
+              "colSpan": 12,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 5,
+          "fields": [
+            {
+              "name": "diasPosteo",
+              "label": "Días de publicación de posteos",
+              "type": "text",
+              "required": false,
+              "placeholder": "Ej. Lun, Mié, Vie",
+              "colSpan": 6,
+              "collection": "single"
+            },
+            {
+              "name": "redesActivas",
+              "label": "Redes Sociales Activas",
+              "type": "checkbox-group",
+              "required": false,
+              "optionsRef": "redesActivas",
+              "placeholder": "",
+              "colSpan": 6,
+              "collection": "array"
+            }
+          ]
+        },
+        {
+          "num": 6,
+          "fields": [
+            {
+              "name": "ctaPreferido",
+              "label": "Llamado a la acción preferido",
+              "type": "select",
+              "required": false,
+              "optionsRef": "ctaPreferido",
+              "placeholder": "",
+              "colSpan": 12,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 7,
+          "fields": [
+            {
+              "name": "activarAgenda",
+              "label": "¿Activar agenda?",
+              "type": "select",
+              "required": false,
+              "optionsRef": "activarAgenda",
+              "placeholder": "",
+              "colSpan": 12,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 8,
+          "fields": [
+            {
+              "name": "objetivos",
+              "label": "Objetivos del negocio",
+              "type": "textarea",
+              "required": false,
+              "placeholder": "",
+              "colSpan": 12,
+              "collection": "single"
+            }
+          ]
+        }
+      ],
+      "visibility": {
+        "IC_OPERATOR": true,
+        "IC_EDITOR": true,
+        "CLIENT": true,
+        "AGENT": true,
+        "SUPERVISOR_TELEMARKETING": true
+      },
+      "values": {
+        "bioSocial": "Panadería artesanal con panes recién horneados todos los días. ¡Visítanos!",
+        "publicoObjetivo": "Familias, oficinistas y comercios de zona Roma-Condesa.",
+        "intereses": "Gastronomía, postres, recetas, pan artesanal.",
+        "temasPosteo": "Promociones, productos del día, recetas, historias del pan.",
+        "diasPosteo": "Lun, Mié, Vie",
+        "redesActivas": ["Facebook", "Instagram"],
+        "ctaPreferido": "WhatsApp",
+        "activarAgenda": "no",
+        "objetivos": "Aumentar las visitas a la sucursal y pedidos por WhatsApp en un 25%."
+      }
+    },
+    {
+      "code": "tu_imagen_y_estilo",
+      "schemaVersion": 1,
+      "name": "Tu imagen y estilo",
+      "description": "Comparte los elementos gráficos que representan a tu marca. Con esta información podremos diseñar contenido alineado a tu estilo y personalidad visual.",
+      "order": 7,
+      "ui": {
+        "icon": "palette",
+        "collapsible": true,
+        "startOpen": false
+      },
+      "optionSets": {},
+      "rows": [
+        {
+          "num": 1,
+          "fields": [
+            {
+              "name": "logo",
+              "usage": "LOGO",
+              "label": "Logotipo (imagen)",
+              "type": "file",
+              "required": false,
+              "placeholder": "",
+              "colSpan": 6,
+              "collection": "single"
+            },
+            {
+              "name": "colores",
+              "usage": "",
+              "label": "Colores corporativos",
+              "type": "text",
+              "required": false,
+              "placeholder": "Detalla el color o indica el código de color Hex/RGB/Pantone",
+              "colSpan": 6,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 2,
+          "fields": [
+            {
+              "name": "tipografia",
+              "usage": "",
+              "label": "Tipografía",
+              "type": "text",
+              "required": false,
+              "placeholder": "Familias y usos",
+              "colSpan": 6,
+              "collection": "single"
+            },
+            {
+              "name": "fotosNegocio",
+              "usage": "BUSINESS_PHOTO",
+              "label": "Fotografías del negocio",
+              "type": "file",
+              "required": false,
+              "placeholder": "",
+              "colSpan": 6,
+              "collection": "array"
+            }
+          ]
+        },
+        {
+          "num": 3,
+          "fields": [
+            {
+              "name": "imgProductos",
+              "usage": "PRODUCT_IMAGE",
+              "label": "Imágenes de productos",
+              "type": "file",
+              "required": false,
+              "placeholder": "",
+              "colSpan": 6,
+              "collection": "array"
+            },
+            {
+              "name": "imgEquipo",
+              "usage": "TEAM_IMAGE",
+              "label": "Imágenes del personal / equipo",
+              "type": "file",
+              "required": false,
+              "placeholder": "",
+              "colSpan": 6,
+              "collection": "array"
+            }
+          ]
+        },
+        {
+          "num": 4,
+          "fields": [
+            {
+              "name": "otrasImg",
+              "usage": "OTHER_IMAGE",
+              "label": "Otras imágenes",
+              "type": "file",
+              "required": false,
+              "placeholder": "",
+              "colSpan": 6,
+              "collection": "array"
+            },
+            {
+              "name": "Driveimagenes",
+              "usage": "",
+              "label": "URL de Drive o servicio en línea en donde alojes tus fotos",
+              "type": "url",
+              "required": false,
+              "placeholder": "enlace de google drive, microsoft onedrive u otros",
+              "colSpan": 6,
+              "collection": "single"
+            }
+          ]
+        }
+      ],
+      "visibility": {
+        "IC_OPERATOR": true,
+        "IC_EDITOR": true,
+        "CLIENT": true,
+        "AGENT": true,
+        "SUPERVISOR_TELEMARKETING": true
+      },
+      "values": {
+        "logo": "logo_laestrella.png",
+        "colores": "#FFC107, #8B4513",
+        "tipografia": "Montserrat para títulos, Open Sans para texto.",
+        "fotosNegocio": ["fachada.jpg", "interior1.jpg"],
+        "imgProductos": ["conchas.jpg", "roles.jpg", "baguettes.jpg"],
+        "imgEquipo": ["equipo1.jpg", "equipo2.jpg"],
+        "otrasImg": ["promo_navidad.png"],
+        "Driveimagenes": "https://drive.google.com/drive/folders/imagenes123"
+      }
+    },
+    {
+      "code": "contenido_optimizado",
+      "schemaVersion": 1,
+      "name": "Contenido Optimizado ",
+      "description": "Pega los enlaces (Google Drive, Dropbox, etc.) a los documentos y textos útiles.",
+      "order": 8,
+      "ui": {
+        "icon": "article",
+        "collapsible": true,
+        "startOpen": false
+      },
+      "optionSets": {},
+      "rows": [
+        {
+          "num": 1,
+          "fields": [
+            {
+              "name": "urlSitio",
+              "label": "Contenido del sitio (URL)",
+              "type": "url",
+              "required": false,
+              "placeholder": "Pega el enlace al documento...",
+              "colSpan": 6,
+              "collection": "single"
+            },
+            {
+              "name": "plantilla",
+              "label": "Plantilla para Sitio",
+              "type": "url",
+              "required": false,
+              "placeholder": "Indica la plantilla o referencia...",
+              "colSpan": 6,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 2,
+          "fields": [
+            {
+              "name": "urlCopys",
+              "label": "Copys RRSS (URL)",
+              "type": "url",
+              "required": false,
+              "placeholder": "Pega el enlace al documento...",
+              "colSpan": 6,
+              "collection": "single"
+            },
+            {
+              "name": "urlplantilla",
+              "label": "Plantilla para parrilla o referencia (URL)",
+              "type": "url",
+              "required": false,
+              "placeholder": "Pega el enlace al PDF...",
+              "colSpan": 6,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 3,
+          "fields": [
+            {
+              "name": "urlAviso",
+              "label": "Aviso de Privacidad (URL)",
+              "type": "url",
+              "required": false,
+              "placeholder": "Pega el enlace al PDF...",
+              "colSpan": 6,
+              "collection": "single"
+            },
+            {
+              "name": "urlTerminos",
+              "label": "Aviso de Términos y condiciones (URL)",
+              "type": "url",
+              "required": false,
+              "placeholder": "Pega el enlace al PDF...",
+              "colSpan": 6,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 4,
+          "fields": [
+            {
+              "name": "urlListaProductos",
+              "label": "Lista de productos o servicios (URL)",
+              "type": "url",
+              "required": false,
+              "placeholder": "Pega el enlace al Excel/PDF...",
+              "colSpan": 12,
+              "collection": "single"
+            }
+          ]
+        },
+        {
+          "num": 5,
+          "fields": [
+            {
+              "name": "urlCategorias",
+              "label": "Categorías de catálogo (URL)",
+              "type": "url",
+              "required": false,
+              "placeholder": "Pega el enlace al documento...",
+              "colSpan": 12,
+              "collection": "single"
+            }
+          ]
+        }
+      ],
+      "visibility": {
+        "IC_OPERATOR": true,
+        "IC_EDITOR": true,
+        "CLIENT": false,
+        "AGENT": true,
+        "SUPERVISOR_TELEMARKETING": true
+      },
+      "values": {
+        "urlSitio": "https://drive.google.com/file/sitio123",
+        "plantilla": "https://drive.google.com/file/plantilla123",
+        "urlCopys": "https://drive.google.com/file/copys123",
+        "urlplantilla": "https://drive.google.com/file/rrss123",
+        "urlAviso": "https://drive.google.com/file/aviso123",
+        "urlTerminos": "https://drive.google.com/file/terminos123",
+        "urlListaProductos": "https://drive.google.com/file/lista123",
+        "urlCategorias": "https://drive.google.com/file/categorias123"
+      }
+    }
+  ]
+}

@@ -114,6 +114,11 @@
   background: #bbf7d0;
 }
 
+.sidebar__status.--error {
+  border-color: #ef4444;
+  background: #fee2e2;
+}
+
 .sidebar__item-head {
   display: flex;
   align-items: center;
