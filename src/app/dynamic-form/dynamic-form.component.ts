@@ -10,8 +10,10 @@ import {
   ReactiveFormsModule,
   Validators
 } from '@angular/forms';
+import { FieldValidatorFactory } from '../utils/field-validator.factory';
 import { getControl, getFieldOptions, optionKey, OptionValue, toggleOption } from '../utils';
 import { SaveBlocksRequest } from '../services/request/save-blocks.request';
+import { PayloadBuilder } from '../utils/payload.builder';
 import {
   BlockUI,
   BusinessForm,
@@ -112,7 +114,6 @@ export class DynamicFormComponent implements OnChanges {
   form!: FormGroup;
   private readonly fallbackActorType = 'AGENT';
   private readonly fallbackActorId = 'usuario.demo';
-  private readonly urlPattern = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/i;
   blocks: BlockView[] = [];
   optionsMap: Record<string, OptionItemInterface[]> = {};
   apiOptionsCache: Record<string, Observable<OptionItemInterface[]>> = {};
@@ -121,7 +122,14 @@ export class DynamicFormComponent implements OnChanges {
   private pendingSelectValues: Record<string, unknown> = {};
   getControl = getControl;
 
+<<<<<<< HEAD
   constructor(private fb: FormBuilder) { }
+=======
+  constructor(
+    private fb: FormBuilder,
+    private validatorFactory: FieldValidatorFactory
+  ) {}
+>>>>>>> 1e31f03 (implmentando pattrones de diseño)
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['schema']?.currentValue) {
@@ -361,19 +369,9 @@ export class DynamicFormComponent implements OnChanges {
       label: fieldDef.label || this.toLabel(fieldDef.name)
     };
 
-    const validators: ValidatorFn[] = [];
-    if (fieldDef.required) {
-      validators.push(fieldDef.type === 'opening_hours' ? this.openingHoursRequiredValidator() : Validators.required);
-    }
-    if (fieldDef.type === 'email') {
-      validators.push(Validators.email);
-    }
-    if (fieldDef.type === 'url') {
-      validators.push(Validators.pattern(this.urlPattern));
-    }
-    if (fieldDef.pattern) {
-      validators.push(Validators.pattern(fieldDef.pattern));
-    }
+    const validators = this.validatorFactory.build(fieldDef, {
+      requiredValidator: fieldDef.type === 'opening_hours' ? this.openingHoursRequiredValidator() : undefined
+    });
 
     const control = this.fb.control(value, validators);
 
@@ -758,16 +756,12 @@ export class DynamicFormComponent implements OnChanges {
   }
 
   private buildPayload(): SaveBlocksRequest {
-    const blocks = this.getBlocksWithCurrentValues().map((block) => ({
-      code: block.code,
-      values: block.values ?? {}
-    }));
+    const builder = new PayloadBuilder(
+      this.schema.actorType || this.fallbackActorType,
+      this.schema.actorId || this.fallbackActorId
+    );
 
-    return {
-      actorType: this.schema.actorType || this.fallbackActorType,
-      actorId: this.schema.actorId || this.fallbackActorId,
-      blocks
-    };
+    return builder.withBlocks(this.getBlocksWithCurrentValues()).build();
   }
 
   private getBlocksWithCurrentValues(): BusinessFormBlock[] {
