@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
-import { FormField, OptionItem, OptionSet } from '../../models/form-schema.model';
+import { FormField, OptionSet } from '../../models/form-schema.model';
+import { OptionItemInterface } from '../../dynamic-form/interface/OptionItem.intreface';
 
 type DayOption = { value: string; label: string; index: number };
 type ItemSchema = NonNullable<FormField['itemSchema']>;
@@ -167,7 +168,7 @@ export class FieldOpeningHoursAdvancedComponent implements OnChanges {
     return this.timeKeys.slice(2, 4);
   }
 
-  get dayOptionSet(): OptionItem[] {
+  get dayOptionSet(): OptionItemInterface[] {
     const dayRef = this.field.itemSchema?.['dia']?.optionsRef;
     const optionSet: OptionSet | undefined = dayRef ? this.optionSets?.[dayRef] : undefined;
     return optionSet?.items ?? [];
