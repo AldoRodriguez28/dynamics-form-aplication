@@ -74,6 +74,14 @@ export class FieldArrayPrimitiveComponent {
   }
 
   private controlValidators() {
-    return this.field.required ? [Validators.required] : [];
+    const validators = this.field.required ? [Validators.required] : [];
+    const type = this.itemType || this.field.type;
+    if (type === 'email') {
+      validators.push(Validators.email);
+    }
+    if (type === 'url') {
+      validators.push(Validators.pattern(this.urlPattern));
+    }
+    return validators;
   }
 }

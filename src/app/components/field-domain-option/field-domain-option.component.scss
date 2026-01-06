@@ -114,6 +114,13 @@
   outline: none;
   border-color: #0f172a;
   box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.12);
+  background: #fff;
+}
+
+.field-control.ng-invalid.ng-touched {
+  border-color: #ef4444;
+  background: #fef2f2;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.16);
 }
 
 .check-btn {

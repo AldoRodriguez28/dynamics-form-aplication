@@ -112,6 +112,7 @@ export class DynamicFormComponent implements OnChanges {
   form!: FormGroup;
   private readonly fallbackActorType = 'AGENT';
   private readonly fallbackActorId = 'usuario.demo';
+  private readonly urlPattern = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/i;
   blocks: BlockView[] = [];
   optionsMap: Record<string, OptionItemInterface[]> = {};
   apiOptionsCache: Record<string, Observable<OptionItemInterface[]>> = {};
@@ -363,6 +364,15 @@ export class DynamicFormComponent implements OnChanges {
     const validators: ValidatorFn[] = [];
     if (fieldDef.required) {
       validators.push(fieldDef.type === 'opening_hours' ? this.openingHoursRequiredValidator() : Validators.required);
+    }
+    if (fieldDef.type === 'email') {
+      validators.push(Validators.email);
+    }
+    if (fieldDef.type === 'url') {
+      validators.push(Validators.pattern(this.urlPattern));
+    }
+    if (fieldDef.pattern) {
+      validators.push(Validators.pattern(fieldDef.pattern));
     }
 
     const control = this.fb.control(value, validators);
