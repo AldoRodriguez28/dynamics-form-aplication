@@ -122,14 +122,10 @@ export class DynamicFormComponent implements OnChanges {
   private pendingSelectValues: Record<string, unknown> = {};
   getControl = getControl;
 
-<<<<<<< HEAD
-  constructor(private fb: FormBuilder) { }
-=======
   constructor(
     private fb: FormBuilder,
     private validatorFactory: FieldValidatorFactory
   ) {}
->>>>>>> 1e31f03 (implmentando pattrones de diseño)
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['schema']?.currentValue) {
