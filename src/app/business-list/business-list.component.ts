@@ -24,6 +24,7 @@ export class BusinessListComponent {
   private readonly tokenStore = inject(TokenStorageService);
 
   clientId: string | null = null;
+  clientName:string | null = null;
   errorCode: '' | 'CLIENT_NOT_FOUND' | 'GENERIC' = '';
 
   clientData$: Observable<LegacyBusinessInterface | null> = EMPTY;
@@ -56,6 +57,7 @@ export class BusinessListComponent {
       map(() => {
 
         this.clientId = this.tokenStore.getAdvertiserId();
+        this.clientName = this.tokenStore.getAdvertiserName();
         return this.clientId;
       }),
       switchMap(clientId => {

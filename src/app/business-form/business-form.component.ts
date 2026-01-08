@@ -1,12 +1,13 @@
 import { CommonModule, Location } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, tap } from 'rxjs';
+import { map, Observable, tap } from 'rxjs';
 import Swal from 'sweetalert2';
 import { BusinessService } from '../services/business.service';
 import { BusinessForm, FormStatus } from '../models/form-schema.model';
 import { DynamicFormComponent } from '../dynamic-form/dynamic-form.component';
 import { SaveBlocksRequest } from '../services/request/save-blocks.request';
+import { BusinessMapping } from '../mapping/business/business.map';
 
 @Component({
   selector: 'app-business-form',
@@ -24,8 +25,12 @@ export class BusinessFormComponent {
   clientId = this.route.snapshot.paramMap.get('idClient') ?? '';
   businessId = this.route.snapshot.paramMap.get('businessId') ?? '';
   formSchema$: Observable<BusinessForm> = this.businessService
-    .getBusinessForm(this.businessId)
-    .pipe(tap(data => console.log('Business form response:', data)));
+  .getbusinessesById(this.businessId)
+  .pipe(
+    tap(res => console.log('Business form response:', res)),
+    map(res => BusinessMapping.MapBlocksToBusinessForm(res,this.commercialName))
+  );
+
   commercialName =
     this.router.getCurrentNavigation()?.extras.state?.['commercialName'] ??
     history.state?.commercialName ??
