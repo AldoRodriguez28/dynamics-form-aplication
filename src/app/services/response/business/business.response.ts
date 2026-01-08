@@ -1,11 +1,13 @@
+import { ExternalReferenceResponse } from "./external-reference.response";
 
 export class BusinessResponse {
   businessId?: number;
-  BusinessVersion?: number;
+  businessVersion?: number;
   commercialName!: string;
   categoryCode!: string;
   townCode!: string;
   state!: string;
   lastUpdate?: string | Date;
-  ExternalData!: string;
+  externalData!: string;
+  externalReference?:ExternalReferenceResponse
 }

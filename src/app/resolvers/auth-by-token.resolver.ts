@@ -23,6 +23,9 @@ export const authByTokenResolver: ResolveFn<boolean> = (route) => {
             const payload = decodeJwtPayload(res.bearerToken);
             const advertiserId = payload?.['bcm.advertiser_id'];
             if (advertiserId != null) storage.setAdvertiserId(String(advertiserId));
+
+            const advertiserName = payload?.['bcm.advertiser_name'];
+            if (advertiserName != null) storage.setAdvertiserName(String(advertiserName));
         }),
         map(() => true),
         catchError((err) => {

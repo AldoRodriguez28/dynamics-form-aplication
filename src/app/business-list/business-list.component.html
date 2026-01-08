@@ -4,8 +4,7 @@
     <div>
       <p class="eyebrow">Cliente</p>
       <!-- En legacy no viene nombre; mostramos '-' -->
-      <h1 class="bussine-name">{{ '-' }}</h1>
-
+      <h1 class="bussine-name">{{ clientName || '-' }}</h1>
       <!-- ID desde legacy; si faltara, usa this.clientId -->
       <p class="meta">Advertiser ID: {{ clientData.legacyAdvertiserId || clientId || '-' }}</p>
     </div>

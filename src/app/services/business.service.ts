@@ -10,6 +10,7 @@ import { LegacyBusinessResponse } from './response/business/legacy-business.resp
 import { SaveBlocksRequest } from './request/save-blocks.request';
 import { CreateBusinesessResponse } from './response/business/create-businesses.response';
 import { ResolveTokenRequest } from './request/resolve-token.request';
+import { BusinessDetailWithBlocksResponse } from './response/business/Business-detail-withBlocks.response';
 
 export type DomainCheckResponse = string | string[] | { message?: string };
 
@@ -17,7 +18,7 @@ export type DomainCheckResponse = string | string[] | { message?: string };
   providedIn: 'root'
 })
 export class BusinessService {
-  private readonly baseUrl = environment.API_URI;
+  private readonly baseUrl = `${environment.API_URI}/v1` ;
   constructor(
     private http: HttpClient,
     private authHeader: AuthHeaderService
@@ -25,16 +26,16 @@ export class BusinessService {
 
 
   getLegacy(businessId: string | number): Observable<LegacyBusinessResponse> {
-    const url = `${this.baseUrl}/business/legacy/${businessId}`;
+    const url = `${this.baseUrl}/legacy-advertisers/${businessId}/businesses`;
     return this.http.get<LegacyBusinessResponse>(url, {
       headers: this.authHeader.build()
     });
   }
 
-  /** GET /business/{id}/blocks con Authorization: Bearer <token> */
-  getBlocks(businessId: string | number): Observable<BlocksResponse> {
-    const url = `${this.baseUrl}/business/${businessId}/blocks`;
-    return this.http.get<BlocksResponse>(url, { headers: this.authHeader.build() });
+  /** GET /businesses/{id} con Authorization: Bearer <token> */
+  getbusinessesById(businessId: string | number): Observable<BlocksResponse> {
+    const url = `${this.baseUrl}/businesses/${businessId}`;
+    return this.http.get<BusinessDetailWithBlocksResponse>(url, { headers: this.authHeader.build() });
   }
 
    /**
@@ -43,7 +44,7 @@ export class BusinessService {
    * Retorna: boolean
    */
   saveBlocks(businessId: string | number, request: SaveBlocksRequest): Observable<boolean> {
-    const url = `${this.baseUrl}/business/${businessId}/blocks`;
+    const url = `${this.baseUrl}/businesses/${businessId}/blocks`;
     return this.http.put<boolean>(url, request, {
       headers: this.authHeader.build()
     });
@@ -55,7 +56,7 @@ export class BusinessService {
    * ResolveTokenRequest para request espera: { token: 'ssssss'}.
    */
   initialize(request: ResolveTokenRequest): Observable<CreateBusinesessResponse> {
-    const url = `${this.baseUrl}/business/initialize`;
+    const url = `${this.baseUrl}/businesses/initialize`;
     return this.http.post<CreateBusinesessResponse>(url, request, {
       headers: this.authHeader.build()
     });
@@ -67,7 +68,7 @@ export class BusinessService {
    * Retorna: CreateBusinesessResponse
    */
   initializeToken(request: ResolveTokenRequest): Observable<CreateBusinesessResponse> {
-    const url = `${this.baseUrl}/business/initialize-token`;
+    const url = `${this.baseUrl}/businesses/initialize-token`;
     return this.http.post<CreateBusinesessResponse>(url, request, {
       headers: this.authHeader.build()
     });
@@ -86,16 +87,6 @@ export class BusinessService {
         });
       })
     );
-  }
-
-  /**
-   * Obtiene el esquema de formulario para un negocio específico (mock local).
-   */
-  getBusinessForm(businessId: string | number): Observable<BusinessForm> {
-    const url = `${this.baseUrl}/business/${businessId}/blocks`;
-    return this.http.get<BusinessForm>(url, {
-      headers: this.authHeader.build()
-    });
   }
 
   /**

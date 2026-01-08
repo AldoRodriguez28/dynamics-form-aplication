@@ -4,6 +4,7 @@ import { Injectable } from '@angular/core';
 export class TokenStorageService {
   private static readonly STORAGE_KEY = 'KEY';
   private static readonly ADVERTISER_KEY = 'ADVERTISER_KEY';
+  private static readonly ADVERTISER_NAME = 'ADVERTISER_NAME';
 
   /** Guarda el token en localStorage */
   setToken(token: string): void {
@@ -29,5 +30,15 @@ export class TokenStorageService {
   /** Lee advertiser_id */
   getAdvertiserId(): string | null {
     return localStorage.getItem(TokenStorageService.ADVERTISER_KEY);
+  }
+
+   /** Guarda advertiser_name */
+  setAdvertiserName(advertiserName: string): void {
+    localStorage.setItem(TokenStorageService.ADVERTISER_NAME, advertiserName);
+  }
+
+  /** Lee advertiser_NAME */
+  getAdvertiserName(): string | null {
+    return localStorage.getItem(TokenStorageService.ADVERTISER_NAME);
   }
 }
