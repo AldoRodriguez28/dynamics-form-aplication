@@ -12,9 +12,11 @@
 
   <div class="fps-pills">
     @for (tag of items; track tag; let idx = $index) {
-    <button type="button" class="fps-pill fps-pill--active" (click)="toggleTag(tag)">
+    <button type="button" class="fps-pill fps-pill--active" (click)="toggleTag(tag)" [disabled]="readOnly">
       <span>{{ tag }}</span>
+      @if (!readOnly) {
       <span class="fps-pill__close" (click)="removeTag(idx); $event.stopPropagation()">×</span>
+      }
     </button>
     }
   </div>
@@ -25,8 +27,9 @@
       type="text"
       [placeholder]="field.placeholder || 'Escribe y presiona agregar...'"
       [(ngModel)]="newTag"
+      [disabled]="readOnly"
       (keydown.enter)="$event.preventDefault(); addTag()"
     />
-    <button type="button" class="fps-add" (click)="addTag()">Agregar</button>
+    <button type="button" class="fps-add" (click)="addTag()" [disabled]="readOnly">Agregar</button>
   </div>
 </div>

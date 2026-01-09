@@ -28,7 +28,7 @@
 
   @if (formSchema$ | async; as schema) {
   <div class="card">
-    <app-dynamic-form [schema]="schema" (submitForm)="handleSubmit($event)" />
+    <app-dynamic-form [schema]="schema" [userRole]="userRole" (submitForm)="handleSubmit($event)" />
   </div>
   } @else {
   <p class="loading">Cargando esquema...</p>

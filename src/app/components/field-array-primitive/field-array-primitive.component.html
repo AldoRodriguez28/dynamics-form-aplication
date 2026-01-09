@@ -12,9 +12,11 @@
     </div>
     <div class="label-actions">
       <span class="pill">{{ formArray.length }} item(s)</span>
+      @if (!readOnly) {
       <button type="button" class="ghost-btn" (click)="addItem()">
         + Añadir
       </button>
+      }
     </div>
   </div>
 
@@ -29,14 +31,16 @@
             <p class="array-card__title">{{ field.label }} #{{ idx + 1 }}</p>
           </div>
         </div>
+        @if (!readOnly) {
         <button type="button" class="text-btn" (click)="removeItem(idx)" [disabled]="formArray.length <= 1">
           Eliminar
         </button>
+        }
       </div>
 
       @switch (itemType) {
         @case ('select') {
-          <select class="field-control" [id]="field.name + '-' + idx" [formControl]="control">
+          <select class="field-control" [id]="field.name + '-' + idx" [formControl]="control" [disabled]="readOnly">
             <option value="">Seleccione una opción</option>
             @for (opt of options; track opt.value) {
               <option [value]="opt.value">{{ opt.label }}</option>
@@ -50,6 +54,7 @@
               [id]="field.name + '-' + idx"
               [type]="inputType()"
               [formControl]="control"
+              [disabled]="readOnly"
             />
             <span>Seleccionado</span>
           </label>
@@ -61,12 +66,13 @@
               [id]="field.name + '-' + idx"
               [type]="inputType()"
               [formControl]="control"
+              [disabled]="readOnly"
             />
             <span>Seleccionado</span>
           </label>
         }
         @case ('file') {
-          <app-field-file [field]="field" [control]="control" />
+          <app-field-file [field]="field" [control]="control" [readOnly]="readOnly" />
         }
         @default {
           <input
@@ -75,6 +81,7 @@
             [type]="hasType() ? inputType() : 'text'"
             [placeholder]="field.placeholder || ''"
             [formControl]="control"
+            [disabled]="readOnly"
           />
         }
       }

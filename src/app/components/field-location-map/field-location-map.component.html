@@ -15,16 +15,17 @@
       type="text"
       [placeholder]="field.placeholder || 'Ej. Insurgentes Norte 123, Juárez, Ciudad de México'"
       [formControl]="addressControl"
+      [disabled]="readOnly"
     />
 
     <div class="coords-grid">
       <div class="coord">
         <label class="label">Lat</label>
-        <input class="input" type="text" placeholder="19.4326" [value]="lat" (input)="onLatChange($any($event.target).value)" />
+        <input class="input" type="text" placeholder="19.4326" [value]="lat" [disabled]="readOnly" (input)="onLatChange($any($event.target).value)" />
       </div>
       <div class="coord">
         <label class="label">Lng</label>
-        <input class="input" type="text" placeholder="-99.1332" [value]="lng" (input)="onLngChange($any($event.target).value)" />
+        <input class="input" type="text" placeholder="-99.1332" [value]="lng" [disabled]="readOnly" (input)="onLngChange($any($event.target).value)" />
       </div>
     </div>
 

@@ -15,6 +15,7 @@ export class FieldMultiselectComponent {
   @Input({ required: true }) field!: FormField & { name: string };
   @Input({ required: true }) control!: FormControl;
   @Input() options: OptionItemInterface[] = [];
+  @Input() readOnly = false;
 
   get size(): number {
     const base = this.options?.length ?? 4;

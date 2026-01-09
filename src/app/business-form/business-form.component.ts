@@ -8,6 +8,7 @@ import { BusinessForm, FormStatus } from '../models/form-schema.model';
 import { DynamicFormComponent } from '../dynamic-form/dynamic-form.component';
 import { SaveBlocksRequest } from '../services/request/save-blocks.request';
 import { BusinessMapping } from '../mapping/business/business.map';
+import { TokenStorageService } from '../services/shared/token-storage.service';
 
 @Component({
   selector: 'app-business-form',
@@ -21,6 +22,7 @@ export class BusinessFormComponent {
   private readonly router = inject(Router);
   private readonly location = inject(Location);
   private readonly businessService = inject(BusinessService);
+  private readonly tokenStore = inject(TokenStorageService);
 
   clientId = this.route.snapshot.paramMap.get('idClient') ?? '';
   businessId = this.route.snapshot.paramMap.get('businessId') ?? '';
@@ -39,6 +41,7 @@ export class BusinessFormComponent {
     this.router.getCurrentNavigation()?.extras.state?.['advertiserName'] ??
     history.state?.advertiserName ??
     '';
+  userRole = this.tokenStore.getRole();
 
   statusContainerClass(status?: FormStatus): string {
     const normalized = (status || 'draft').toString().toLowerCase();

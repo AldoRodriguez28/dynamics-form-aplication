@@ -79,6 +79,7 @@ interface BlockView {
   optionSets?: Record<string, OptionSet>;
   rows: RowView[];
   fieldCount: number;
+  readOnly: boolean;
 }
 
 @Component({
@@ -109,12 +110,15 @@ export class DynamicFormComponent implements OnChanges {
   private readonly catalogService = inject(CatalogService);
 
   @Input({ required: true }) schema!: BusinessForm;
+  @Input() readOnly = false;
+  @Input() userRole?: string | null;
   @Output() submitForm = new EventEmitter<SaveBlocksRequest>();
 
   form!: FormGroup;
   private readonly fallbackActorType = 'AGENT';
   private readonly fallbackActorId = 'usuario.demo';
   blocks: BlockView[] = [];
+  formReadOnly = false;
   optionsMap: Record<string, OptionItemInterface[]> = {};
   apiOptionsCache: Record<string, Observable<OptionItemInterface[]>> = {};
   categoriasNegocio$: Observable<OptionItemInterface[]> = EMPTY;
@@ -146,6 +150,7 @@ export class DynamicFormComponent implements OnChanges {
   }
 
   onSubmit(): void {
+    if (this.formReadOnly) return;
     if (!this.form) return;
     this.form.markAllAsTouched();
 
@@ -171,6 +176,7 @@ export class DynamicFormComponent implements OnChanges {
   }
 
   emitDraft(): void {
+    if (this.formReadOnly) return;
     if (!this.form) return;
     this.submitForm.emit(this.buildPayload());
   }
@@ -182,12 +188,17 @@ export class DynamicFormComponent implements OnChanges {
     this.optionsMap = {};
     this.valueParsers = {};
 
-    this.blocks = this.schema.blocks
-      .slice()
-      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-      .map((block, index) => {
+    const schemaBlocks = this.schema.blocks
+      .filter((block) => this.isBlockVisible(block))
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+    this.blocks = schemaBlocks.map((block, index) => {
         const { rows, controls, fieldCount } = this.buildBlock(block);
+        const blockReadOnly = this.isBlockReadOnly(block);
         group[block.code] = this.fb.group(controls);
+        if (blockReadOnly) {
+          group[block.code].disable({ emitEvent: false });
+        }
 
         return {
           code: block.code,
@@ -196,16 +207,17 @@ export class DynamicFormComponent implements OnChanges {
           ui: block.ui,
           optionSets: block.optionSets,
           rows,
-          fieldCount
+          fieldCount,
+          readOnly: blockReadOnly
         };
       });
 
     // Solo para pruebas: imprimir los campos requeridos detectados en el esquema
-    const requiredFieldsSnapshot = collectRequiredFields(this.schema.blocks);
+    const requiredFieldsSnapshot = collectRequiredFields(schemaBlocks);
     console.info('Campos requeridos detectados:', requiredFieldsSnapshot);
 
     this.form = this.fb.group(group);
-
+    this.formReadOnly = this.readOnly || !this.blocks.some((block) => !block.readOnly);
     this.loadApiOptionsForBlocks();
   }
 
@@ -760,6 +772,20 @@ export class DynamicFormComponent implements OnChanges {
     return builder.withBlocks(this.getBlocksWithCurrentValues()).build();
   }
 
+  private isBlockReadOnly(block: BusinessFormBlock): boolean {
+    if (this.readOnly) return true;
+    const roles = block.readOnlyRoles ?? [];
+    if (!roles.length || !this.userRole) return false;
+    return roles.includes(this.userRole);
+  }
+
+  private isBlockVisible(block: BusinessFormBlock): boolean {
+    const visibility = block.visibility;
+    if (!visibility || Object.keys(visibility).length === 0) return true;
+    if (!this.userRole) return true;
+    return visibility[this.userRole] !== false;
+  }
+
   private getBlocksWithCurrentValues(): BusinessFormBlock[] {
     if (!this.schema?.blocks || !this.form) return [];
 
@@ -780,9 +806,9 @@ export class DynamicFormComponent implements OnChanges {
   }
 
   private loadApiOptionsForBlocks(): void {
-    if (!this.schema?.blocks?.length || !this.form) return;
+    if (!this.blocks.length || !this.form) return;
 
-    this.schema.blocks.forEach((block) => {
+    this.blocks.forEach((block) => {
       const categoriasSet = block.optionSets?.['categoriasNegocio'];
       if (!categoriasSet || categoriasSet.mode !== 'api') return;
 
@@ -829,4 +855,3 @@ export class DynamicFormComponent implements OnChanges {
     });
   }
 }
-

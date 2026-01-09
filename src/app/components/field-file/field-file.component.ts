@@ -15,6 +15,7 @@ import { BusinessService } from '../../services/business.service';
 export class FieldFileComponent implements OnDestroy {
   @Input({ required: true }) field!: FormField & { name: string };
   @Input({ required: true }) control!: FormControl;
+  @Input() readOnly = false;
   private fileObjectUrl: string | null = null;
   uploading = false;
   uploadError: string | null = null;
@@ -31,6 +32,7 @@ export class FieldFileComponent implements OnDestroy {
   }
 
   onFileChange(event: Event): void {
+    if (this.readOnly) return;
     const target = event.target as HTMLInputElement;
     const file = target?.files?.item(0) ?? null;
     if (!file) {

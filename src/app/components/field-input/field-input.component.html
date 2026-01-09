@@ -6,6 +6,7 @@
         type="checkbox"
         [id]="field.name"
         [formControl]="control"
+        [disabled]="readOnly"
         [attr.required]="field.required || null"
       />
       <span>
@@ -28,6 +29,7 @@
       [id]="field.name"
       [type]="inputType"
       [formControl]="control"
+      [disabled]="readOnly"
       [attr.required]="field.required || null"
       [attr.maxLength]="field.maxLength"
       [attr.pattern]="field.pattern"

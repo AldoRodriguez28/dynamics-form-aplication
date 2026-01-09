@@ -5,6 +5,7 @@ export class TokenStorageService {
   private static readonly STORAGE_KEY = 'KEY';
   private static readonly ADVERTISER_KEY = 'ADVERTISER_KEY';
   private static readonly ADVERTISER_NAME = 'ADVERTISER_NAME';
+  private static readonly ROLE_KEY = 'ROLE_KEY';
 
   /** Guarda el token en localStorage */
   setToken(token: string): void {
@@ -20,6 +21,8 @@ export class TokenStorageService {
   clearToken(): void {
     localStorage.removeItem(TokenStorageService.STORAGE_KEY);
     localStorage.removeItem(TokenStorageService.ADVERTISER_KEY);
+    localStorage.removeItem(TokenStorageService.ADVERTISER_NAME);
+    localStorage.removeItem(TokenStorageService.ROLE_KEY);
   }
 
   /** Guarda advertiser_id */
@@ -40,5 +43,15 @@ export class TokenStorageService {
   /** Lee advertiser_NAME */
   getAdvertiserName(): string | null {
     return localStorage.getItem(TokenStorageService.ADVERTISER_NAME);
+  }
+
+  /** Guarda role */
+  setRole(role: string): void {
+    localStorage.setItem(TokenStorageService.ROLE_KEY, role);
+  }
+
+  /** Lee role */
+  getRole(): string | null {
+    return localStorage.getItem(TokenStorageService.ROLE_KEY);
   }
 }

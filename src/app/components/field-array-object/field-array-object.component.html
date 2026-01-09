@@ -12,9 +12,11 @@
     </div>
     <div class="label-actions">
       <span class="pill">{{ formArray.length }} item(s)</span>
+      @if (!readOnly) {
       <button type="button" class="ghost-btn" (click)="addItem()">
         + Añadir item
       </button>
+      }
     </div>
   </div>
 
@@ -29,9 +31,11 @@
             <p class="array-card__title">{{ field.label }} #{{ idx + 1 }}</p>
           </div>
         </div>
+        @if (!readOnly) {
         <button type="button" class="text-btn" (click)="removeItem(idx)" [disabled]="formArray.length <= 1">
           Eliminar
         </button>
+        }
       </div>
 
       <div class="array-grid">
@@ -46,7 +50,8 @@
                 <select
                   class="field-control"
                   [id]="field.name + '-' + key + '-' + idx"
-                  [formControlName]="key">
+                  [formControlName]="key"
+                  [disabled]="readOnly">
                   <option value="">Seleccione una opción</option>
                   @for (opt of optionsForKey(key); track opt.value) {
                     <option [value]="opt.value">{{ opt.label }}</option>
@@ -58,6 +63,7 @@
                   class="field-control"
                   [id]="field.name + '-' + key + '-' + idx"
                   [placeholder]="placeholderForKey(key)"
+                  [disabled]="readOnly"
                   [formControlName]="key">
                 </textarea>
               }
@@ -67,6 +73,7 @@
                   [id]="field.name + '-' + key + '-' + idx"
                   [type]="inputTypeForKey(key)"
                   [placeholder]="placeholderForKey(key)"
+                  [disabled]="readOnly"
                   [formControlName]="key"
                 />
               }
@@ -77,6 +84,7 @@
               [id]="field.name + '-' + key + '-' + idx"
               type="text"
               [placeholder]="placeholderForKey(key)"
+              [disabled]="readOnly"
               [formControlName]="key"
             />
           }

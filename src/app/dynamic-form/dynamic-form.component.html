@@ -29,37 +29,40 @@
               <div class="field-col" [style.gridColumn]="'span ' + field.colSpan">
                 @switch (field.displayType) {
                 @case ('textarea') {
-                <app-field-textarea [field]="field" [control]="getControl(form, [block.code, field.name])" />
+                <app-field-textarea [field]="field" [control]="getControl(form, [block.code, field.name])" [readOnly]="readOnly || block.readOnly" />
                 }
                 @case ('select') {
                 <app-field-select [field]="field" [control]="getControl(form, [block.code, field.name])"
-                  [options]="getOptions(block.code, field.name)" />
+                  [options]="getOptions(block.code, field.name)" [readOnly]="readOnly || block.readOnly" />
                 }
                 @case ('multiselect') {
                 <app-field-multiselect [field]="field" [control]="getControl(form, [block.code, field.name])"
-                  [options]="getOptions(block.code, field.name)" />
+                  [options]="getOptions(block.code, field.name)" [readOnly]="readOnly || block.readOnly" />
                 }
                 @case ('checkbox-grid') {
                 <app-field-pill-multiselect [field]="field"
                   [control]="getControl(form, [block.code, field.name])"
-                  [options]="getOptions(block.code, field.name)" />
+                  [options]="getOptions(block.code, field.name)"
+                  [readOnly]="readOnly || block.readOnly" />
                 }
                 @case ('array-checkbox-grid') {
                 <app-field-pill-multiselect [field]="field"
                   [control]="getControl(form, [block.code, field.name])"
-                  [options]="getOptions(block.code, field.name)" />
+                  [options]="getOptions(block.code, field.name)"
+                  [readOnly]="readOnly || block.readOnly" />
                 }
                 @case ('file') {
-                <app-field-file [field]="field" [control]="getControl(form, [block.code, field.name])" />
+                <app-field-file [field]="field" [control]="getControl(form, [block.code, field.name])" [readOnly]="readOnly || block.readOnly" />
                 }
                 @case ('opening-hours') {
-                <app-field-opening-hours [field]="field" [control]="getControl(form, [block.code, field.name])" />
+                <app-field-opening-hours [field]="field" [control]="getControl(form, [block.code, field.name])" [readOnly]="readOnly || block.readOnly" />
                 }
                 @case ('opening-hours-advanced') {
                 <app-field-opening-hours-advanced
                   [field]="field"
                   [formArray]="getArrayControl(block.code, field.name)"
                   [optionSets]="block.optionSets || {}"
+                  [readOnly]="readOnly || block.readOnly"
                 />
                 }
                 @case ('location-map') {
@@ -68,28 +71,31 @@
                   [coordsControl]="getControl(form, [block.code, field.name])"
                   [addressControl]="getControl(form, [block.code, 'direccion'])"
                   [blockName]="block.title"
+                  [readOnly]="readOnly || block.readOnly"
                 />
                 }
                 @case ('domain-option') {
-                <app-field-domain-option [field]="field" [control]="getControl(form, [block.code, field.name])" />
+                <app-field-domain-option [field]="field" [control]="getControl(form, [block.code, field.name])" [readOnly]="readOnly || block.readOnly" />
                 }
                 @case ('pill-multiselect') {
-                <app-field-pill-multiselect [field]="field" [control]="getControl(form, [block.code, field.name])" />
+                <app-field-pill-multiselect [field]="field" [control]="getControl(form, [block.code, field.name])" [readOnly]="readOnly || block.readOnly" />
                 }
                 @case ('productos-servicios') {
                 <app-field-productos-servicios
                   [field]="field"
                   [formArray]="getArrayControl(block.code, field.name)"
+                  [readOnly]="readOnly || block.readOnly"
                 />
                 }
                 @case ('checkbox') {
-                <app-field-input [field]="field" [control]="getControl(form, [block.code, field.name])" />
+                <app-field-input [field]="field" [control]="getControl(form, [block.code, field.name])" [readOnly]="readOnly || block.readOnly" />
                 }
                 @case ('array-object') {
                 <app-field-array-object
                   [field]="field"
                   [formArray]="getArrayControl(block.code, field.name)"
                   [optionSets]="block.optionSets || {}"
+                  [readOnly]="readOnly || block.readOnly"
                 />
                 }
                 @case ('array-primitive') {
@@ -97,10 +103,11 @@
                   [field]="field"
                   [formArray]="getArrayControl(block.code, field.name)"
                   [options]="getOptions(block.code, field.name)"
+                  [readOnly]="readOnly || block.readOnly"
                 />
                 }
                 @default {
-                <app-field-input [field]="field" [control]="getControl(form, [block.code, field.name])" />
+                <app-field-input [field]="field" [control]="getControl(form, [block.code, field.name])" [readOnly]="readOnly || block.readOnly" />
                 }
                 }
               </div>
@@ -112,6 +119,7 @@
       <hr class="df-divider" />
       }
 
+      @if (!formReadOnly) {
       <div class="actions">
         <button type="button" class="btn ghost" (click)="emitDraft()">
           Guardar avance
@@ -120,6 +128,7 @@
           Finalizar
         </button>
       </div>
+      }
     </form>
   </div>
 </div>

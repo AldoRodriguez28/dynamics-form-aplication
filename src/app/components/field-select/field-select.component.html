@@ -7,6 +7,7 @@
   @if (!field.multiple) {
   <select class="field-control" [id]="field.name" [formControl]="control" [attr.required]="field.required ? '' : null"
     [attr.aria-required]="field.required" [attr.aria-invalid]="control.invalid && control.touched ? 'true' : null"
+    [disabled]="readOnly"
     (blur)="markTouched()">
     <option value="">{{ emptyText }}</option>
 
@@ -19,6 +20,7 @@
   @if (field.multiple) {
   <select class="field-control" [id]="field.name" multiple [formControl]="control"
     [attr.required]="field.required ? '' : null" [attr.aria-required]="field.required"
+    [disabled]="readOnly"
     [attr.aria-invalid]="control.invalid && control.touched ? 'true' : null" (blur)="markTouched()">
     @for (opt of options; track trackByValue($index, opt)) {
     <option [ngValue]="opt.value">{{ opt.label }}</option>

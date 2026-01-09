@@ -18,6 +18,7 @@ export class FieldSelectComponent<T = any> {
   @Input({ required: true }) control!: FormControl<T | T[] | null>;
   @Input() options: SelectOption<T>[] = [];
   @Input() emptyText = 'Selecciona...';
+  @Input() readOnly = false;
 
   trackByValue = (_: number, opt: SelectOption<T>) => opt.value;
 

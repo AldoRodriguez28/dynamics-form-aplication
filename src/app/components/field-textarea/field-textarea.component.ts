@@ -13,4 +13,5 @@ import { FormField } from '../../models/form-schema.model';
 export class FieldTextareaComponent {
   @Input({ required: true }) field!: FormField & { name: string };
   @Input({ required: true }) control!: FormControl;
+  @Input() readOnly = false;
 }

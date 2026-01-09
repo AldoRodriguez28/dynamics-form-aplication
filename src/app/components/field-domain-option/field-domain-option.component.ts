@@ -16,6 +16,7 @@ type DomainStatus = 'idle' | 'checking' | 'available' | 'taken';
 export class FieldDomainOptionComponent {
   @Input({ required: true }) field!: FormField & { name: string };
   @Input({ required: true }) control!: FormControl;
+  @Input() readOnly = false;
 
   status: DomainStatus = 'idle';
   message = 'Ingresa el dominio para revisar su disponibilidad.';
@@ -28,6 +29,7 @@ export class FieldDomainOptionComponent {
   }
 
   onInput(value: string): void {
+    if (this.readOnly) return;
     this.control.setValue(value);
     this.status = 'idle';
     this.suggestions = [];
@@ -36,6 +38,7 @@ export class FieldDomainOptionComponent {
   }
 
   checkAvailability(): void {
+    if (this.readOnly) return;
     const domain = this.value.trim();
     if (!domain) {
       this.status = 'idle';
