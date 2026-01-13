@@ -19,7 +19,16 @@
               </p>
             </div>
           </div>
-          <span class="pill">{{ block.fieldCount }} campos</span>
+          <div class="section__actions">
+            <span class="pill">{{ block.fieldCount }} campos</span>
+            <button
+              type="button"
+              class="btn ghost btn--small"
+              [disabled]="formReadOnly || block.readOnly"
+              (click)="saveJustOneBlock(block, $event)">
+              Guardar
+            </button>
+          </div>
         </summary>
 
         <div class="section__content" [formGroupName]="block.code">

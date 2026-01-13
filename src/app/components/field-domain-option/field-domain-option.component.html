@@ -31,7 +31,6 @@
         [formControl]="control"
         [placeholder]="field.placeholder || 'ej. midominio.com'"
         [attr.aria-invalid]="control.invalid && control.touched ? 'true' : null"
-        [disabled]="readOnly"
         (input)="onInput($any($event.target).value)"
       />
       <button type="button" class="check-btn" (click)="checkAvailability()" [disabled]="readOnly">Verificar</button>

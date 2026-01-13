@@ -74,6 +74,11 @@ export class FieldArrayPrimitiveComponent {
     }
   }
 
+  maxLength(): number | null {
+    if (this.inputType() === 'tel') return 10;
+    return this.field.maxLength ?? null;
+  }
+
   private defaultValue(): unknown {
     if (this.isCheckbox()) return false;
     if (this.isFile()) return null;

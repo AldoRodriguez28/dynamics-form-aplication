@@ -50,8 +50,7 @@
                 <select
                   class="field-control"
                   [id]="field.name + '-' + key + '-' + idx"
-                  [formControlName]="key"
-                  [disabled]="readOnly">
+                  [formControlName]="key">
                   <option value="">Seleccione una opción</option>
                   @for (opt of optionsForKey(key); track opt.value) {
                     <option [value]="opt.value">{{ opt.label }}</option>
@@ -63,7 +62,6 @@
                   class="field-control"
                   [id]="field.name + '-' + key + '-' + idx"
                   [placeholder]="placeholderForKey(key)"
-                  [disabled]="readOnly"
                   [formControlName]="key">
                 </textarea>
               }
@@ -73,8 +71,8 @@
                   [id]="field.name + '-' + key + '-' + idx"
                   [type]="inputTypeForKey(key)"
                   [placeholder]="placeholderForKey(key)"
-                  [disabled]="readOnly"
                   [formControlName]="key"
+                  [attr.maxLength]="maxLengthForKey(key)"
                 />
               }
             }
@@ -84,8 +82,8 @@
               [id]="field.name + '-' + key + '-' + idx"
               type="text"
               [placeholder]="placeholderForKey(key)"
-              [disabled]="readOnly"
               [formControlName]="key"
+              [attr.maxLength]="maxLengthForKey(key)"
             />
           }
         </div>

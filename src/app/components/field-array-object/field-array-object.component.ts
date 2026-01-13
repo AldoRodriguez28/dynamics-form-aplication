@@ -95,6 +95,11 @@ export class FieldArrayObjectComponent {
     }
   }
 
+  maxLengthForKey(key: string): number | null {
+    if (this.inputTypeForKey(key) === 'tel') return 10;
+    return null;
+  }
+
   private buildEmptyGroup(): FormGroup {
     const controls: Record<string, FormControl> = {};
     const schema = this.field.itemSchema ?? {};

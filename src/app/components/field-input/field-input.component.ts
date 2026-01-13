@@ -29,4 +29,9 @@ export class FieldInputComponent {
         return 'text';
     }
   }
+
+  get maxLength(): number | null {
+    if (this.inputType === 'tel') return 10;
+    return this.field.maxLength ?? null;
+  }
 }

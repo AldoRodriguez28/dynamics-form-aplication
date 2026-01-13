@@ -175,6 +175,49 @@ export class DynamicFormComponent implements OnChanges {
     }
   }
 
+  saveJustOneBlock(block: BlockView, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+
+    if (!this.form) return;
+    const blockWithValues = this.getBlockWithCurrentValues(block.code);
+    if (!blockWithValues) return;
+    console.log(`${block.code}:`, blockWithValues.values);
+  }
+  saveBlock(block: BlockView, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+
+    if (this.formReadOnly || block.readOnly) return;
+    if (!this.form) return;
+
+    const blockGroup = this.form.get(block.code) as FormGroup | null;
+    blockGroup?.markAllAsTouched();
+
+    const blockWithValues = this.getBlockWithCurrentValues(block.code);
+    if (!blockWithValues) return;
+
+    const missingRequired = findMissingRequiredFields([blockWithValues]);
+    if (missingRequired.length) {
+      const detail = missingRequired
+        .map((item) => `${item.blockName || item.blockCode}: ${item.label || item.fieldName}`)
+        .join('<br>');
+
+      Swal.fire({
+        icon: 'warning',
+        title: 'Faltan campos obligatorios',
+        html: detail,
+        confirmButtonText: 'Entendido'
+      });
+
+      return;
+    }
+
+    if (blockGroup?.valid) {
+      this.submitForm.emit(this.buildPayloadForBlocks([blockWithValues]));
+    }
+  }
+
   emitDraft(): void {
     if (this.formReadOnly) return;
     if (!this.form) return;
@@ -218,6 +261,9 @@ export class DynamicFormComponent implements OnChanges {
 
     this.form = this.fb.group(group);
     this.formReadOnly = this.readOnly || !this.blocks.some((block) => !block.readOnly);
+    if (this.readOnly) {
+      this.form.disable({ emitEvent: false });
+    }
     this.loadApiOptionsForBlocks();
   }
 
@@ -764,12 +810,16 @@ export class DynamicFormComponent implements OnChanges {
   }
 
   private buildPayload(): SaveBlocksRequest {
+    return this.buildPayloadForBlocks(this.getBlocksWithCurrentValues());
+  }
+
+  private buildPayloadForBlocks(blocks: BusinessFormBlock[]): SaveBlocksRequest {
     const builder = new PayloadBuilder(
       this.schema.actorType || this.fallbackActorType,
       this.schema.actorId || this.fallbackActorId
     );
 
-    return builder.withBlocks(this.getBlocksWithCurrentValues()).build();
+    return builder.withBlocks(blocks).build();
   }
 
   private isBlockReadOnly(block: BusinessFormBlock): boolean {
@@ -790,19 +840,29 @@ export class DynamicFormComponent implements OnChanges {
     if (!this.schema?.blocks || !this.form) return [];
 
     return this.schema.blocks.map((block) => {
-      const rawValues = (this.form.get(block.code) as FormGroup)?.value ?? {};
-      const parsedValues: Record<string, unknown> = {};
-
-      Object.entries(rawValues).forEach(([name, value]) => {
-        const parser = this.valueParsers[optionKey(block.code, name)];
-        parsedValues[name] = parser ? parser(value) : value;
-      });
-
-      return {
-        ...block,
-        values: parsedValues
-      };
+      const blockWithValues = this.getBlockWithCurrentValues(block.code);
+      return blockWithValues ?? block;
     });
+  }
+
+  private getBlockWithCurrentValues(blockCode: string): BusinessFormBlock | null {
+    if (!this.schema?.blocks || !this.form) return null;
+
+    const block = this.schema.blocks.find((candidate) => candidate.code === blockCode);
+    if (!block) return null;
+
+    const rawValues = (this.form.get(block.code) as FormGroup)?.value ?? {};
+    const parsedValues: Record<string, unknown> = {};
+
+    Object.entries(rawValues).forEach(([name, value]) => {
+      const parser = this.valueParsers[optionKey(block.code, name)];
+      parsedValues[name] = parser ? parser(value) : value;
+    });
+
+    return {
+      ...block,
+      values: parsedValues
+    };
   }
 
   private loadApiOptionsForBlocks(): void {
