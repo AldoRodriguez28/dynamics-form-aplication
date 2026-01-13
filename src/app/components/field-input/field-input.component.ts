@@ -13,6 +13,7 @@ import { FormField } from '../../models/form-schema.model';
 export class FieldInputComponent {
   @Input({ required: true }) field!: FormField & { name: string };
   @Input({ required: true }) control!: FormControl;
+  @Input() readOnly = false;
 
   get inputType(): string {
     switch (this.field.type) {
@@ -27,5 +28,10 @@ export class FieldInputComponent {
       default:
         return 'text';
     }
+  }
+
+  get maxLength(): number | null {
+    if (this.inputType === 'tel') return 10;
+    return this.field.maxLength ?? null;
   }
 }

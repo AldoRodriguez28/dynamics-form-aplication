@@ -18,6 +18,7 @@ export class FieldPillMultiselectComponent {
   @Input({ required: true }) field!: FormField & { name: string };
   @Input({ required: true }) control!: FormControl<PillValue[]>;
   @Input() options: OptionItemInterface[] = [];
+  @Input() readOnly = false;
 
   get items(): PillValue[] {
     const value = this.control?.value;
@@ -36,6 +37,7 @@ export class FieldPillMultiselectComponent {
   }
 
   toggle(item: PillValue): void {
+    if (this.readOnly) return;
     const current = this.items;
     const exists = current.includes(item);
     const next = exists ? current.filter((v) => v !== item) : [...current, item];

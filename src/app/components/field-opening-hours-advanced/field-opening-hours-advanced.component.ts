@@ -18,6 +18,7 @@ export class FieldOpeningHoursAdvancedComponent implements OnChanges {
   @Input({ required: true }) field!: FormField & { name: string; itemSchema?: FormField['itemSchema'] };
   @Input({ required: true }) formArray!: FormArray<FormGroup>;
   @Input() optionSets: Record<string, OptionSet> = {};
+  @Input() readOnly = false;
 
   days: DayOption[] = [];
   timeKeys: string[] = [];
@@ -43,6 +44,7 @@ export class FieldOpeningHoursAdvancedComponent implements OnChanges {
   }
 
   updateTime(index: number, key: string, value: string): void {
+    if (this.readOnly) return;
     const group = this.getGroupForDayByIndex(index);
     if (!group) return;
     const control = group.get(key) as FormControl | null;
@@ -54,16 +56,19 @@ export class FieldOpeningHoursAdvancedComponent implements OnChanges {
   }
 
   clearDay(index: number): void {
+    if (this.readOnly) return;
     this.timeKeys.forEach((key) => this.updateTime(index, key, ''));
   }
 
   deleteDay(index: number): void {
+    if (this.readOnly) return;
     if (index < 0 || index >= this.formArray.length) return;
     this.formArray.removeAt(index);
     this.days = this.getDays();
   }
 
   copyFirstToAll(): void {
+    if (this.readOnly) return;
     const first = this.days[0];
     if (!first) return;
     const source = this.getGroupForDayByIndex(first.index);
@@ -79,10 +84,12 @@ export class FieldOpeningHoursAdvancedComponent implements OnChanges {
   }
 
   clearAll(): void {
+    if (this.readOnly) return;
     this.days.forEach((day) => this.clearDay(day.index));
   }
 
   addDay(): void {
+    if (this.readOnly) return;
     const schema: ItemSchema = (this.field.itemSchema as ItemSchema) ?? {};
     const newGroup = this.buildEmptyGroup('', schema);
     this.formArray.push(newGroup);
@@ -182,6 +189,7 @@ export class FieldOpeningHoursAdvancedComponent implements OnChanges {
   }
 
   onDayChange(index: number, value: string): void {
+    if (this.readOnly) return;
     const group = this.getGroupForDayByIndex(index);
     if (!group) return;
     group.get('dia')?.setValue(value);

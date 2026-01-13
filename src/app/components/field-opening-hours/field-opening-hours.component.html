@@ -24,6 +24,7 @@
           type="time"
           [id]="field.name + '-' + dia + '-' + campo"
           [value]="valueFor(dia, campo)"
+          [disabled]="readOnly"
           (input)="updateValue(dia, campo, $any($event.target).value)"
         />
       </div>

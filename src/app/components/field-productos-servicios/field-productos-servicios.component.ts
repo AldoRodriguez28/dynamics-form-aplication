@@ -13,6 +13,7 @@ import { FormField } from '../../models/form-schema.model';
 export class FieldProductosServiciosComponent {
   @Input({ required: true }) field!: FormField & { name: string };
   @Input({ required: true }) formArray!: FormArray;
+  @Input() readOnly = false;
 
   newTag = '';
 
@@ -24,6 +25,7 @@ export class FieldProductosServiciosComponent {
   constructor(private fb: FormBuilder) {}
 
   addTag(): void {
+    if (this.readOnly) return;
     const value = this.newTag.trim();
     if (!value) return;
     this.formArray.push(this.fb.control(value));
@@ -31,11 +33,13 @@ export class FieldProductosServiciosComponent {
   }
 
   removeTag(idx: number): void {
+    if (this.readOnly) return;
     if (idx < 0 || idx >= this.formArray.length) return;
     this.formArray.removeAt(idx);
   }
 
   toggleTag(tag: string): void {
+    if (this.readOnly) return;
     const idx = this.items.findIndex((t) => t === tag);
     if (idx >= 0) {
       this.removeTag(idx);

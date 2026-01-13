@@ -79,6 +79,7 @@ interface BlockView {
   optionSets?: Record<string, OptionSet>;
   rows: RowView[];
   fieldCount: number;
+  readOnly: boolean;
 }
 
 @Component({
@@ -109,12 +110,15 @@ export class DynamicFormComponent implements OnChanges {
   private readonly catalogService = inject(CatalogService);
 
   @Input({ required: true }) schema!: BusinessForm;
+  @Input() readOnly = false;
+  @Input() userRole?: string | null;
   @Output() submitForm = new EventEmitter<SaveBlocksRequest>();
 
   form!: FormGroup;
   private readonly fallbackActorType = 'AGENT';
   private readonly fallbackActorId = 'usuario.demo';
   blocks: BlockView[] = [];
+  formReadOnly = false;
   optionsMap: Record<string, OptionItemInterface[]> = {};
   apiOptionsCache: Record<string, Observable<OptionItemInterface[]>> = {};
   categoriasNegocio$: Observable<OptionItemInterface[]> = EMPTY;
@@ -146,6 +150,7 @@ export class DynamicFormComponent implements OnChanges {
   }
 
   onSubmit(): void {
+    if (this.formReadOnly) return;
     if (!this.form) return;
     this.form.markAllAsTouched();
 
@@ -170,7 +175,51 @@ export class DynamicFormComponent implements OnChanges {
     }
   }
 
+  saveJustOneBlock(block: BlockView, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+
+    if (!this.form) return;
+    const blockWithValues = this.getBlockWithCurrentValues(block.code);
+    if (!blockWithValues) return;
+    console.log(`${block.code}:`, blockWithValues.values);
+  }
+  saveBlock(block: BlockView, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+
+    if (this.formReadOnly || block.readOnly) return;
+    if (!this.form) return;
+
+    const blockGroup = this.form.get(block.code) as FormGroup | null;
+    blockGroup?.markAllAsTouched();
+
+    const blockWithValues = this.getBlockWithCurrentValues(block.code);
+    if (!blockWithValues) return;
+
+    const missingRequired = findMissingRequiredFields([blockWithValues]);
+    if (missingRequired.length) {
+      const detail = missingRequired
+        .map((item) => `${item.blockName || item.blockCode}: ${item.label || item.fieldName}`)
+        .join('<br>');
+
+      Swal.fire({
+        icon: 'warning',
+        title: 'Faltan campos obligatorios',
+        html: detail,
+        confirmButtonText: 'Entendido'
+      });
+
+      return;
+    }
+
+    if (blockGroup?.valid) {
+      this.submitForm.emit(this.buildPayloadForBlocks([blockWithValues]));
+    }
+  }
+
   emitDraft(): void {
+    if (this.formReadOnly) return;
     if (!this.form) return;
     this.submitForm.emit(this.buildPayload());
   }
@@ -182,12 +231,17 @@ export class DynamicFormComponent implements OnChanges {
     this.optionsMap = {};
     this.valueParsers = {};
 
-    this.blocks = this.schema.blocks
-      .slice()
-      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-      .map((block, index) => {
+    const schemaBlocks = this.schema.blocks
+      .filter((block) => this.isBlockVisible(block))
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+    this.blocks = schemaBlocks.map((block, index) => {
         const { rows, controls, fieldCount } = this.buildBlock(block);
+        const blockReadOnly = this.isBlockReadOnly(block);
         group[block.code] = this.fb.group(controls);
+        if (blockReadOnly) {
+          group[block.code].disable({ emitEvent: false });
+        }
 
         return {
           code: block.code,
@@ -196,16 +250,20 @@ export class DynamicFormComponent implements OnChanges {
           ui: block.ui,
           optionSets: block.optionSets,
           rows,
-          fieldCount
+          fieldCount,
+          readOnly: blockReadOnly
         };
       });
 
     // Solo para pruebas: imprimir los campos requeridos detectados en el esquema
-    const requiredFieldsSnapshot = collectRequiredFields(this.schema.blocks);
+    const requiredFieldsSnapshot = collectRequiredFields(schemaBlocks);
     console.info('Campos requeridos detectados:', requiredFieldsSnapshot);
 
     this.form = this.fb.group(group);
-
+    this.formReadOnly = this.readOnly || !this.blocks.some((block) => !block.readOnly);
+    if (this.readOnly) {
+      this.form.disable({ emitEvent: false });
+    }
     this.loadApiOptionsForBlocks();
   }
 
@@ -752,37 +810,65 @@ export class DynamicFormComponent implements OnChanges {
   }
 
   private buildPayload(): SaveBlocksRequest {
+    return this.buildPayloadForBlocks(this.getBlocksWithCurrentValues());
+  }
+
+  private buildPayloadForBlocks(blocks: BusinessFormBlock[]): SaveBlocksRequest {
     const builder = new PayloadBuilder(
       this.schema.actorType || this.fallbackActorType,
       this.schema.actorId || this.fallbackActorId
     );
 
-    return builder.withBlocks(this.getBlocksWithCurrentValues()).build();
+    return builder.withBlocks(blocks).build();
+  }
+
+  private isBlockReadOnly(block: BusinessFormBlock): boolean {
+    if (this.readOnly) return true;
+    const roles = block.readOnlyRoles ?? [];
+    if (!roles.length || !this.userRole) return false;
+    return roles.includes(this.userRole);
+  }
+
+  private isBlockVisible(block: BusinessFormBlock): boolean {
+    const visibility = block.visibility;
+    if (!visibility || Object.keys(visibility).length === 0) return true;
+    if (!this.userRole) return true;
+    return visibility[this.userRole] !== false;
   }
 
   private getBlocksWithCurrentValues(): BusinessFormBlock[] {
     if (!this.schema?.blocks || !this.form) return [];
 
     return this.schema.blocks.map((block) => {
-      const rawValues = (this.form.get(block.code) as FormGroup)?.value ?? {};
-      const parsedValues: Record<string, unknown> = {};
-
-      Object.entries(rawValues).forEach(([name, value]) => {
-        const parser = this.valueParsers[optionKey(block.code, name)];
-        parsedValues[name] = parser ? parser(value) : value;
-      });
-
-      return {
-        ...block,
-        values: parsedValues
-      };
+      const blockWithValues = this.getBlockWithCurrentValues(block.code);
+      return blockWithValues ?? block;
     });
   }
 
-  private loadApiOptionsForBlocks(): void {
-    if (!this.schema?.blocks?.length || !this.form) return;
+  private getBlockWithCurrentValues(blockCode: string): BusinessFormBlock | null {
+    if (!this.schema?.blocks || !this.form) return null;
 
-    this.schema.blocks.forEach((block) => {
+    const block = this.schema.blocks.find((candidate) => candidate.code === blockCode);
+    if (!block) return null;
+
+    const rawValues = (this.form.get(block.code) as FormGroup)?.value ?? {};
+    const parsedValues: Record<string, unknown> = {};
+
+    Object.entries(rawValues).forEach(([name, value]) => {
+      const parser = this.valueParsers[optionKey(block.code, name)];
+      parsedValues[name] = parser ? parser(value) : value;
+    });
+
+    return {
+      ...block,
+      values: parsedValues
+    };
+  }
+
+  private loadApiOptionsForBlocks(): void {
+    if (!this.blocks.length || !this.form) return;
+
+    this.blocks.forEach((block) => {
       const categoriasSet = block.optionSets?.['categoriasNegocio'];
       if (!categoriasSet || categoriasSet.mode !== 'api') return;
 
@@ -829,4 +915,3 @@ export class DynamicFormComponent implements OnChanges {
     });
   }
 }
-

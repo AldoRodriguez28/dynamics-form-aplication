@@ -16,6 +16,7 @@ export class FieldLocationMapComponent implements OnChanges {
   @Input({ required: true }) coordsControl!: FormControl<string>;
   @Input({ required: true }) addressControl!: FormControl<string>;
   @Input() blockName = 'Ubicación';
+  @Input() readOnly = false;
 
   lat = '';
   lng = '';
@@ -34,16 +35,19 @@ export class FieldLocationMapComponent implements OnChanges {
   }
 
   updateCoords(): void {
+    if (this.readOnly) return;
     const next = [this.lat, this.lng].filter(Boolean).join(',');
     this.coordsControl.setValue(next);
   }
 
   onLatChange(value: string): void {
+    if (this.readOnly) return;
     this.lat = value;
     this.updateCoords();
   }
 
   onLngChange(value: string): void {
+    if (this.readOnly) return;
     this.lng = value;
     this.updateCoords();
   }

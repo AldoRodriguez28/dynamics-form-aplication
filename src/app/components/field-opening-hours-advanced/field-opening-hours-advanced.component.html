@@ -12,11 +12,13 @@
     </div>
 
     <div class="oh-actions">
+      @if (!readOnly) {
       <button type="button" class="btn ghost" (click)="addDay()">
         + Agregar día
       </button>
      
       <button type="button" class="btn ghost danger" (click)="clearAll()">Limpiar</button>
+      }
     </div>
   </div>
 
@@ -28,7 +30,7 @@
           <div class="avatar">{{ day.label | slice: 0 : 1 }}</div>
           <div>
             <p class="day-name">
-              <select class="day-select inline" [ngModel]="day.value" (ngModelChange)="onDayChange(day.index, $event)">
+              <select class="day-select inline" [ngModel]="day.value" (ngModelChange)="onDayChange(day.index, $event)" [disabled]="readOnly">
                 <option value="">Selecciona un día de la semana</option>
                 @for (opt of dayOptionsFor(day.value); track opt.value) {
                 <option [value]="opt.value">{{ opt.label }}</option>
@@ -39,8 +41,10 @@
           </div>
         </div>
         <div class="card-actions">
+          @if (!readOnly) {
           <button type="button" class="round" (click)="clearDay(day.index)" aria-label="Limpiar día">Limpiar</button>
           <button type="button" class="round danger" (click)="deleteDay(day.index)" aria-label="Eliminar día">✕</button>
+          }
         </div>
       </div>
 
@@ -54,6 +58,7 @@
               type="time"
               [placeholder]="placeholderMap[key]"
               [value]="valueFor(day.index, key)"
+              [disabled]="readOnly"
               (input)="updateTime(day.index, key, $any($event.target).value)"
             />
           </div>
@@ -71,6 +76,7 @@
               type="time"
               [placeholder]="placeholderMap[key]"
               [value]="valueFor(day.index, key)"
+              [disabled]="readOnly"
               (input)="updateTime(day.index, key, $any($event.target).value)"
             />
           </div>

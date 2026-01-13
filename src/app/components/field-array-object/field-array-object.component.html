@@ -12,9 +12,11 @@
     </div>
     <div class="label-actions">
       <span class="pill">{{ formArray.length }} item(s)</span>
+      @if (!readOnly) {
       <button type="button" class="ghost-btn" (click)="addItem()">
         + Añadir item
       </button>
+      }
     </div>
   </div>
 
@@ -29,9 +31,11 @@
             <p class="array-card__title">{{ field.label }} #{{ idx + 1 }}</p>
           </div>
         </div>
+        @if (!readOnly) {
         <button type="button" class="text-btn" (click)="removeItem(idx)" [disabled]="formArray.length <= 1">
           Eliminar
         </button>
+        }
       </div>
 
       <div class="array-grid">
@@ -68,6 +72,7 @@
                   [type]="inputTypeForKey(key)"
                   [placeholder]="placeholderForKey(key)"
                   [formControlName]="key"
+                  [attr.maxLength]="maxLengthForKey(key)"
                 />
               }
             }
@@ -78,6 +83,7 @@
               type="text"
               [placeholder]="placeholderForKey(key)"
               [formControlName]="key"
+              [attr.maxLength]="maxLengthForKey(key)"
             />
           }
         </div>

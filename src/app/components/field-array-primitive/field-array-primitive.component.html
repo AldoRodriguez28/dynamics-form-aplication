@@ -12,9 +12,11 @@
     </div>
     <div class="label-actions">
       <span class="pill">{{ formArray.length }} item(s)</span>
+      @if (!readOnly) {
       <button type="button" class="ghost-btn" (click)="addItem()">
         + Añadir
       </button>
+      }
     </div>
   </div>
 
@@ -29,9 +31,11 @@
             <p class="array-card__title">{{ field.label }} #{{ idx + 1 }}</p>
           </div>
         </div>
+        @if (!readOnly) {
         <button type="button" class="text-btn" (click)="removeItem(idx)" [disabled]="formArray.length <= 1">
           Eliminar
         </button>
+        }
       </div>
 
       @switch (itemType) {
@@ -66,7 +70,7 @@
           </label>
         }
         @case ('file') {
-          <app-field-file [field]="field" [control]="control" />
+          <app-field-file [field]="field" [control]="control" [readOnly]="readOnly" />
         }
         @default {
           <input
@@ -75,6 +79,7 @@
             [type]="hasType() ? inputType() : 'text'"
             [placeholder]="field.placeholder || ''"
             [formControl]="control"
+            [attr.maxLength]="maxLength()"
           />
         }
       }

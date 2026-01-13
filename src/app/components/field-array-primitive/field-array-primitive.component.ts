@@ -17,6 +17,7 @@ export class FieldArrayPrimitiveComponent {
   @Input({ required: true }) field!: FormField & { name: string; itemType?: FormField['type'] };
   @Input({ required: true }) formArray!: FormArray<FormControl>;
   @Input() options: OptionItemInterface[] = [];
+  @Input() readOnly = false;
 
   constructor(
     private fb: FormBuilder,
@@ -24,10 +25,12 @@ export class FieldArrayPrimitiveComponent {
   ) {}
 
   addItem(): void {
+    if (this.readOnly) return;
     this.formArray.push(this.fb.control(this.defaultValue(), this.controlValidators()));
   }
 
   removeItem(index: number): void {
+    if (this.readOnly) return;
     if (this.formArray.length <= 1) return;
     this.formArray.removeAt(index);
   }
@@ -69,6 +72,11 @@ export class FieldArrayPrimitiveComponent {
       default:
         return 'text';
     }
+  }
+
+  maxLength(): number | null {
+    if (this.inputType() === 'tel') return 10;
+    return this.field.maxLength ?? null;
   }
 
   private defaultValue(): unknown {

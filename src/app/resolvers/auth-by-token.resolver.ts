@@ -21,15 +21,15 @@ export const authByTokenResolver: ResolveFn<boolean> = (route) => {
             storage.setToken(res.bearerToken);
 
             const payload = decodeJwtPayload(res.bearerToken);
-            console.log(payload);
             const advertiserId = payload?.['bcm.advertiser_id'];
             if (advertiserId != null) storage.setAdvertiserId(String(advertiserId));
 
             const advertiserName = payload?.['bcm.advertiser_name'];
             if (advertiserName != null) storage.setAdvertiserName(String(advertiserName));
 
-            const role = payload?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
-             console.log('role',role);
+            const roleClaim = payload?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+            const role = Array.isArray(roleClaim) ? roleClaim[0] : roleClaim;
+            if (role != null) storage.setRole(String(role));
 
         }),
         map(() => true),

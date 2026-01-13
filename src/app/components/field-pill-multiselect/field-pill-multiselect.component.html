@@ -19,6 +19,7 @@
       type="button"
       class="pill"
       [class.selected]="isSelected(opt.value)"
+      [disabled]="readOnly"
       (click)="toggle(opt.value)">
       {{ opt.label }}
     </button>

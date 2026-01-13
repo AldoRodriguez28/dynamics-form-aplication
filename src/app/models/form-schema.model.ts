@@ -89,6 +89,8 @@ export interface BusinessFormBlock {
   optionSets?: Record<string, OptionSet>;
   rows: FormRow[];
   values: Record<string, unknown>;
+  readOnlyRoles?: string[];
+  visibility?: Record<string, boolean>;
 }
 
 export interface BusinessForm {

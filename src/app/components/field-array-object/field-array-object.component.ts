@@ -23,6 +23,7 @@ export class FieldArrayObjectComponent {
   @Input({ required: true }) field!: FormField & { name: string; itemKeys?: string[] };
   @Input({ required: true }) formArray!: FormArray<FormGroup>;
   @Input() optionSets: Record<string, OptionSet> = {};
+  @Input() readOnly = false;
   getControl = getControl;
 
   constructor(private fb: FormBuilder) {
@@ -39,10 +40,12 @@ export class FieldArrayObjectComponent {
   }
 
   addItem(): void {
+    if (this.readOnly) return;
     this.formArray.push(this.buildEmptyGroup());
   }
 
   removeItem(index: number): void {
+    if (this.readOnly) return;
     if (this.formArray.length <= 1) return;
     this.formArray.removeAt(index);
   }
@@ -90,6 +93,11 @@ export class FieldArrayObjectComponent {
       default:
         return 'text';
     }
+  }
+
+  maxLengthForKey(key: string): number | null {
+    if (this.inputTypeForKey(key) === 'tel') return 10;
+    return null;
   }
 
   private buildEmptyGroup(): FormGroup {

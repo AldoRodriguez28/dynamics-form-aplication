@@ -15,6 +15,7 @@ type OpeningHoursValue = Record<string, Record<string, string>>;
 export class FieldOpeningHoursComponent {
   @Input({ required: true }) field!: FormField & { name: string };
   @Input({ required: true }) control!: FormControl<OpeningHoursValue>;
+  @Input() readOnly = false;
 
   get dias(): string[] {
     const schema = this.field.schema as { dias?: string[] } | undefined;
@@ -27,6 +28,7 @@ export class FieldOpeningHoursComponent {
   }
 
   updateValue(dia: string, campo: string, value: string): void {
+    if (this.readOnly) return;
     const current = (this.control.value as OpeningHoursValue) || {};
     const nextDia = { ...(current[dia] ?? {}), [campo]: value };
     const next: OpeningHoursValue = { ...current, [dia]: nextDia };
