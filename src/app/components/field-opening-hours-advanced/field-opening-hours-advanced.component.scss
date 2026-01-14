@@ -281,6 +281,13 @@
   text-align: left;
 }
 
+.error-message {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #ef4444;
+}
+
 @media (max-width: 640px) {
   .oh-grid {
     grid-template-columns: 1fr;

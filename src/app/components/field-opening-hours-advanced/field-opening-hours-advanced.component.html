@@ -83,6 +83,9 @@
           }
         </div>
       </div>
+      @if (hasOrderError(day.index)) {
+        <p class="error-message">El orden de horarios no es válido.</p>
+      }
     </div>
     }
   </div>

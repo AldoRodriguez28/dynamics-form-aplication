@@ -49,6 +49,8 @@ export class FieldOpeningHoursAdvancedComponent implements OnChanges {
     if (!group) return;
     const control = group.get(key) as FormControl | null;
     control?.setValue(value);
+    group.markAsTouched();
+    group.updateValueAndValidity({ emitEvent: false });
   }
 
   isClosed(index: number): boolean {
@@ -65,6 +67,11 @@ export class FieldOpeningHoursAdvancedComponent implements OnChanges {
     if (index < 0 || index >= this.formArray.length) return;
     this.formArray.removeAt(index);
     this.days = this.getDays();
+  }
+
+  hasOrderError(index: number): boolean {
+    const group = this.getGroupForDayByIndex(index);
+    return Boolean(group?.touched && group?.errors?.['openingHoursOrder']);
   }
 
   copyFirstToAll(): void {
