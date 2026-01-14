@@ -14,20 +14,25 @@
 
   <div class="opening-grid">
     @for (dia of dias; track dia) {
-    <div class="opening-row">
-      <div class="opening-day">{{ dia }}</div>
-      @for (campo of campos; track campo) {
-      <div class="opening-field">
-        <label class="sub-label" [for]="field.name + '-' + dia + '-' + campo">{{ campo | titlecase }}</label>
-        <input
-          class="field-control"
-          type="time"
-          [id]="field.name + '-' + dia + '-' + campo"
-          [value]="valueFor(dia, campo)"
-          [disabled]="readOnly"
-          (input)="updateValue(dia, campo, $any($event.target).value)"
-        />
+    <div>
+      <div class="opening-row">
+        <div class="opening-day">{{ dia }}</div>
+        @for (campo of campos; track campo) {
+        <div class="opening-field">
+          <label class="sub-label" [for]="field.name + '-' + dia + '-' + campo">{{ campo | titlecase }}</label>
+          <input
+            class="field-control"
+            type="time"
+            [id]="field.name + '-' + dia + '-' + campo"
+            [value]="valueFor(dia, campo)"
+            [disabled]="readOnly"
+            (input)="updateValue(dia, campo, $any($event.target).value)"
+          />
+        </div>
+        }
       </div>
+      @if (hasOrderErrorFor(dia)) {
+        <p class="error-message">La hora de apertura debe ser menor que la de cierre.</p>
       }
     </div>
     }

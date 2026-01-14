@@ -1,4 +1,5 @@
 export * from './field-input/field-input.component';
+export * from './field-url/field-url.component';
 export * from './field-textarea/field-textarea.component';
 export * from './field-select/field-select.component';
 export * from './field-multiselect/field-multiselect.component';

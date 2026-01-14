@@ -40,8 +40,12 @@ export class BusinessService {
   }
 
   /** GET /businesses/{id} con Authorization: Bearer <token> */
-  getbusinessesById(businessId: string | number): Observable<BlocksResponse> {
-    const url = `${this.baseUrl}/businesses/${businessId}`;
+  // getbusinessesById(businessId: string | number): Observable<BlocksResponse> {
+  //   const url = `${this.baseUrl}/businesses/${businessId}`;
+  //   return this.http.get<BusinessDetailWithBlocksResponse>(url, { headers: this.authHeader.build() });
+  // }
+    getbusinessesById(businessId: string | number): Observable<BlocksResponse> {
+    const url = `assets/data/mock-blocks.json`;
     return this.http.get<BusinessDetailWithBlocksResponse>(url, { headers: this.authHeader.build() });
   }
 

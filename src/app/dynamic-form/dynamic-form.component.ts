@@ -27,6 +27,7 @@ import {
   FieldArrayPrimitiveComponent,
   FieldFileComponent,
   FieldInputComponent,
+  FieldUrlComponent,
   FieldDomainOptionComponent,
   FieldOpeningHoursComponent,
   FieldOpeningHoursAdvancedComponent,
@@ -47,6 +48,7 @@ import { CatalogMapping } from '../mapping/catalog/catalog.map';
 
 type FieldDisplayType =
   | 'text'
+  | 'url'
   | 'textarea'
   | 'select'
   | 'multiselect'
@@ -89,6 +91,7 @@ interface BlockView {
     CommonModule,
     ReactiveFormsModule,
     FieldInputComponent,
+    FieldUrlComponent,
     FieldTextareaComponent,
     FieldSelectComponent,
     FieldMultiselectComponent,
@@ -426,6 +429,9 @@ export class DynamicFormComponent implements OnChanges {
     const validators = this.validatorFactory.build(fieldDef, {
       requiredValidator: fieldDef.type === 'opening_hours' ? this.openingHoursRequiredValidator() : undefined
     });
+    if (fieldDef.type === 'opening_hours') {
+      validators.push(this.openingHoursOrderValidator());
+    }
 
     const control = this.fb.control(value, validators);
 
@@ -441,6 +447,7 @@ export class DynamicFormComponent implements OnChanges {
     if (type === 'textarea') return 'textarea';
     if (type === 'select') return 'select';
     if (type === 'checkbox') return 'checkbox';
+    if (type === 'url') return 'url';
     return 'text';
   }
 
@@ -617,6 +624,70 @@ export class DynamicFormComponent implements OnChanges {
     };
   }
 
+  private openingHoursOrderValidator(): ValidatorFn {
+    return (control: AbstractControl) => {
+      const value = control.value as Record<string, Record<string, string>> | null | undefined;
+      if (!value) return null;
+
+      for (const dia of Object.values(value)) {
+        const abre = dia?.['abre'];
+        const cierra = dia?.['cierra'];
+        if (!this.hasTimeValue(abre) || !this.hasTimeValue(cierra)) continue;
+
+        const start = this.timeToMinutes(abre);
+        const end = this.timeToMinutes(cierra);
+        if (start === null || end === null || start >= end) {
+          return { openingHoursOrder: true };
+        }
+      }
+
+      return null;
+    };
+  }
+
+  private openingHoursAdvancedValidator(timeKeys: string[]): ValidatorFn {
+    return (control: AbstractControl) => {
+      const group = control as FormGroup | null;
+      if (!group) return null;
+
+      for (let i = 0; i < timeKeys.length - 1; i += 1) {
+        const current = group.get(timeKeys[i])?.value;
+        const next = group.get(timeKeys[i + 1])?.value;
+        if (!this.hasTimeValue(current) || !this.hasTimeValue(next)) continue;
+
+        const currentMinutes = this.timeToMinutes(current);
+        const nextMinutes = this.timeToMinutes(next);
+        if (currentMinutes === null || nextMinutes === null || currentMinutes >= nextMinutes) {
+          return { openingHoursOrder: true };
+        }
+      }
+
+      return null;
+    };
+  }
+
+  private hasTimeValue(value: unknown): value is string {
+    return typeof value === 'string' && value.trim() !== '';
+  }
+
+  private timeToMinutes(value: string): number | null {
+    const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(value.trim());
+    if (!match) return null;
+    const hours = Number(match[1]);
+    const minutes = Number(match[2]);
+    return hours * 60 + minutes;
+  }
+
+  private getAdvancedTimeSequence(keys: string[], field: FormField): string[] {
+    const schema = field.itemSchema ?? {};
+    const schemaTimeKeys = Object.keys(schema).filter((key) => schema[key]?.type === 'time');
+    const base = schemaTimeKeys.length ? schemaTimeKeys : keys.filter((key) => key !== 'dia');
+    const preferred = ['abre', 'comidaSale', 'comidaRegresa', 'cierra'];
+    const ordered = preferred.filter((key) => base.includes(key));
+    const remaining = base.filter((key) => !preferred.includes(key));
+    return [...ordered, ...remaining];
+  }
+
   private isObjectArrayField(field: FormField): boolean {
     return field.collection === 'array' && field.type === 'object';
   }
@@ -686,7 +757,11 @@ export class DynamicFormComponent implements OnChanges {
       controls[key] = this.fb.control(this.coercePrimitive(value?.[key]), validators);
     });
 
-    return this.fb.group(controls);
+    const validators = this.isAdvancedOpeningHoursField(field)
+      ? [this.openingHoursAdvancedValidator(this.getAdvancedTimeSequence(keys, field))]
+      : [];
+
+    return this.fb.group(controls, { validators });
   }
 
   private buildPrimitiveArrayControl(field: FormField, rawValue: unknown): FormArray<FormControl> {
