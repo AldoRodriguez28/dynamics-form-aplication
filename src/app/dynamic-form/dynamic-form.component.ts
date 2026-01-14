@@ -27,6 +27,7 @@ import {
   FieldArrayPrimitiveComponent,
   FieldFileComponent,
   FieldInputComponent,
+  FieldUrlComponent,
   FieldDomainOptionComponent,
   FieldOpeningHoursComponent,
   FieldOpeningHoursAdvancedComponent,
@@ -47,6 +48,7 @@ import { CatalogMapping } from '../mapping/catalog/catalog.map';
 
 type FieldDisplayType =
   | 'text'
+  | 'url'
   | 'textarea'
   | 'select'
   | 'multiselect'
@@ -89,6 +91,7 @@ interface BlockView {
     CommonModule,
     ReactiveFormsModule,
     FieldInputComponent,
+    FieldUrlComponent,
     FieldTextareaComponent,
     FieldSelectComponent,
     FieldMultiselectComponent,
@@ -441,6 +444,7 @@ export class DynamicFormComponent implements OnChanges {
     if (type === 'textarea') return 'textarea';
     if (type === 'select') return 'select';
     if (type === 'checkbox') return 'checkbox';
+    if (type === 'url') return 'url';
     return 'text';
   }
 

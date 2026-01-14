@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ValidatorFn, Validators } from '@angular/forms';
+import { AbstractControl, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { FormField } from '../models/form-schema.model';
 
 interface BuildOptions {
@@ -9,7 +9,7 @@ interface BuildOptions {
 
 @Injectable({ providedIn: 'root' })
 export class FieldValidatorFactory {
-  private readonly urlPattern = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/i;
+  private readonly urlSchemePattern = /^(https?:)?\/\//i;
 
   build(field: FormField, options?: BuildOptions): ValidatorFn[] {
     const validators: ValidatorFn[] = [];
@@ -26,7 +26,7 @@ export class FieldValidatorFactory {
     }
 
     if (field.type === 'url') {
-      validators.push(Validators.pattern(this.urlPattern));
+      validators.push(this.urlValidator());
     }
 
     if (field.pattern) {
@@ -38,5 +38,26 @@ export class FieldValidatorFactory {
     }
 
     return validators;
+  }
+
+  private urlValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const rawValue = typeof control.value === 'string' ? control.value.trim() : '';
+      if (!rawValue) return null;
+
+      const normalized = this.urlSchemePattern.test(rawValue) ? rawValue : `https://${rawValue}`;
+
+      try {
+        const parsed = new URL(normalized);
+        const hostname = parsed.hostname;
+        if (!hostname.includes('.')) return { url: true };
+        if (hostname.endsWith('.')) return { url: true };
+        const labels = hostname.split('.');
+        if (labels.some((label) => label.length === 0)) return { url: true };
+        return null;
+      } catch {
+        return { url: true };
+      }
+    };
   }
 }

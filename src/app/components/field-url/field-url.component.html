@@ -1,0 +1,25 @@
+<div class="field-wrapper">
+  <label class="field-label" [for]="field.name">
+    {{ field.label }}
+    @if (field.required) { <span class="required">*</span> }
+  </label>
+  <input
+    class="field-control"
+    type="text"
+    [id]="field.name"
+    [formControl]="control"
+    [readonly]="readOnly"
+    [attr.required]="field.required || null"
+    [attr.maxLength]="field.maxLength"
+    [attr.placeholder]="field.placeholder"
+  />
+  @if (showError && hasRequiredError) {
+    <p class="error-message">Este campo es obligatorio.</p>
+  }
+  @if (showError && hasPatternError) {
+    <p class="error-message">URL invalida.</p>
+  }
+  @if (field.placeholder) {
+    <p class="help">{{ field.placeholder }}</p>
+  }
+</div>

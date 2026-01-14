@@ -99,6 +99,9 @@
                 @case ('checkbox') {
                 <app-field-input [field]="field" [control]="getControl(form, [block.code, field.name])" [readOnly]="readOnly || block.readOnly" />
                 }
+                @case ('url') {
+                <app-field-url [field]="field" [control]="getControl(form, [block.code, field.name])" [readOnly]="readOnly || block.readOnly" />
+                }
                 @case ('array-object') {
                 <app-field-array-object
                   [field]="field"
