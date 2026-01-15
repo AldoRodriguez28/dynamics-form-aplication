@@ -1,4 +1,4 @@
-import { ResolveFn } from '@angular/router';
+import { ResolveFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
 import { catchError, map, of, tap } from 'rxjs';
 import { AuthService } from '../services/Auth.service';
@@ -15,6 +15,7 @@ export const authByTokenResolver: ResolveFn<boolean> = (route) => {
 
     const auth = inject(AuthService);
     const storage = inject(TokenStorageService);
+    const router = inject(Router);
 
     return auth.loginByToken(finalToken).pipe(
         tap(res => {
@@ -34,6 +35,10 @@ export const authByTokenResolver: ResolveFn<boolean> = (route) => {
         }),
         map(() => true),
         catchError((err) => {
+            if (err?.status === 401) {
+                storage.clearToken();
+                router.navigateByUrl('/unauthorized');
+            }
             return of(false);
         })
     );
