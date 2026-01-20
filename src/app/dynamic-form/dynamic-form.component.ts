@@ -28,6 +28,7 @@ import {
   FieldFileComponent,
   FieldInputComponent,
   FieldUrlComponent,
+  FieldPhoneComponent,
   FieldDomainOptionComponent,
   FieldOpeningHoursComponent,
   FieldOpeningHoursAdvancedComponent,
@@ -59,6 +60,7 @@ type FieldDisplayType =
   | 'opening-hours'
   | 'opening-hours-advanced'
   | 'location-map'
+  | 'phones'
   | 'pill-multiselect'
   | 'productos-servicios'
   | 'checkbox'
@@ -102,6 +104,7 @@ interface BlockView {
     FieldProductosServiciosComponent,
     FieldArrayObjectComponent,
     FieldArrayPrimitiveComponent,
+    FieldPhoneComponent,
     FieldOpeningHoursComponent,
     FieldOpeningHoursAdvancedComponent,
     FormSidebarComponent
@@ -325,6 +328,7 @@ export class DynamicFormComponent implements OnChanges {
     const isDomainOption = this.isDomainOptionField(fieldDef);
     const isAdvancedOpening = this.isAdvancedOpeningHoursField(fieldDef);
     const isLocationMap = this.isLocationMapField(fieldDef);
+    const isPhonesField = this.isPhonesField(fieldDef);
     let displayType: FieldDisplayType;
 
     if (isAdvancedOpening) {
@@ -333,6 +337,8 @@ export class DynamicFormComponent implements OnChanges {
       displayType = 'location-map';
     } else if (fieldDef.collection === 'array' && fieldDef.type === 'checkbox-group') {
       displayType = 'array-checkbox-grid';
+    } else if (isPhonesField) {
+      displayType = 'phones';
     } else if (isObjectArrayField) {
       displayType = 'array-object';
     } else if (this.isProductosServiciosField(fieldDef)) {
@@ -373,6 +379,18 @@ export class DynamicFormComponent implements OnChanges {
 
     if (this.isProductosServiciosField(fieldDef)) {
       const control = this.buildPrimitiveArrayControl(fieldDef, rawValue);
+      const field: BlockField = {
+        ...fieldDef,
+        displayType,
+        colSpan,
+        label: fieldDef.label || this.toLabel(fieldDef.name)
+      };
+
+      return { field, control };
+    }
+
+    if (isPhonesField) {
+      const control = this.buildPhoneArrayControl(fieldDef, rawValue);
       const field: BlockField = {
         ...fieldDef,
         displayType,
@@ -722,6 +740,20 @@ export class DynamicFormComponent implements OnChanges {
     return field.name === 'coordenadas' && field.type === 'text' && field.collection !== 'array';
   }
 
+  private isPhonesField(field: FormField): boolean {
+    if (field.collection !== 'array') return false;
+    const widget = (field.widget || '').toLowerCase();
+    if (widget === 'phones' || widget === 'telefonos' || widget === 'phone') return true;
+
+    if (field.type === 'tel') return true;
+    if (field.type !== 'object') return false;
+
+    const schema = field.itemSchema ?? {};
+    const hasNumero = Object.prototype.hasOwnProperty.call(schema, 'numero');
+    const hasTelType = Object.values(schema).some((item) => item?.type === 'tel');
+    return hasNumero && hasTelType;
+  }
+
   private isDireccionField(field: FormField): boolean {
     return field.name === 'direccion';
   }
@@ -745,6 +777,51 @@ export class DynamicFormComponent implements OnChanges {
     const groups = items.map((item) => this.buildObjectGroup(keys, field, item));
     const control = this.fb.array(groups.length ? groups : [this.buildObjectGroup(keys, field, {})]);
     return { control, itemKeys: keys };
+  }
+
+  private buildPhoneArrayControl(field: FormField, rawValue: unknown): FormArray<FormGroup> {
+    const schema = field.itemSchema ?? {};
+    const includeTipo = Object.prototype.hasOwnProperty.call(schema, 'tipo');
+    const keys = includeTipo ? ['tipo', 'numero', 'country'] : ['numero', 'country'];
+
+    const normalizeCountry = (value: unknown): 'MX' | 'US' => {
+      const normalized =
+        typeof value === 'string' ? value.replace(/\s+/g, '').toUpperCase() : '';
+      return normalized === 'US' ? 'US' : 'MX';
+    };
+
+    let items: Record<string, unknown>[] = [];
+    if (Array.isArray(rawValue)) {
+      const hasObject = rawValue.some((item) => item && typeof item === 'object');
+      if (hasObject) {
+        items = this.normalizeObjectArray(rawValue, field).items;
+      } else {
+        items = rawValue.map((value) => ({ numero: value }));
+      }
+    } else if (rawValue && typeof rawValue === 'object') {
+      items = this.normalizeObjectArray(rawValue, field).items;
+    }
+    if (!items.length) items = [{}];
+
+    const groups = items.map((item) => {
+      const originalCountry = (item as Record<string, unknown>)?.['country'];
+      const normalizedCountry = normalizeCountry(originalCountry);
+      return this.buildObjectGroup(keys, field, {
+        ...item,
+        country: normalizedCountry
+      });
+    });
+
+    const formArray = this.fb.array(
+      groups.length ? groups : [this.buildObjectGroup(keys, field, { country: 'MX' })]
+    );
+
+    formArray.controls.forEach((group, index) => {
+      const country = normalizeCountry((items[index] as Record<string, unknown>)?.['country']);
+      group.get('country')?.setValue(country, { emitEvent: false });
+    });
+
+    return formArray;
   }
 
   private buildObjectGroup(keys: string[], field: FormField, value: Record<string, unknown>): FormGroup {

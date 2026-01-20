@@ -20,8 +20,10 @@ export const authByTokenResolver: ResolveFn<boolean> = (route) => {
     return auth.loginByToken(finalToken).pipe(
         tap(res => {
             storage.setToken(res.bearerToken);
+            console.log("res",res)
 
             const payload = decodeJwtPayload(res.bearerToken);
+            console.log("payload",payload)
             const advertiserId = payload?.['bcm.advertiser_id'];
             if (advertiserId != null) storage.setAdvertiserId(String(advertiserId));
 

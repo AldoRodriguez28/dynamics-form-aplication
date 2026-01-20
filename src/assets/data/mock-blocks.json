@@ -611,11 +611,13 @@
         "telsNegocio": [
           {
             "tipo": "Fijo",
-            "numero": "5555123456"
+            "numero": "5555123456",
+            "country": "MX"
           },
           {
             "tipo": "Celular",
-            "numero": "5512345678"
+            "numero": "5512345678",
+            "country": "US"
           }
         ],
         "waAtencion": ["5512345678", "5599988877"],
