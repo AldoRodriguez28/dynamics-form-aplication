@@ -4,7 +4,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { EMPTY, map, Observable, of, switchMap, tap } from 'rxjs';
 import { Business } from '../models/business.model';
 import { BusinessService } from '../services/business.service';
-import { TokenStorageService } from '../services/shared/token-storage.service';
+import { AuthService } from '../services/Auth.service';
+import { OtpRedirectTarget, TokenStorageService } from '../services/shared/token-storage.service';
 import { BusinessMapping } from '../mapping/business/business.map';
 import { LegacyBusinessInterface } from '../Interfaces/business/response/legacy-business.interface';
 import { ClientNotFoundComponent } from '../components/client-not-found/client-not-found.component';
@@ -22,6 +23,7 @@ export class BusinessListComponent {
   private readonly businessService = inject(BusinessService);
   private readonly router = inject(Router);
   private readonly tokenStore = inject(TokenStorageService);
+  private readonly authService = inject(AuthService);
 
   clientId: string | null = null;
   clientName:string | null = null;
@@ -34,6 +36,13 @@ export class BusinessListComponent {
   }
 
   goToForm(clientId: string, business: Business, advertiserName: string): void {
+    const role = (this.tokenStore.getRole() ?? '').toUpperCase();
+    const requiresOtp = role === 'CLIENT' && !this.tokenStore.isOtpVerified();
+    if (requiresOtp) {
+      this.requestOtpAndRedirect(clientId, business, advertiserName);
+      return;
+    }
+
     this.router.navigate(['/', clientId, business.businessId], {
       state: { commercialName: business.commercialName, advertiserName: advertiserName }
     });
@@ -80,6 +89,36 @@ export class BusinessListComponent {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
+    });
+  }
+
+  private requestOtpAndRedirect(clientId: string, business: Business, advertiserName: string): void {
+    const targetClientId = clientId || this.clientId || '';
+    if (!targetClientId || !business?.businessId) {
+      console.warn('No se pudo iniciar OTP: falta clientId o businessId.');
+      return;
+    }
+
+    this.authService.getOtpUrl().subscribe({
+      next: (otpUrl) => {
+        if (!otpUrl) {
+          console.error('La respuesta de OTP no incluye url de redireccion.');
+          return;
+        }
+
+        const target: OtpRedirectTarget = {
+          clientId: targetClientId,
+          businessId: business.businessId,
+          advertiserName: advertiserName || this.clientName || '',
+          commercialName: business.commercialName ?? ''
+        };
+
+        this.tokenStore.setOtpTarget(target);
+        window.location.assign(otpUrl);
+      },
+      error: (error) => {
+        console.error('Error al solicitar URL de OTP', error);
+      }
     });
   }
 }

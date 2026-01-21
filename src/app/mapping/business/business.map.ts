@@ -39,7 +39,8 @@ export class BusinessMapping {
 
   return {
     businessId: business.businessId,
-    businessVersion: business.businessVersion,
+    businessVersion: business.businessVersion ?? null,
+    versionNumber: business.versionNumber ?? business.businessVersion ?? null,
     advertiserId: business.advertiserId,
     commercialName: business.commercialName ?? commercialName,
 

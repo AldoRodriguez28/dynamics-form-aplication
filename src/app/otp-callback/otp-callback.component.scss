@@ -1,0 +1,15 @@
+.page {
+  display: grid;
+  place-items: center;
+  min-height: 60vh;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  max-width: 420px;
+  width: min(90%, 420px);
+  text-align: center;
+}

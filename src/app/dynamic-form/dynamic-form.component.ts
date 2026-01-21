@@ -46,6 +46,7 @@ import { CatalogService } from '../services/catalog.service';
 import { EMPTY, map, Observable, shareReplay, take, tap } from 'rxjs';
 import { OptionItemInterface } from './interface/OptionItem.intreface';
 import { CatalogMapping } from '../mapping/catalog/catalog.map';
+import { BusinessService } from '../services/business.service';
 
 type FieldDisplayType =
   | 'text'
@@ -114,6 +115,7 @@ interface BlockView {
 })
 export class DynamicFormComponent implements OnChanges {
   private readonly catalogService = inject(CatalogService);
+  private readonly businessService = inject(BusinessService);
 
   @Input({ required: true }) schema!: BusinessForm;
   @Input() readOnly = false;
@@ -185,10 +187,55 @@ export class DynamicFormComponent implements OnChanges {
     event?.preventDefault();
     event?.stopPropagation();
 
+    if (this.formReadOnly || block.readOnly) return;
     if (!this.form) return;
+
+    const blockGroup = this.form.get(block.code) as FormGroup | null;
+    blockGroup?.markAllAsTouched();
+
     const blockWithValues = this.getBlockWithCurrentValues(block.code);
     if (!blockWithValues) return;
-    console.log(`${block.code}:`, blockWithValues.values);
+
+    const missingRequired = findMissingRequiredFields([blockWithValues]);
+    if (missingRequired.length) {
+      const detail = missingRequired
+        .map((item) => `${item.blockName || item.blockCode}: ${item.label || item.fieldName}`)
+        .join('<br>');
+
+      Swal.fire({
+        icon: 'warning',
+        title: 'Faltan campos obligatorios',
+        html: detail,
+        confirmButtonText: 'Entendido'
+      });
+
+      return;
+    }
+
+    if (!blockGroup?.valid) return;
+
+    const businessId = this.schema?.businessId;
+    const versionNumber = this.schema?.versionNumber ?? this.schema?.businessVersion;
+
+    if (businessId == null || versionNumber == null) {
+      console.warn('No se pudo guardar el bloque: falta businessId o versionNumber.');
+      return;
+    }
+
+    const request = this.buildPayloadForBlocks([blockWithValues]);
+
+    this.businessService
+      .saveSingleBlock(businessId, versionNumber, blockWithValues.code, request)
+      .subscribe({
+        next: () => {
+          Swal.fire({
+            icon: 'success',
+            title: 'Bloque guardado',
+            text: 'Los cambios se guardaron correctamente.'
+          });
+        },
+        error: (error) => console.error('Error al guardar bloque', error)
+      });
   }
   saveBlock(block: BlockView, event?: Event): void {
     event?.preventDefault();

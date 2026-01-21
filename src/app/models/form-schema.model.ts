@@ -94,6 +94,11 @@ export interface BusinessFormBlock {
 }
 
 export interface BusinessForm {
+  businessId?: string | number;
+  businessVersion?: number;
+  versionNumber?: number;
+  advertiserId?: string | number;
+  commercialName?: string;
   actorType?: string;
   actorId?: string;
   status?: FormStatus;
