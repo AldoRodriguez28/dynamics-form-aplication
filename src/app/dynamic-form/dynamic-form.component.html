@@ -96,6 +96,13 @@
                   [readOnly]="readOnly || block.readOnly"
                 />
                 }
+                @case ('phones') {
+                <app-field-phone
+                  [field]="field"
+                  [formArray]="getArrayControl(block.code, field.name)"
+                  [readOnly]="readOnly || block.readOnly"
+                />
+                }
                 @case ('checkbox') {
                 <app-field-input [field]="field" [control]="getControl(form, [block.code, field.name])" [readOnly]="readOnly || block.readOnly" />
                 }

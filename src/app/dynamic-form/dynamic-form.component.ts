@@ -1,33 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import {
-  AbstractControl,
-  FormArray,
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  ValidatorFn,
-  ReactiveFormsModule,
-  Validators
-} from '@angular/forms';
-import { FieldValidatorFactory } from '../utils/field-validator.factory';
+import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { getControl, getFieldOptions, optionKey, OptionValue, toggleOption } from '../utils';
 import { SaveBlocksRequest } from '../services/request/save-blocks.request';
 import { PayloadBuilder } from '../utils/payload.builder';
-import {
-  BlockUI,
-  BusinessForm,
-  BusinessFormBlock,
-  FormField,
-  FormRow,
-  OptionSet
-} from '../models/form-schema.model';
+import { BusinessForm, BusinessFormBlock } from '../models/form-schema.model';
 import {
   FieldArrayObjectComponent,
   FieldArrayPrimitiveComponent,
   FieldFileComponent,
   FieldInputComponent,
   FieldUrlComponent,
+  FieldPhoneComponent,
   FieldDomainOptionComponent,
   FieldOpeningHoursComponent,
   FieldOpeningHoursAdvancedComponent,
@@ -42,47 +26,12 @@ import { FormSidebarComponent } from '../components/form-sidebar/form-sidebar.co
 import { collectRequiredFields, findMissingRequiredFields } from '../utils';
 import Swal from 'sweetalert2';
 import { CatalogService } from '../services/catalog.service';
-import { EMPTY, map, Observable, shareReplay, take, tap } from 'rxjs';
+import { EMPTY, map, Observable, shareReplay, take } from 'rxjs';
 import { OptionItemInterface } from './interface/OptionItem.intreface';
 import { CatalogMapping } from '../mapping/catalog/catalog.map';
-
-type FieldDisplayType =
-  | 'text'
-  | 'url'
-  | 'textarea'
-  | 'select'
-  | 'multiselect'
-  | 'checkbox-grid'
-  | 'array-checkbox-grid'
-  | 'file'
-  | 'domain-option'
-  | 'opening-hours'
-  | 'opening-hours-advanced'
-  | 'location-map'
-  | 'pill-multiselect'
-  | 'productos-servicios'
-  | 'checkbox'
-  | 'array-object'
-  | 'array-primitive';
-type BlockField = FormField & {
-  displayType: FieldDisplayType;
-  colSpan: number;
-  itemKeys?: string[];
-  itemType?: FormField['type'];
-};
-type RowView = { num: number; fields: BlockField[] };
-type FormValueParser = (value: unknown) => unknown;
-type Primitive = string | number | boolean | null;
-interface BlockView {
-  code: string;
-  title: string;
-  description?: string;
-  ui?: BlockUI;
-  optionSets?: Record<string, OptionSet>;
-  rows: RowView[];
-  fieldCount: number;
-  readOnly: boolean;
-}
+import { BusinessService } from '../services/business.service';
+import { BlockAccessPolicy } from './services/block-access.policy';
+import { BlockFactoryService, BlockView, FormValueParser } from './services/block-factory.service';
 
 @Component({
   selector: 'app-dynamic-form',
@@ -102,6 +51,7 @@ interface BlockView {
     FieldProductosServiciosComponent,
     FieldArrayObjectComponent,
     FieldArrayPrimitiveComponent,
+    FieldPhoneComponent,
     FieldOpeningHoursComponent,
     FieldOpeningHoursAdvancedComponent,
     FormSidebarComponent
@@ -111,6 +61,9 @@ interface BlockView {
 })
 export class DynamicFormComponent implements OnChanges {
   private readonly catalogService = inject(CatalogService);
+  private readonly businessService = inject(BusinessService);
+  private readonly blockFactory = inject(BlockFactoryService);
+  private readonly fb = inject(FormBuilder);
 
   @Input({ required: true }) schema!: BusinessForm;
   @Input() readOnly = false;
@@ -128,11 +81,6 @@ export class DynamicFormComponent implements OnChanges {
   valueParsers: Record<string, FormValueParser> = {};
   private pendingSelectValues: Record<string, unknown> = {};
   getControl = getControl;
-
-  constructor(
-    private fb: FormBuilder,
-    private validatorFactory: FieldValidatorFactory
-  ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['schema']?.currentValue) {
@@ -182,10 +130,55 @@ export class DynamicFormComponent implements OnChanges {
     event?.preventDefault();
     event?.stopPropagation();
 
+    if (this.formReadOnly || block.readOnly) return;
     if (!this.form) return;
+
+    const blockGroup = this.form.get(block.code) as FormGroup | null;
+    blockGroup?.markAllAsTouched();
+
     const blockWithValues = this.getBlockWithCurrentValues(block.code);
     if (!blockWithValues) return;
-    console.log(`${block.code}:`, blockWithValues.values);
+
+    const missingRequired = findMissingRequiredFields([blockWithValues]);
+    if (missingRequired.length) {
+      const detail = missingRequired
+        .map((item) => `${item.blockName || item.blockCode}: ${item.label || item.fieldName}`)
+        .join('<br>');
+
+      Swal.fire({
+        icon: 'warning',
+        title: 'Faltan campos obligatorios',
+        html: detail,
+        confirmButtonText: 'Entendido'
+      });
+
+      return;
+    }
+
+    if (!blockGroup?.valid) return;
+
+    const businessId = this.schema?.businessId;
+    const versionNumber = this.schema?.versionNumber ?? this.schema?.businessVersion;
+
+    if (businessId == null || versionNumber == null) {
+      console.warn('No se pudo guardar el bloque: falta businessId o versionNumber.');
+      return;
+    }
+
+    const request = this.buildPayloadForBlocks([blockWithValues]);
+
+    this.businessService
+      .saveSingleBlock(businessId, versionNumber, blockWithValues.code, request)
+      .subscribe({
+        next: () => {
+          Swal.fire({
+            icon: 'success',
+            title: 'Bloque guardado',
+            text: 'Los cambios se guardaron correctamente.'
+          });
+        },
+        error: (error) => console.error('Error al guardar bloque', error)
+      });
   }
   saveBlock(block: BlockView, event?: Event): void {
     event?.preventDefault();
@@ -234,29 +227,28 @@ export class DynamicFormComponent implements OnChanges {
     this.optionsMap = {};
     this.valueParsers = {};
 
+    const accessPolicy = new BlockAccessPolicy(this.readOnly, this.userRole);
     const schemaBlocks = this.schema.blocks
-      .filter((block) => this.isBlockVisible(block))
+      .filter((block) => accessPolicy.isBlockVisible(block))
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
     this.blocks = schemaBlocks.map((block, index) => {
-        const { rows, controls, fieldCount } = this.buildBlock(block);
-        const blockReadOnly = this.isBlockReadOnly(block);
-        group[block.code] = this.fb.group(controls);
-        if (blockReadOnly) {
-          group[block.code].disable({ emitEvent: false });
-        }
+      const blockReadOnly = accessPolicy.isBlockReadOnly(block);
+      const { view, controls, optionsMap, valueParsers } = this.blockFactory.buildBlock(
+        block,
+        index,
+        blockReadOnly
+      );
+      group[block.code] = this.fb.group(controls);
+      if (blockReadOnly) {
+        group[block.code].disable({ emitEvent: false });
+      }
 
-        return {
-          code: block.code,
-          title: block.name || this.formatBlockLabel(block.code, index),
-          description: block.description,
-          ui: block.ui,
-          optionSets: block.optionSets,
-          rows,
-          fieldCount,
-          readOnly: blockReadOnly
-        };
-      });
+      Object.assign(this.optionsMap, optionsMap);
+      Object.assign(this.valueParsers, valueParsers);
+
+      return view;
+    });
 
     // Solo para pruebas: imprimir los campos requeridos detectados en el esquema
     const requiredFieldsSnapshot = collectRequiredFields(schemaBlocks);
@@ -270,620 +262,6 @@ export class DynamicFormComponent implements OnChanges {
     this.loadApiOptionsForBlocks();
   }
 
-  private buildBlock(block: BusinessFormBlock): {
-    rows: RowView[];
-    controls: Record<string, AbstractControl>;
-    fieldCount: number;
-  } {
-    const rows: RowView[] = [];
-    const controls: Record<string, AbstractControl> = {};
-
-    const rowsSource: FormRow[] = block.rows && block.rows.length > 0 ? block.rows : this.buildLegacyRows(block);
-    const sortedRows = rowsSource.slice().sort((a, b) => (a.num ?? 0) - (b.num ?? 0));
-    const hasLocationMap = sortedRows.some((row) => (row.fields ?? []).some((f) => this.isLocationMapField(f)));
-
-    sortedRows.forEach((row) => {
-      const defaultColSpan =
-        row.fields?.length && row.fields.length > 0 ? Math.max(1, Math.floor(12 / row.fields.length)) : 12;
-      const rowFields: BlockField[] = (row.fields ?? []).map((fieldDef) => {
-        const rawValue = (block.values ?? {})[fieldDef.name];
-        const { field, control, options, parser } = this.buildField(block, fieldDef, rawValue, defaultColSpan);
-        const skipRender = hasLocationMap && this.isDireccionField(fieldDef);
-
-        controls[field.name] = control;
-
-        if (options) {
-          this.optionsMap[optionKey(block.code, field.name)] = options;
-        }
-        if (parser) {
-          this.valueParsers[optionKey(block.code, field.name)] = parser;
-        }
-
-        return skipRender ? null : field;
-      }).filter((f): f is BlockField => !!f);
-
-      rows.push({
-        num: row.num,
-        fields: rowFields
-      });
-    });
-
-    // Use unique control names to avoid over-counting repeated fields (e.g., the same checkbox twice in the UI)
-    const fieldCount = Object.keys(controls).length;
-
-    return { rows, controls, fieldCount };
-  }
-
-  private buildField(
-    block: BusinessFormBlock,
-    fieldDef: FormField,
-    rawValue: unknown,
-    defaultColSpan: number
-  ): { field: BlockField; control: AbstractControl; options?: OptionItemInterface[]; parser?: FormValueParser } {
-    const isObjectArrayField = this.isObjectArrayField(fieldDef);
-    const isPrimitiveArrayField = this.isPrimitiveArrayField(fieldDef);
-    const isDomainOption = this.isDomainOptionField(fieldDef);
-    const isAdvancedOpening = this.isAdvancedOpeningHoursField(fieldDef);
-    const isLocationMap = this.isLocationMapField(fieldDef);
-    let displayType: FieldDisplayType;
-
-    if (isAdvancedOpening) {
-      displayType = 'opening-hours-advanced';
-    } else if (isLocationMap) {
-      displayType = 'location-map';
-    } else if (fieldDef.collection === 'array' && fieldDef.type === 'checkbox-group') {
-      displayType = 'array-checkbox-grid';
-    } else if (isObjectArrayField) {
-      displayType = 'array-object';
-    } else if (this.isProductosServiciosField(fieldDef)) {
-      displayType = 'productos-servicios';
-    } else if (this.isPillMultiselectField(fieldDef)) {
-      displayType = 'pill-multiselect';
-    } else if (isPrimitiveArrayField) {
-      displayType = 'array-primitive';
-    } else if (isDomainOption) {
-      displayType = 'domain-option';
-    } else {
-      displayType = this.resolveDisplayType(fieldDef.type);
-      if (fieldDef.collection === 'array' && displayType === 'text') displayType = 'textarea';
-    }
-
-    let colSpanSource = fieldDef.colSpan ?? defaultColSpan;
-    if (isLocationMap) {
-      colSpanSource = this.getDireccionColSpan(block) ?? colSpanSource;
-    }
-
-    const colSpan = Math.min(12, Math.max(1, colSpanSource));
-
-    if (fieldDef.collection === 'array' && fieldDef.type === 'checkbox-group') {
-      const control = this.fb.control(Array.isArray(rawValue) ? rawValue : []);
-      const options = this.resolveOptions(block, fieldDef, rawValue, displayType);
-      if (options) {
-        this.optionsMap[optionKey(block.code, fieldDef.name)] = options;
-      }
-      const field: BlockField = {
-        ...fieldDef,
-        displayType,
-        colSpan,
-        label: fieldDef.label || this.toLabel(fieldDef.name)
-      };
-
-      return { field, control };
-    }
-
-    if (this.isProductosServiciosField(fieldDef)) {
-      const control = this.buildPrimitiveArrayControl(fieldDef, rawValue);
-      const field: BlockField = {
-        ...fieldDef,
-        displayType,
-        colSpan,
-        label: fieldDef.label || this.toLabel(fieldDef.name)
-      };
-
-      return { field, control };
-    }
-
-    if (isObjectArrayField) {
-      const { control, itemKeys } = this.buildArrayObjectControl(fieldDef, rawValue);
-      const field: BlockField = {
-        ...fieldDef,
-        displayType,
-        colSpan,
-        itemKeys,
-        label: fieldDef.label || this.toLabel(fieldDef.name)
-      };
-
-      return { field, control };
-    }
-
-    if (isPrimitiveArrayField) {
-      const control = this.buildPrimitiveArrayControl(fieldDef, rawValue);
-      const itemType = fieldDef.type;
-      const itemDisplayType = this.resolveDisplayType(itemType);
-      const options = this.resolveOptions(block, fieldDef, rawValue, itemDisplayType);
-      if (options) {
-        this.optionsMap[optionKey(block.code, fieldDef.name)] = options;
-      }
-      const field: BlockField = {
-        ...fieldDef,
-        displayType,
-        itemType,
-        colSpan,
-        label: fieldDef.label || this.toLabel(fieldDef.name)
-      };
-
-      return { field, control };
-    }
-
-    const { value, parser } = this.normalizeValue(block.code, fieldDef, rawValue, displayType);
-    const options = this.resolveOptions(block, fieldDef, rawValue, displayType);
-
-    const field: BlockField = {
-      ...fieldDef,
-      displayType,
-      colSpan,
-      rows: displayType === 'textarea' ? fieldDef.rows ?? this.textAreaRows(rawValue) : fieldDef.rows,
-      label: fieldDef.label || this.toLabel(fieldDef.name)
-    };
-
-    const validators = this.validatorFactory.build(fieldDef, {
-      requiredValidator: fieldDef.type === 'opening_hours' ? this.openingHoursRequiredValidator() : undefined
-    });
-    if (fieldDef.type === 'opening_hours') {
-      validators.push(this.openingHoursOrderValidator());
-    }
-
-    const control = this.fb.control(value, validators);
-
-    return { field, control, options, parser };
-  }
-
-  private resolveDisplayType(type: string): FieldDisplayType {
-    if (type === 'object') return 'textarea';
-    if (type === 'opening_hours') return 'opening-hours';
-    if (type === 'location-map') return 'location-map';
-    if (type === 'checkbox-group') return 'checkbox-grid';
-    if (type === 'file') return 'file';
-    if (type === 'textarea') return 'textarea';
-    if (type === 'select') return 'select';
-    if (type === 'checkbox') return 'checkbox';
-    if (type === 'url') return 'url';
-    return 'text';
-  }
-
-  private buildLegacyRows(block: BusinessFormBlock): FormRow[] {
-    const values = block.values ?? {};
-    return [
-      {
-        num: 1,
-        fields: Object.keys(values).map((name) => ({
-          name,
-          label: this.toLabel(name),
-          type: this.guessTypeFromValue(values[name])
-        }))
-      }
-    ];
-  }
-
-  private guessTypeFromValue(value: unknown): FieldDisplayType {
-    if (typeof value === 'boolean') return 'checkbox';
-    if (Array.isArray(value)) return 'textarea';
-    if (value && typeof value === 'object') return 'textarea';
-    if (typeof value === 'string' && value.length > 120) return 'textarea';
-    return 'text';
-  }
-
-  private normalizeValue(
-    blockCode: string,
-    field: FormField,
-    rawValue: unknown,
-    displayType: FieldDisplayType
-  ): { value: unknown; parser?: FormValueParser } {
-    const isArrayCollection = field.collection === 'array';
-
-    if (field.type === 'opening_hours') {
-      return { value: this.normalizeOpeningHours(field, rawValue) };
-    }
-
-    // Arrays for checkbox groups
-    if (displayType === 'checkbox-grid') {
-      const value = Array.isArray(rawValue) ? rawValue : [];
-      return { value };
-    }
-
-    if (displayType === 'location-map') {
-      const value = typeof rawValue === 'string' ? rawValue : '';
-      return { value };
-    }
-
-    // Arrays sin UI específica: editar como texto/JSON para no perder estructura
-    if (isArrayCollection) {
-      const stringValue = this.stringifyValue(rawValue ?? []);
-      return {
-        value: stringValue,
-        parser: (value) => this.parseJson(value, blockCode, field.name)
-      };
-    }
-
-    // Booleans for checkbox
-    if (displayType === 'checkbox') {
-      const value = typeof rawValue === 'boolean' ? rawValue : !!rawValue;
-      return { value };
-    }
-
-    // Objects/arrays rendered como texto JSON
-    if (field.type === 'object' || (rawValue && typeof rawValue === 'object')) {
-      const stringValue = this.stringifyValue(rawValue ?? (isArrayCollection ? [] : {}));
-      return {
-        value: stringValue,
-        parser: (value) => this.parseJson(value, blockCode, field.name)
-      };
-    }
-
-    // Long strings -> textarea para mejor UX
-    if (typeof rawValue === 'string' && rawValue.length > 120) {
-      return { value: rawValue, parser: undefined };
-    }
-
-    if (rawValue === undefined || rawValue === null) {
-      if (isArrayCollection) return { value: [] };
-      return { value: '' };
-    }
-
-    return { value: rawValue };
-  }
-
-  private normalizeOpeningHours(field: FormField, rawValue: unknown): Record<string, Record<string, string>> {
-    const schema = field.schema as { dias?: string[]; campos?: string[] } | undefined;
-    const dias = schema?.dias ?? [];
-    const campos = schema?.campos ?? ['abre', 'cierra'];
-    const base: Record<string, Record<string, string>> = {};
-    dias.forEach((dia) => {
-      base[dia] = {};
-      campos.forEach((c) => {
-        base[dia][c] = '';
-      });
-    });
-
-    if (rawValue && typeof rawValue === 'object') {
-      const incoming = rawValue as Record<string, Record<string, string>>;
-      Object.keys(incoming).forEach((dia) => {
-        base[dia] = { ...base[dia], ...(incoming[dia] ?? {}) };
-      });
-    }
-
-    return base;
-  }
-
-  private resolveOptions(
-    block: BusinessFormBlock,
-    field: FormField,
-    rawValue: unknown,
-    displayType: FieldDisplayType
-  ): OptionItemInterface[] | undefined {
-    if (displayType === 'array-primitive') {
-      return undefined;
-    }
-
-    if (displayType === 'checkbox') {
-      return [
-        { value: true, label: 'Sí' },
-        { value: false, label: 'No' }
-      ];
-    }
-
-    if (!field.optionsRef) {
-      return undefined;
-    }
-
-    const optionSet: OptionSet | undefined = block.optionSets?.[field.optionsRef];
-
-    if (optionSet?.mode === 'static' && optionSet.items?.length) {
-      return optionSet.items;
-    }
-
-    if (optionSet?.mode === 'api') {
-      // Fallback: si ya existe un valor, lo usamos como opción preliminar
-      const fallbackOptions = this.toOptionsFromValue(rawValue);
-      if (fallbackOptions.length) return fallbackOptions;
-    }
-
-    return optionSet?.items ?? this.toOptionsFromValue(rawValue);
-  }
-
-  private toOptionsFromValue(value: unknown): OptionItemInterface[] {
-    if (Array.isArray(value)) {
-      return value
-        .filter((v) => this.isPrimitive(v))
-        .map((v) => ({
-          value: v as Primitive,
-          label: String(v)
-        }));
-    }
-
-    if (this.isPrimitive(value)) {
-      return [
-        {
-          value: value as Primitive,
-          label: String(value)
-        }
-      ];
-    }
-
-    return [];
-  }
-
-  private openingHoursRequiredValidator(): ValidatorFn {
-    return (control: AbstractControl) => {
-      const value = control.value as Record<string, Record<string, string>> | null | undefined;
-      if (!value) return { required: true };
-      const hasValue = Object.values(value).some((dia) =>
-        Object.values(dia || {}).some((v) => (typeof v === 'string' ? v.trim() !== '' : !!v))
-      );
-      return hasValue ? null : { required: true };
-    };
-  }
-
-  private openingHoursOrderValidator(): ValidatorFn {
-    return (control: AbstractControl) => {
-      const value = control.value as Record<string, Record<string, string>> | null | undefined;
-      if (!value) return null;
-
-      for (const dia of Object.values(value)) {
-        const abre = dia?.['abre'];
-        const cierra = dia?.['cierra'];
-        if (!this.hasTimeValue(abre) || !this.hasTimeValue(cierra)) continue;
-
-        const start = this.timeToMinutes(abre);
-        const end = this.timeToMinutes(cierra);
-        if (start === null || end === null || start >= end) {
-          return { openingHoursOrder: true };
-        }
-      }
-
-      return null;
-    };
-  }
-
-  private openingHoursAdvancedValidator(timeKeys: string[]): ValidatorFn {
-    return (control: AbstractControl) => {
-      const group = control as FormGroup | null;
-      if (!group) return null;
-
-      for (let i = 0; i < timeKeys.length - 1; i += 1) {
-        const current = group.get(timeKeys[i])?.value;
-        const next = group.get(timeKeys[i + 1])?.value;
-        if (!this.hasTimeValue(current) || !this.hasTimeValue(next)) continue;
-
-        const currentMinutes = this.timeToMinutes(current);
-        const nextMinutes = this.timeToMinutes(next);
-        if (currentMinutes === null || nextMinutes === null || currentMinutes >= nextMinutes) {
-          return { openingHoursOrder: true };
-        }
-      }
-
-      return null;
-    };
-  }
-
-  private hasTimeValue(value: unknown): value is string {
-    return typeof value === 'string' && value.trim() !== '';
-  }
-
-  private timeToMinutes(value: string): number | null {
-    const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(value.trim());
-    if (!match) return null;
-    const hours = Number(match[1]);
-    const minutes = Number(match[2]);
-    return hours * 60 + minutes;
-  }
-
-  private getAdvancedTimeSequence(keys: string[], field: FormField): string[] {
-    const schema = field.itemSchema ?? {};
-    const schemaTimeKeys = Object.keys(schema).filter((key) => schema[key]?.type === 'time');
-    const base = schemaTimeKeys.length ? schemaTimeKeys : keys.filter((key) => key !== 'dia');
-    const preferred = ['abre', 'comidaSale', 'comidaRegresa', 'cierra'];
-    const ordered = preferred.filter((key) => base.includes(key));
-    const remaining = base.filter((key) => !preferred.includes(key));
-    return [...ordered, ...remaining];
-  }
-
-  private isObjectArrayField(field: FormField): boolean {
-    return field.collection === 'array' && field.type === 'object';
-  }
-
-  private isPrimitiveArrayField(field: FormField): boolean {
-    return (
-      field.collection === 'array' &&
-      field.type !== 'object' &&
-      field.type !== 'checkbox-group' &&
-      !this.isPillMultiselectField(field) &&
-      !this.isProductosServiciosField(field)
-    );
-  }
-
-  private isDomainOptionField(field: FormField): boolean {
-    return field.collection !== 'array' && /^dominio\d*$/.test(field.name ?? '') && field.type === 'text';
-  }
-
-  private isPillMultiselectField(field: FormField): boolean {
-    return field.collection === 'array' && field.type === 'checkbox-group' && field.name !== 'productosServicios';
-  }
-
-  private isProductosServiciosField(field: FormField): boolean {
-    return field.name === 'productosServicios' && field.collection === 'array';
-  }
-
-  private isAdvancedOpeningHoursField(field: FormField): boolean {
-    return field.name === 'horariosPersonalizados' && field.collection === 'array' && field.type === 'object';
-  }
-
-  private isLocationMapField(field: FormField): boolean {
-    return field.name === 'coordenadas' && field.type === 'text' && field.collection !== 'array';
-  }
-
-  private isDireccionField(field: FormField): boolean {
-    return field.name === 'direccion';
-  }
-
-  private getDireccionColSpan(block: BusinessFormBlock): number | undefined {
-    for (const row of block.rows || []) {
-      for (const field of row.fields || []) {
-        if (field.name === 'direccion' && field.colSpan) {
-          return field.colSpan;
-        }
-      }
-    }
-    return undefined;
-  }
-
-  private buildArrayObjectControl(
-    field: FormField,
-    rawValue: unknown
-  ): { control: FormArray<FormGroup>; itemKeys: string[] } {
-    const { items, keys } = this.normalizeObjectArray(rawValue, field);
-    const groups = items.map((item) => this.buildObjectGroup(keys, field, item));
-    const control = this.fb.array(groups.length ? groups : [this.buildObjectGroup(keys, field, {})]);
-    return { control, itemKeys: keys };
-  }
-
-  private buildObjectGroup(keys: string[], field: FormField, value: Record<string, unknown>): FormGroup {
-    const schema = field.itemSchema ?? {};
-    const controls: Record<string, FormControl> = {};
-
-    keys.forEach((key) => {
-      const fieldSchema = schema[key];
-      const validators = fieldSchema?.required ? [Validators.required] : [];
-      controls[key] = this.fb.control(this.coercePrimitive(value?.[key]), validators);
-    });
-
-    const validators = this.isAdvancedOpeningHoursField(field)
-      ? [this.openingHoursAdvancedValidator(this.getAdvancedTimeSequence(keys, field))]
-      : [];
-
-    return this.fb.group(controls, { validators });
-  }
-
-  private buildPrimitiveArrayControl(field: FormField, rawValue: unknown): FormArray<FormControl> {
-    const validators = field.required ? [Validators.required] : [];
-    const values: unknown[] = Array.isArray(rawValue) ? rawValue : [];
-    const controls = values.length
-      ? values.map((v) => this.fb.control(this.coercePrimitiveArrayValue(field, v), validators))
-      : [this.fb.control(this.defaultPrimitiveArrayValue(field), validators)];
-    return this.fb.array(controls);
-  }
-
-  private defaultPrimitiveArrayValue(field: FormField): Primitive | '' {
-    if (field.type === 'checkbox' || field.type === 'checkbox-group') return false;
-    if (field.type === 'file') return null;
-    return '';
-  }
-
-  private coercePrimitiveArrayValue(field: FormField, value: unknown): unknown {
-    if (field.type === 'file') return value ?? null;
-    return this.coercePrimitive(value);
-  }
-
-  private normalizeObjectArray(
-    rawValue: unknown,
-    field: FormField
-  ): {
-    items: Record<string, unknown>[];
-    keys: string[];
-  } {
-    let parsed: unknown = rawValue;
-
-    if (typeof rawValue === 'string') {
-      const trimmed = rawValue.trim();
-      if (trimmed) {
-        try {
-          parsed = JSON.parse(trimmed);
-        } catch {
-          parsed = [];
-        }
-      }
-    }
-
-    let items: unknown[] = [];
-    if (Array.isArray(parsed)) {
-      items = parsed;
-    } else if (parsed && typeof parsed === 'object') {
-      items = [parsed];
-    }
-
-    const safeItems = items
-      .map((item) => (item && typeof item === 'object' ? item : {}))
-      .map((item) => ({ ...(item as Record<string, unknown>) }));
-
-    const keySet = new Set<string>(Object.keys(field.itemSchema ?? {}));
-    safeItems.forEach((item) => {
-      Object.keys(item).forEach((k) => keySet.add(k));
-    });
-    if (keySet.size === 0) {
-      ['nombreSucursal', 'telefonoSucursal', 'direccionSucursal'].forEach((k) => keySet.add(k));
-    }
-    if (!safeItems.length) safeItems.push({});
-
-    return { items: safeItems, keys: Array.from(keySet) };
-  }
-
-  private coercePrimitive(value: unknown): string | number | boolean | null {
-    if (value === undefined) return '';
-    if (value === null) return null;
-    if (typeof value === 'string') return value;
-    if (typeof value === 'number' || typeof value === 'boolean') return value;
-    try {
-      return JSON.stringify(value);
-    } catch {
-      return String(value);
-    }
-  }
-
-  private stringifyValue(value: unknown): string {
-    try {
-      return JSON.stringify(value, null, 2);
-    } catch {
-      return String(value);
-    }
-  }
-
-  private parseJson(value: unknown, blockCode: string, fieldName: string): unknown {
-    if (typeof value !== 'string') return value;
-    const trimmed = value.trim();
-    if (!trimmed) return null;
-    try {
-      return JSON.parse(trimmed);
-    } catch (error) {
-      console.warn(`No se pudo parsear JSON para ${blockCode}.${fieldName}`, error);
-      return value;
-    }
-  }
-
-  private textAreaRows(rawValue: unknown): number {
-    const value =
-      typeof rawValue === 'string' ? rawValue : rawValue ? this.stringifyValue(rawValue) : '';
-    const lines = value.split('\n').length;
-    return Math.min(12, Math.max(3, lines + 1));
-  }
-
-  private toLabel(raw: string): string {
-    return raw
-      .replace(/_/g, ' ')
-      .replace(/([a-z])([A-Z])/g, '$1 $2')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .replace(/^./, (c) => c.toUpperCase());
-  }
-
-  private formatBlockLabel(code: string, index: number): string {
-    const label = this.toLabel(code);
-    return label || `Bloque ${index + 1}`;
-  }
-
-  private isPrimitive(value: unknown): value is Primitive | undefined {
-    return ['string', 'number', 'boolean', 'undefined'].includes(typeof value) || value === null;
-  }
-
   private buildPayload(): SaveBlocksRequest {
     return this.buildPayloadForBlocks(this.getBlocksWithCurrentValues());
   }
@@ -895,20 +273,6 @@ export class DynamicFormComponent implements OnChanges {
     );
 
     return builder.withBlocks(blocks).build();
-  }
-
-  private isBlockReadOnly(block: BusinessFormBlock): boolean {
-    if (this.readOnly) return true;
-    const roles = block.readOnlyRoles ?? [];
-    if (!roles.length || !this.userRole) return false;
-    return roles.includes(this.userRole);
-  }
-
-  private isBlockVisible(block: BusinessFormBlock): boolean {
-    const visibility = block.visibility;
-    if (!visibility || Object.keys(visibility).length === 0) return true;
-    if (!this.userRole) return true;
-    return visibility[this.userRole] !== false;
   }
 
   private getBlocksWithCurrentValues(): BusinessFormBlock[] {

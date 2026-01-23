@@ -8,6 +8,7 @@ export * from './field-array-checkbox-group/field-array-checkbox-group.component
 export * from './field-file/field-file.component';
 export * from './field-array-object/field-array-object.component';
 export * from './field-array-primitive/field-array-primitive.component';
+export * from './field-phone/field-phone.component';
 export * from './field-opening-hours/field-opening-hours.component';
 export * from './field-opening-hours-advanced/field-opening-hours-advanced.component';
 export * from './field-location-map/field-location-map.component';

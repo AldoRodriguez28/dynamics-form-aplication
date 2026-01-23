@@ -61,6 +61,18 @@ export class BusinessService {
     });
   }
 
+  saveSingleBlock(
+    businessId: string | number,
+    versionNumber: string | number,
+    blockCode: string,
+    request: SaveBlocksRequest
+  ): Observable<boolean> {
+    const url = `${this.baseUrl}/businesses/${businessId}/VersionNumber/${versionNumber}/blocks/${blockCode}`;
+    return this.http.put<boolean>(url, request, {
+      headers: this.authHeader.build()
+    });
+  }
+
   /**
    * POST /api/business/initialize
    * Retorna: CreateBusinesessResponse

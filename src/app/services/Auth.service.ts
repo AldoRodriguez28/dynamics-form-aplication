@@ -1,8 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { AuthResponse } from './response/auth/auth-response';
 import { environment } from '../../environments/environment';
+import { AuthHeaderService } from './shared/auth-header.service';
+
+interface OtpUrlResponse {
+  url?: string;
+  redirectUrl?: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +16,10 @@ import { environment } from '../../environments/environment';
 export class AuthService {
   private readonly baseUrl = environment.API_URI;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private authHeader: AuthHeaderService
+  ) {}
 
   /**
    * Envía el token al backend y obtiene el bearerToken como respuesta.
@@ -25,5 +34,17 @@ export class AuthService {
 
     const body = { token };
     return this.http.post<AuthResponse>(url, body, { headers });
+  }
+
+  getOtpUrl(): Observable<string | null> {
+    const url = `${this.baseUrl}/Auth/url-otp`;
+    return this.http
+      .get<OtpUrlResponse | string>(url, { headers: this.authHeader.build() })
+      .pipe(
+        map((response) => {
+          if (typeof response === 'string') return response;
+          return response?.url ?? response?.redirectUrl ?? null;
+        })
+      );
   }
 }
