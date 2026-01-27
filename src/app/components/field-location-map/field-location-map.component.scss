@@ -107,3 +107,156 @@
   text-align: center;
   background: #f8fafc;
 }
+
+.hint {
+  margin-top: 0.6rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.85rem;
+  border: 1px solid #e2e8f0;
+  background: rgba(248, 250, 252, 0.85);
+  font-size: 0.92rem;
+  color: #334155;
+}
+
+.hint.warning {
+  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.08);
+  color: #92400e;
+}
+
+
+/* --- Map visibility --- */
+.map-wrap {
+  margin-top: 0.75rem;
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: #f8fafc;
+}
+
+.map {
+  width: 100%;
+  height: 320px; /* crucial: otherwise the map renders at 0px height */
+}
+
+.hint {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  color: rgba(15, 23, 42, 0.7);
+  background: rgba(255, 255, 255, 0.7);
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+/* --- "Completar dirección" panel (keeps same design language) --- */
+.complete-card {
+  margin-top: 0.75rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: #ffffff;
+  box-shadow: 0 10px 28px rgba(2, 6, 23, 0.06);
+  padding: 1rem;
+}
+
+.complete-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.complete-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.muted {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  color: rgba(15, 23, 42, 0.65);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 0.75rem;
+}
+
+.field {
+  grid-column: span 12;
+}
+
+@media (min-width: 720px) {
+  .field { grid-column: span 6; }
+}
+
+.field label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.8);
+  margin-bottom: 0.35rem;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: rgba(15, 23, 42, 0.75);
+}
+
+.complete-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.btn-link {
+  border: 0;
+  background: transparent;
+  color: #2563eb;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+}
+
+.btn-link:hover {
+  text-decoration: underline;
+}
+
+
+.btn {
+  border: 0;
+  border-radius: 0.9rem;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: #0b1c36;
+  color: #fff;
+}
+
+.btn:hover { filter: brightness(1.05); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.input-error {
+  border-color: rgba(239, 68, 68, 0.6) !important;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12) !important;
+  background: #fff;
+}
+
+.error {
+  margin: 0 0 0.75rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.08);
+  color: rgba(127, 29, 29, 0.95);
+  font-size: 0.875rem;
+}
