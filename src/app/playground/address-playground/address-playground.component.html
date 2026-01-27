@@ -1,0 +1,45 @@
+<div class="page">
+  <div class="header">
+    <h2>Playground: Dirección / Coordenadas</h2>
+    <p class="muted">
+      Esta pantalla es solo para pruebas locales: entra directo por URL sin pasar por el flujo completo.
+    </p>
+
+    <div class="actions">
+      <button type="button" class="btn" (click)="setExample1()">Cargar ejemplo</button>
+      <button type="button" class="btn btn-secondary" (click)="clear()">Limpiar</button>
+    </div>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <h3>Inputs</h3>
+
+      <!-- Aquí puedes reemplazar este input por tu componente real de Autocomplete -->
+      <label class="label">Dirección (por ahora en duro)</label>
+      <input class="input" [formControl]="addressCtrl" placeholder="Escribe una dirección..." />
+
+      <label class="label">Coordenadas (lat,lng)</label>
+      <input class="input" [formControl]="coordsCtrl" placeholder="19.432608,-99.133209" />
+
+      <div class="hint">
+        Tip: cuando implementes el Autocomplete, al seleccionar dirección deberías setear coordsCtrl con "lat,lng".
+        Si el usuario edita coords manualmente, solo se respeta el valor.
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Mapa / preview</h3>
+
+      <app-field-location-map
+        [field]="fieldMock"
+        [coordsControl]="coordsCtrl"
+        [addressControl]="addressCtrl"
+        blockName="Ubicación (Playground)">
+      </app-field-location-map>
+
+      <h4>Valores actuales</h4>
+      <pre class="pre">{{ form.value | json }}</pre>
+    </section>
+  </div>
+</div>

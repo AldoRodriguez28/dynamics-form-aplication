@@ -11,10 +11,13 @@
   <div class="loc-body">
     <label class="label">Dirección</label>
     <input
+      #addressInput
       class="input"
       type="text"
       [placeholder]="field.placeholder || 'Ej. Insurgentes Norte 123, Juárez, Ciudad de México'"
       [formControl]="addressControl"
+      [disabled]="readOnly"
+      autocomplete="off"
     />
 
     <div class="coords-grid">
