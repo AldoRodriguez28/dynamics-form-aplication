@@ -11,6 +11,7 @@ import { SaveBlocksRequest } from './request/save-blocks.request';
 import { CreateBusinesessResponse } from './response/business/create-businesses.response';
 import { ResolveTokenRequest } from './request/resolve-token.request';
 import { BusinessDetailWithBlocksResponse } from './response/business/Business-detail-withBlocks.response';
+import { ContactBlockResponse } from '../Interfaces/business/response/business.interface';
 
 export type DomainCheckResponse = string | string[] | { message?: string };
 export interface UploadFilesPayload {
@@ -32,12 +33,18 @@ export class BusinessService {
   ) { }
 
 
+  // getLegacy(businessId: string | number): Observable<LegacyBusinessResponse> {
+  //   const url = `${this.baseUrl}/legacy-advertisers/${businessId}/businesses`;
+  //   return this.http.get<LegacyBusinessResponse>(url, {
+  //     headers: this.authHeader.build()
+  //   });
+  // }
+
   getLegacy(businessId: string | number): Observable<LegacyBusinessResponse> {
-    const url = `${this.baseUrl}/legacy-advertisers/${businessId}/businesses`;
-    return this.http.get<LegacyBusinessResponse>(url, {
-      headers: this.authHeader.build()
-    });
+    const url = `assets/data/mock-legacy.json`;
+    return this.http.get<LegacyBusinessResponse>(url, { headers: this.authHeader.build() });
   }
+
 
   /** GET /businesses/{id} con Authorization: Bearer <token> */
   getbusinessesById(businessId: string | number): Observable<BlocksResponse> {
@@ -71,6 +78,19 @@ export class BusinessService {
     return this.http.put<boolean>(url, request, {
       headers: this.authHeader.build()
     });
+  }
+
+  getContactBlock(
+    businessId: string | number,
+    versionNumber: string | number,
+    fields: string[] = ['nombreTitular', 'telWA']
+  ): Observable<ContactBlockResponse> {
+    const url = `${this.baseUrl}/businesses/${businessId}/VersionNumber/${versionNumber}/blocks/datos_contacto/query`;
+    return this.http.post<ContactBlockResponse>(
+      url,
+      { fields },
+      { headers: this.authHeader.build() }
+    );
   }
 
   /**

@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { EMPTY, map, Observable, of, switchMap, tap } from 'rxjs';
 import { Business } from '../models/business.model';
 import { BusinessService } from '../services/business.service';
+import { ContactBlockResponse } from '../Interfaces/business/response/business.interface';
 import { AuthService } from '../services/Auth.service';
 import { OtpRedirectTarget, TokenStorageService } from '../services/shared/token-storage.service';
 import { BusinessMapping } from '../mapping/business/business.map';
@@ -37,8 +38,7 @@ export class BusinessListComponent {
 
   goToForm(clientId: string, business: Business, advertiserName: string): void {
     const role = (this.tokenStore.getRole() ?? '').toUpperCase();
-    const requiresOtp = role === 'CLIENT' && !this.tokenStore.isOtpVerified();
-    if (requiresOtp) {
+    if (role === 'CLIENT') {
       this.requestOtpAndRedirect(clientId, business, advertiserName);
       return;
     }
@@ -99,26 +99,61 @@ export class BusinessListComponent {
       return;
     }
 
-    this.authService.getOtpUrl().subscribe({
-      next: (otpUrl) => {
-        if (!otpUrl) {
-          console.error('La respuesta de OTP no incluye url de redireccion.');
-          return;
+    this.businessService
+      .getContactBlock(business.businessId, 1, ['nombreTitular', 'telWA'])
+      .pipe(
+        map((response) => this.extractContactPhone(response)),
+        switchMap((phone) => {
+          if (!phone) {
+            console.error('No se pudo obtener el teléfono de contacto para OTP.');
+            return EMPTY;
+          }
+
+          if (this.tokenStore.isOtpNumberVerified(phone)) {
+            this.router.navigate(['/', targetClientId, business.businessId], {
+              state: {
+                commercialName: business.commercialName ?? '',
+                advertiserName: advertiserName || this.clientName || ''
+              }
+            });
+            return EMPTY;
+          }
+
+          return this.authService.getOtpUrl(phone, business.businessId).pipe(
+            map((otpUrl) => ({ otpUrl, phone }))
+          );
+        })
+      )
+      .subscribe({
+        next: (result) => {
+          if (!result) return;
+          const { otpUrl, phone } = result;
+          if (!otpUrl) {
+            console.error('La respuesta de OTP no incluye url de redireccion.');
+            return;
+          }
+
+          const target: OtpRedirectTarget = {
+            clientId: targetClientId,
+            businessId: business.businessId,
+            advertiserName: advertiserName || this.clientName || '',
+            commercialName: business.commercialName ?? '',
+            phone
+          };
+
+          this.tokenStore.setOtpTarget(target);
+          window.location.assign(otpUrl);
+        },
+        error: (error) => {
+          console.error('Error al solicitar URL de OTP', error);
         }
+      });
+  }
 
-        const target: OtpRedirectTarget = {
-          clientId: targetClientId,
-          businessId: business.businessId,
-          advertiserName: advertiserName || this.clientName || '',
-          commercialName: business.commercialName ?? ''
-        };
-
-        this.tokenStore.setOtpTarget(target);
-        window.location.assign(otpUrl);
-      },
-      error: (error) => {
-        console.error('Error al solicitar URL de OTP', error);
-      }
-    });
+  private extractContactPhone(response: ContactBlockResponse | null | undefined): string | null {
+    const direct = response?.values?.telWA ?? response?.blocks?.[0]?.values?.telWA;
+    if (!direct) return null;
+    const normalized = String(direct).trim();
+    return normalized.length ? normalized : null;
   }
 }

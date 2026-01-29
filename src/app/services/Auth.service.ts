@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { AuthResponse } from './response/auth/auth-response';
 import { environment } from '../../environments/environment';
@@ -36,15 +36,57 @@ export class AuthService {
     return this.http.post<AuthResponse>(url, body, { headers });
   }
 
-  getOtpUrl(): Observable<string | null> {
+  getOtpUrl(phone: string, businessId: string | number): Observable<string | null> {
     const url = `${this.baseUrl}/Auth/url-otp`;
+    const redirectUri = `${window.location.origin}/otp/callback`;
+    const params = new HttpParams()
+      .set('phone', phone)
+      .set('businessid', String(businessId))
+      .set('redirectUri', redirectUri);
     return this.http
-      .get<OtpUrlResponse | string>(url, { headers: this.authHeader.build() })
+      .get(url, {
+        headers: this.authHeader.build(),
+        params,
+        responseType: 'text'
+      })
       .pipe(
-        map((response) => {
-          if (typeof response === 'string') return response;
-          return response?.url ?? response?.redirectUrl ?? null;
+        map((responseText) => {
+          const trimmed = (responseText ?? '').trim();
+          if (!trimmed) return null;
+          try {
+            const parsed = JSON.parse(trimmed) as OtpUrlResponse | string;
+            if (typeof parsed === 'string') return parsed;
+            return parsed?.url ?? parsed?.redirectUrl ?? null;
+          } catch {
+            return trimmed;
+          }
         })
       );
+  }
+
+  redeemOtpCode(code: string, state: string | null): Observable<unknown> {
+    const url = `${this.baseUrl}/Auth/callBack`;
+    const params = new HttpParams().set('code', code);
+    const paramsWithState = state ? params.set('state', state) : params;
+    const basicToken = btoa(`${environment.USER_PINBOX}:${environment.PASSWORD_PINBOX}`);
+    const headers = new HttpHeaders({
+      Authorization: `Basic ${basicToken}`
+    });
+
+    return this.http.get(url, {
+      headers,
+      params: paramsWithState,
+      responseType: 'text'
+    }).pipe(
+      map((responseText) => {
+        const trimmed = (responseText ?? '').trim();
+        if (!trimmed) return null;
+        try {
+          return JSON.parse(trimmed);
+        } catch {
+          return trimmed;
+        }
+      })
+    );
   }
 }
