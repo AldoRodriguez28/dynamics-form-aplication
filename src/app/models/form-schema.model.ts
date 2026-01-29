@@ -66,6 +66,7 @@ export interface FormField {
     compact?: boolean;
     layout?: string;
   };
+  enforceCompleteAddress?:boolean;
 }
 
 export interface FormRow {

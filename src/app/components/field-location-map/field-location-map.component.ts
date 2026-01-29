@@ -8,7 +8,7 @@ import {
   OnDestroy,
   SimpleChanges,
   ViewChild,
-  NgZone 
+  NgZone
 } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FormField } from '../../models/form-schema.model';
@@ -38,27 +38,35 @@ type StructuredAddress = {
   styleUrl: './field-location-map.component.scss'
 })
 export class FieldLocationMapComponent implements OnChanges, AfterViewInit, OnDestroy {
+
+  private _field!: FormField;
   /**
    * Angular templates don't automatically expose global objects like `JSON`.
    * Expose it explicitly so the template can call `JSON.stringify(...)`.
    */
   public JSON = JSON;
 
-  @Input({ required: true }) field!: FormField;
+  @Input({ required: true })
+  set field(value: FormField) {
+    this._field = value;
+    this.enforceCompleteAddress = !!value?.enforceCompleteAddress;
+  }
+  get field(): FormField {
+    return this._field;
+  }
+
   @Input({ required: true }) coordsControl!: FormControl<string>;
   @Input({ required: true }) addressControl!: FormControl<string>;
 
-  
-  @Input() enforceCompleteAddress: boolean = false;
-/**
-   * NUEVO: aquí guardamos la dirección estructurada como JSON string,
-   * sin modificar el valor original de addressControl.
-   *
-   * En tu JSON final:
-   *  - addressControl => dirección original (string)
-   *  - coordsControl  => "lat,lng" (string)
-   *  - structuredAddressControl => JSON string con {street, number, ...}
-   */
+  /**
+     * NUEVO: aquí guardamos la dirección estructurada como JSON string,
+     * sin modificar el valor original de addressControl.
+     *
+     * En tu JSON final:
+     *  - addressControl => dirección original (string)
+     *  - coordsControl  => "lat,lng" (string)
+     *  - structuredAddressControl => JSON string con {street, number, ...}
+     */
   @Input() structuredAddressControl?: FormControl<string>;
 
   @Input() blockName = 'Ubicación';
@@ -79,6 +87,8 @@ export class FieldLocationMapComponent implements OnChanges, AfterViewInit, OnDe
   lat = '';
   lng = '';
 
+  enforceCompleteAddress = false;
+
   // Dirección estructurada (draft) para completar si faltan piezas
   completionOpen = false;
   structuredDraft: StructuredAddress = this.emptyStructured();
@@ -93,10 +103,10 @@ export class FieldLocationMapComponent implements OnChanges, AfterViewInit, OnDe
 
   private static loadingPromise: Promise<void> | null = null;
   structuredSubmitAttempted = false;
-missingStructured: Array<keyof StructuredAddress> = [];
+  missingStructured: Array<keyof StructuredAddress> = [];
 
 
-  constructor(private ngZone: NgZone) {}
+  constructor(private ngZone: NgZone) { }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['coordsControl']) {
@@ -120,9 +130,9 @@ missingStructured: Array<keyof StructuredAddress> = [];
   }
 
   ngOnDestroy(): void {
-    try { if (this.placeListener) this.placeListener.remove(); } catch {}
-    try { if (this.markerDragListener) this.markerDragListener.remove(); } catch {}
-    try { if (this.mapClickListener) this.mapClickListener.remove(); } catch {}
+    try { if (this.placeListener) this.placeListener.remove(); } catch { }
+    try { if (this.markerDragListener) this.markerDragListener.remove(); } catch { }
+    try { if (this.mapClickListener) this.mapClickListener.remove(); } catch { }
     this.placeListener = null;
     this.markerDragListener = null;
     this.mapClickListener = null;
@@ -241,10 +251,10 @@ missingStructured: Array<keyof StructuredAddress> = [];
 
     this.placeListener = this.autocomplete.addListener('place_changed', () => {
       this.ngZone.run(() => {
-    const place = this.autocomplete.getPlace();
+        const place = this.autocomplete.getPlace();
 
-    this.onPlaceChanged(place);
-  });
+        this.onPlaceChanged(place);
+      });
 
       //const place = this.autocomplete?.getPlace?.();
       //this.onPlaceChanged(place);
@@ -268,7 +278,7 @@ missingStructured: Array<keyof StructuredAddress> = [];
       this.map.setZoom(18);
       this.map.panTo({ lat, lng });
     }
-    
+
     // 3) Descomponer a campos estructurados (sin alterar texto)
     const structured = this.parseStructuredFromPlace(place);
     structured.placeId = place.place_id || undefined;
@@ -334,22 +344,22 @@ missingStructured: Array<keyof StructuredAddress> = [];
     this.setStructuredControlValue(this.structuredDraft);
   }
 
- saveStructured(): void {
-  this.structuredSubmitAttempted = true;
+  saveStructured(): void {
+    this.structuredSubmitAttempted = true;
 
-  const missing = this.getMissingStructuredFields(this.structuredDraft)
-    .filter(k => !(k === 'number' && this.structuredDraft.number === 'S/N'));
+    const missing = this.getMissingStructuredFields(this.structuredDraft)
+      .filter(k => !(k === 'number' && this.structuredDraft.number === 'S/N'));
 
-  this.missingStructured = missing;
+    this.missingStructured = missing;
 
-  if (this.enforceCompleteAddress && missing.length > 0) {
-    this.completionOpen = true;
-    return;
+    if (this.enforceCompleteAddress && missing.length > 0) {
+      this.completionOpen = true;
+      return;
+    }
+
+    this.setStructuredControlValue(this.structuredDraft);
+    this.completionOpen = false;
   }
-
-  this.setStructuredControlValue(this.structuredDraft);
-  this.completionOpen = false;
-}
 
   private setStructuredControlValue(val: StructuredAddress): void {
     const ctrl = this.structuredAddressControl;
