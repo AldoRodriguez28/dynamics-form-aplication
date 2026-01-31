@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpHeaders } from '@angular/common/http';
 import { TokenStorageService } from './token-storage.service';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AuthHeaderService {
@@ -15,7 +16,7 @@ export class AuthHeaderService {
 
     const token = this.tokenStore.getToken();
 
-    if (token && token.trim().length > 0) {
+    if (!environment.SKIP_AUTH && token && token.trim().length > 0) {
       headers = headers.set('Authorization', `Bearer ${token}`);
     }
     return headers;

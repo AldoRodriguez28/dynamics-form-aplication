@@ -27,11 +27,11 @@ export class BusinessFormComponent {
   clientId = this.route.snapshot.paramMap.get('idClient') ?? '';
   businessId = this.route.snapshot.paramMap.get('businessId') ?? '';
   formSchema$: Observable<BusinessForm> = this.businessService
-  .getbusinessesById(this.businessId)
-  .pipe(
-    tap(res => console.log('Business form response:', res)),
-    map(res => BusinessMapping.MapBlocksToBusinessForm(res,this.commercialName))
-  );
+    .getbusinessesById(this.businessId)
+    .pipe(
+      tap(res => console.log('Business form response:', res)),
+      map(res => BusinessMapping.MapBlocksToBusinessForm(res, this.commercialName))
+    );
 
   commercialName =
     this.router.getCurrentNavigation()?.extras.state?.['commercialName'] ??

@@ -11,3 +11,16 @@ export interface BusinessInterface {
   externalData?: string | null;
   externalReference?:ExternalReferenceInterface
 }
+
+export interface ContactBlockResponse {
+  values?: {
+    nombreTitular?: string;
+    telWA?: string;
+  };
+  blocks?: Array<{
+    values?: {
+      nombreTitular?: string;
+      telWA?: string;
+    };
+  }>;
+}

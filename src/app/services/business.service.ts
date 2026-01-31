@@ -11,6 +11,7 @@ import { SaveBlocksRequest } from './request/save-blocks.request';
 import { CreateBusinesessResponse } from './response/business/create-businesses.response';
 import { ResolveTokenRequest } from './request/resolve-token.request';
 import { BusinessDetailWithBlocksResponse } from './response/business/Business-detail-withBlocks.response';
+import { ContactBlockResponse } from '../Interfaces/business/response/business.interface';
 
 export type DomainCheckResponse = string | string[] | { message?: string };
 export interface UploadFilesPayload {
@@ -38,6 +39,12 @@ export class BusinessService {
       headers: this.authHeader.build()
     });
   }
+
+  // getLegacy(businessId: string | number): Observable<LegacyBusinessResponse> {
+  //   const url = `assets/data/mock-legacy.json`;
+  //   return this.http.get<LegacyBusinessResponse>(url, { headers: this.authHeader.build() });
+  // }
+
 
   /** GET /businesses/{id} con Authorization: Bearer <token> */
   getbusinessesById(businessId: string | number): Observable<BlocksResponse> {
@@ -73,6 +80,19 @@ export class BusinessService {
     });
   }
 
+  getContactBlock(
+    businessId: string | number,
+    versionNumber: string | number,
+    fields: string[] = ['nombreTitular', 'telWA']
+  ): Observable<ContactBlockResponse> {
+    const url = `${this.baseUrl}/businesses/${businessId}/VersionNumber/${versionNumber}/blocks/datos_contacto/query`;
+    return this.http.post<ContactBlockResponse>(
+      url,
+      { fields },
+      { headers: this.authHeader.build() }
+    );
+  }
+
   /**
    * POST /api/business/initialize
    * Retorna: CreateBusinesessResponse
@@ -97,20 +117,7 @@ export class BusinessService {
     });
   }
 
-  /**
-   * Obtiene los negocios de un cliente a partir del mock local.
-   * Simula "cliente no encontrado" cuando el id solicitado no coincide con el mock disponible.
-   */
-  getClientBusinesses(idClient: string): Observable<ClientData> {
-    return this.http.get<ClientData>('assets/data/mock-client.json').pipe(
-      mergeMap((data) => {
-        return of({
-          ...data,
-          advertiserId: idClient || data.advertiserId
-        });
-      })
-    );
-  }
+
 
   /**
    * POST /api/domain

@@ -8,6 +8,7 @@ export class TokenStorageService {
   private static readonly ROLE_KEY = 'ROLE_KEY';
   private static readonly OTP_VERIFIED_KEY = 'OTP_VERIFIED';
   private static readonly OTP_TARGET_KEY = 'OTP_TARGET';
+  private static readonly OTP_VERIFIED_NUMBERS_KEY = 'number_otp_verified';
 
   setOtpVerified(verified: boolean): void {
     sessionStorage.setItem(TokenStorageService.OTP_VERIFIED_KEY, verified ? 'true' : 'false');
@@ -39,6 +40,36 @@ export class TokenStorageService {
     sessionStorage.removeItem(TokenStorageService.OTP_TARGET_KEY);
   }
 
+  getVerifiedOtpNumbers(): string[] {
+    const raw = sessionStorage.getItem(TokenStorageService.OTP_VERIFIED_NUMBERS_KEY);
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter((value) => typeof value === 'string');
+    } catch {
+      return [];
+    }
+  }
+
+  isOtpNumberVerified(phone: string): boolean {
+    return this.getVerifiedOtpNumbers().includes(phone);
+  }
+
+  addVerifiedOtpNumber(phone: string): void {
+    const numbers = this.getVerifiedOtpNumbers();
+    if (numbers.includes(phone)) return;
+    numbers.push(phone);
+    sessionStorage.setItem(
+      TokenStorageService.OTP_VERIFIED_NUMBERS_KEY,
+      JSON.stringify(numbers)
+    );
+  }
+
+  clearOtpVerifiedNumbers(): void {
+    sessionStorage.removeItem(TokenStorageService.OTP_VERIFIED_NUMBERS_KEY);
+  }
+
   /** Guarda el token en localStorage */
   setToken(token: string): void {
     localStorage.setItem(TokenStorageService.STORAGE_KEY, token);
@@ -58,6 +89,7 @@ export class TokenStorageService {
     sessionStorage.removeItem(TokenStorageService.ROLE_KEY);
     this.clearOtpVerified();
     this.clearOtpTarget();
+    this.clearOtpVerifiedNumbers();
   }
 
   /** Guarda advertiser_id */
@@ -97,4 +129,5 @@ export interface OtpRedirectTarget {
   businessId: string | number;
   advertiserName?: string;
   commercialName?: string;
+  phone?: string;
 }
