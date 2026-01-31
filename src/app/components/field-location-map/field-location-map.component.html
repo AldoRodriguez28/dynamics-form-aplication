@@ -3,39 +3,171 @@
     <div class="icon">📍</div>
     <div>
       <p class="eyebrow">Ubicación</p>
-      <h3 class="title">{{ 'Dirección del local o negocio (incluye coordenadas si aplica)'  }}</h3>
-      <p class="subtitle">{{'(incluye coordenadas si aplica)'}}</p>
+      <h3 class="title">Dirección del local o negocio</h3>
+      <p class="subtitle">(incluye coordenadas si aplica)</p>
     </div>
   </header>
 
   <div class="loc-body">
     <label class="label">Dirección</label>
     <input
+      #addressInput
       class="input"
       type="text"
       [placeholder]="field.placeholder || 'Ej. Insurgentes Norte 123, Juárez, Ciudad de México'"
       [formControl]="addressControl"
+      [disabled]="readOnly"
+      autocomplete="off"
     />
 
     <div class="coords-grid">
       <div class="coord">
         <label class="label">Lat</label>
-        <input class="input" type="text" placeholder="19.4326" [value]="lat" [disabled]="readOnly" (input)="onLatChange($any($event.target).value)" />
+        <input
+          class="input"
+          type="text"
+          placeholder="19.4326"
+          [value]="lat"
+          [disabled]="readOnly"
+          (input)="onLatChange($any($event.target).value)"
+        />
       </div>
       <div class="coord">
         <label class="label">Lng</label>
-        <input class="input" type="text" placeholder="-99.1332" [value]="lng" [disabled]="readOnly" (input)="onLngChange($any($event.target).value)" />
+        <input
+          class="input"
+          type="text"
+          placeholder="-99.1332"
+          [value]="lng"
+          [disabled]="readOnly"
+          (input)="onLngChange($any($event.target).value)"
+        />
       </div>
     </div>
 
-    @if (mapUrl) {
-    <div class="map-frame">
-      <iframe [src]="mapUrl | safeUrl" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+    <!-- Mapa interactivo: permite mover el pin para ajustar coordenadas -->
+    <div class="map-wrap">
+      <div #mapContainer class="map"></div>
+      <p class="hint" *ngIf="!readOnly">
+        Tip: puedes <b>mover el pin</b> o hacer <b>click</b> en el mapa para ajustar coordenadas. Esto NO cambia el texto de la dirección.
+      </p>
     </div>
-    } @else {
-    <div class="map-placeholder">
-      <p>Ingresa dirección o coordenadas para mostrar el mapa.</p>
-    </div>
-    }
+
+    <!-- Panel para completar dirección estructurada (solo si faltan campos) -->
+    
+    <section class="complete-card" *ngIf="completionOpen && !readOnly">
+      <div class="complete-header">
+        <div>
+          <h4>Completar dirección</h4>
+          <p class="muted">Faltan datos para guardar la dirección completa. Completa lo que haga falta (se guarda en una propiedad estructurada del JSON).</p>
+        </div>
+        <button type="button" class="btn-link" (click)="completionOpen = false">Cerrar</button>
+      </div>
+      <p class="error" *ngIf="structuredSubmitAttempted && (missingStructured?.length || 0) > 0">
+  Faltan campos obligatorios: {{ missingStructured.join(', ') }}
+</p>
+     <div class="grid">
+  <div class="field">
+    <label>Calle *</label>
+    <input
+      class="input"
+      [class.input-error]="structuredSubmitAttempted && missingStructured.includes('street')"
+      [(ngModel)]="structuredDraft.street"
+      (ngModelChange)="structuredAddressControl?.setValue(JSON.stringify(structuredDraft), {emitEvent:false})"
+    />
+    <small class="field-error"
+      *ngIf="structuredSubmitAttempted && missingStructured.includes('street')">
+      Calle es obligatoria
+    </small>
+  </div>
+
+  <div class="field">
+    <label>Número exterior *</label>
+    <input
+      class="input"
+      [disabled]="structuredDraft.number === 'S/N'"
+      [class.input-error]="structuredSubmitAttempted && missingStructured.includes('number') && structuredDraft.number !== 'S/N'"
+      [(ngModel)]="structuredDraft.number"
+      (ngModelChange)="structuredAddressControl?.setValue(JSON.stringify(structuredDraft), {emitEvent:false})"
+    />
+    <label class="check">
+      <input
+        type="checkbox"
+        [checked]="structuredDraft.number === 'S/N'"
+        (change)="toggleNoNumber($any($event.target).checked)"
+      />
+      <span>Sin número (S/N)</span>
+    </label>
+ 
+    <small class="field-error"
+      *ngIf="structuredSubmitAttempted && missingStructured.includes('number') && structuredDraft.number !== 'S/N'">
+      Número exterior es obligatorio (o marca S/N)
+    </small>
+  </div>
+
+  <div class="field">
+    <label>Código postal *</label>
+    <input
+      class="input"
+      inputmode="numeric"
+      maxlength="5"
+      [class.input-error]="structuredSubmitAttempted && missingStructured.includes('postalCode')"
+      [(ngModel)]="structuredDraft.postalCode"
+      (ngModelChange)="structuredAddressControl?.setValue(JSON.stringify(structuredDraft), {emitEvent:false})"
+    />
+    <small class="field-error"
+      *ngIf="structuredSubmitAttempted && missingStructured.includes('postalCode')">
+      Código postal es obligatorio
+    </small>
+  </div>
+
+  <div class="field">
+    <label>Colonia *</label>
+    <input
+      class="input"
+      [class.input-error]="structuredSubmitAttempted && missingStructured.includes('neighborhood')"
+      [(ngModel)]="structuredDraft.neighborhood"
+      (ngModelChange)="structuredAddressControl?.setValue(JSON.stringify(structuredDraft), {emitEvent:false})"
+    />
+    <small class="field-error"
+      *ngIf="structuredSubmitAttempted && missingStructured.includes('neighborhood')">
+      Colonia es obligatoria
+    </small>
+  </div>
+
+  <div class="field">
+    <label>Ciudad / Municipio *</label>
+    <input
+      class="input"
+      [class.input-error]="structuredSubmitAttempted && missingStructured.includes('city')"
+      [(ngModel)]="structuredDraft.city"
+      (ngModelChange)="structuredAddressControl?.setValue(JSON.stringify(structuredDraft), {emitEvent:false})"
+    />
+    <small class="field-error"
+      *ngIf="structuredSubmitAttempted && missingStructured?.includes('city')">
+      Ciudad / Municipio es obligatorio
+    </small>
+  </div>
+
+  <div class="field">
+    <label>Estado *</label>
+    <input
+      class="input"
+      [class.input-error]="structuredSubmitAttempted && missingStructured.includes('state')"
+      [(ngModel)]="structuredDraft.state"
+      (ngModelChange)="structuredAddressControl?.setValue(JSON.stringify(structuredDraft), {emitEvent:false})"
+    />
+    <small class="field-error"
+      *ngIf="structuredSubmitAttempted && missingStructured.includes('state')">
+      Estado es obligatorio
+    </small>
+  </div>
+</div>
+
+
+      <div class="complete-actions">
+        <button type="button" class="btn" (click)="saveStructured()">Guardar dirección estructurada</button>
+      </div>
+    </section>
   </div>
 </div>

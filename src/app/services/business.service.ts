@@ -33,17 +33,17 @@ export class BusinessService {
   ) { }
 
 
-  // getLegacy(businessId: string | number): Observable<LegacyBusinessResponse> {
-  //   const url = `${this.baseUrl}/legacy-advertisers/${businessId}/businesses`;
-  //   return this.http.get<LegacyBusinessResponse>(url, {
-  //     headers: this.authHeader.build()
-  //   });
-  // }
-
   getLegacy(businessId: string | number): Observable<LegacyBusinessResponse> {
-    const url = `assets/data/mock-legacy.json`;
-    return this.http.get<LegacyBusinessResponse>(url, { headers: this.authHeader.build() });
+    const url = `${this.baseUrl}/legacy-advertisers/${businessId}/businesses`;
+    return this.http.get<LegacyBusinessResponse>(url, {
+      headers: this.authHeader.build()
+    });
   }
+
+  // getLegacy(businessId: string | number): Observable<LegacyBusinessResponse> {
+  //   const url = `assets/data/mock-legacy.json`;
+  //   return this.http.get<LegacyBusinessResponse>(url, { headers: this.authHeader.build() });
+  // }
 
 
   /** GET /businesses/{id} con Authorization: Bearer <token> */
@@ -117,20 +117,7 @@ export class BusinessService {
     });
   }
 
-  /**
-   * Obtiene los negocios de un cliente a partir del mock local.
-   * Simula "cliente no encontrado" cuando el id solicitado no coincide con el mock disponible.
-   */
-  getClientBusinesses(idClient: string): Observable<ClientData> {
-    return this.http.get<ClientData>('assets/data/mock-client.json').pipe(
-      mergeMap((data) => {
-        return of({
-          ...data,
-          advertiserId: idClient || data.advertiserId
-        });
-      })
-    );
-  }
+
 
   /**
    * POST /api/domain

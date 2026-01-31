@@ -1,0 +1,55 @@
+.page { padding: 16px; }
+.header { margin-bottom: 16px; }
+.muted { opacity: 0.75; margin-top: 4px; }
+.actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 1100px) {
+  .grid { grid-template-columns: 1fr; }
+}
+
+.card {
+  background: #fff;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.label { display: block; font-weight: 600; margin-top: 12px; margin-bottom: 6px; }
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(0,0,0,.18);
+  border-radius: 10px;
+  outline: none;
+}
+.input:focus { border-color: rgba(0,0,0,.35); }
+
+.btn {
+  border: 1px solid rgba(0,0,0,.18);
+  background: #fff;
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+.btn:hover { background: rgba(0,0,0,.03); }
+.btn.btn-secondary { opacity: 0.9; }
+
+.hint {
+  margin-top: 12px;
+  font-size: 12px;
+  opacity: .75;
+}
+
+.pre {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(0,0,0,.03);
+  border-radius: 10px;
+  overflow: auto;
+}

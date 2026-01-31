@@ -24,3 +24,6 @@ body {
 .app-shell {
   min-height: 100vh;
 }
+.pac-container {
+  z-index: 99999 !important;
+}
