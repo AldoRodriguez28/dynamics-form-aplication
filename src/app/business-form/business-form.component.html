@@ -14,15 +14,15 @@
       }
     </div>
     @if (formSchema$ | async; as schema) {
-    <div [ngClass]="statusContainerClass(schema.status)">
-      <span class="status-pill" [ngClass]="statusClass(schema.status)">
-        {{ statusLabel(schema.status) }}
-      </span>
-    </div>
+    <span
+      class="status"
+      [attr.data-variant]="statusVariant(schema.status)"
+      [ngClass]="badgeClasses(schema.status)"
+    >
+      {{ statusLabel(schema.status) }}
+    </span>
     } @else {
-    <div class="badge badge--draft">
-      <span>Draft</span>
-    </div>
+    <span class="status" data-variant="DRAFT" [ngClass]="badgeClasses('DRAFT')">Draft</span>
     }
   </header>
 

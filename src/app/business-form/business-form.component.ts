@@ -58,6 +58,7 @@ export class BusinessFormComponent {
       case 'draft':
         return 'Draft';
       case 'in-progress':
+      case 'in_progress':
       case 'in_progres':
       case 'in-progres':
         return 'In-progress';
@@ -70,6 +71,35 @@ export class BusinessFormComponent {
         return 'Locked';
       default:
         return status?.toString() || 'Draft';
+    }
+  }
+
+  statusVariant(status?: FormStatus): string {
+    const raw = (status ?? 'DRAFT').toString().trim();
+    if (!raw) return 'DRAFT';
+    return raw.toUpperCase().replace(/[\s-]+/g, '_');
+  }
+
+  badgeClasses(status?: FormStatus): string {
+    const variant = this.statusVariant(status);
+    const base =
+      'inline-flex items-center justify-center px-4 py-1.5 rounded-full text-sm font-semibold border';
+    switch (variant) {
+      case 'IN_PROGRESS':
+        return `${base} bg-amber-100 text-amber-800 border-amber-200`;
+      case 'PENDING':
+        return `${base} bg-slate-200 text-slate-600 border-slate-300`;
+      case 'COMPLETED':
+        return `${base} bg-emerald-100 text-emerald-700 border-emerald-200`;
+      case 'READY':
+        return `${base} bg-emerald-100 text-emerald-700 border-emerald-200`;
+      case 'LOCKED':
+        return `${base} bg-red-100 text-red-700 border-red-200`;
+      case 'CONTENT_IN_CREATION':
+      case 'CONTENT_IN_CREATTION':
+        return `${base} bg-orange-100 text-orange-700 border-orange-200`;
+      default:
+        return `${base} bg-slate-200 text-slate-700 border-slate-300`;
     }
   }
 

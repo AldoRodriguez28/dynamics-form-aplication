@@ -7,6 +7,10 @@ export interface OtpRedeemResult {
   ok: boolean;
   message: string;
   raw?: unknown;
+  clientId?: string;
+  businessId?: string;
+  isVerified?: boolean;
+  status?: number;
 }
 
 const messageFromResponse = (response: unknown): string => {
@@ -29,6 +33,30 @@ const messageFromResponse = (response: unknown): string => {
   return String(response);
 };
 
+const parseOtpPayload = (response: unknown) => {
+  if (!response || typeof response !== 'object') {
+    return {};
+  }
+
+  const payload = response as Record<string, unknown>;
+  const clientId = payload['clientId'];
+  const businessId = payload['bussines'] ?? payload['business'] ?? payload['businessId'];
+  const isVerified = payload['isVerified'];
+  const status = payload['status'];
+
+  return {
+    clientId: clientId != null ? String(clientId) : undefined,
+    businessId: businessId != null ? String(businessId) : undefined,
+    isVerified: typeof isVerified === 'boolean' ? isVerified : undefined,
+    status:
+      typeof status === 'number'
+        ? status
+        : typeof status === 'string' && status.trim()
+          ? Number(status)
+          : undefined
+  };
+};
+
 export const otpCallbackResolver: ResolveFn<OtpRedeemResult> = (route) => {
   const code = route.queryParamMap.get('code');
   const state = route.queryParamMap.get('state');
@@ -42,7 +70,8 @@ export const otpCallbackResolver: ResolveFn<OtpRedeemResult> = (route) => {
     map((res) => ({
       ok: true,
       message: messageFromResponse(res),
-      raw: res
+      raw: res,
+      ...parseOtpPayload(res)
     })),
     catchError((err) => {
       const message =
