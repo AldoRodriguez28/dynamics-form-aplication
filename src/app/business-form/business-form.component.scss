@@ -83,74 +83,32 @@ h2 {
   margin: 0.2rem 0 0;
 }
 
-.badge {
+.status {
   display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.55rem 0.9rem;
+  justify-content: center;
+  padding: 0.45rem 1rem;
   border-radius: 999px;
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: #0f172a;
-  background: #e2e8f0;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  font-weight: 600;
+  font-size: 0.85rem;
+  background: #eef2ff;
+  color: #1f2937;
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
-.badge--draft {
-  background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
-  color: #0f172a;
+.status[data-variant='IN_PROGRESS'] {
+  background: #fef3c7;
+  color: #92400e;
 }
 
-.badge--progress {
-  background: linear-gradient(135deg, #3b82f6, #22d3ee);
-  color: #ffffff;
+.status[data-variant='PENDING'] {
+  background: #e5e7eb;
+  color: #4b5563;
 }
 
-.badge--content {
-  background: linear-gradient(135deg, #f59e0b, #fbbf24);
-  color: #0f172a;
-}
-
-.badge--ready {
-  background: linear-gradient(135deg, #22c55e, #4ade80);
-  color: #0f172a;
-}
-
-.badge--locked {
-  background: linear-gradient(135deg, #ef4444, #f87171);
-  color: #ffffff;
-}
-
-.status-pill {
-  padding: 0.35rem 0.7rem;
-  border-radius: 999px;
-  font-weight: 700;
-  font-size: 0.9rem;
-  text-transform: capitalize;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.status {
-  &--draft {
-    background: rgba(255, 255, 255, 0.18);
-    color: #f8fafc;
-  }
-  &--progress {
-    background: rgba(52, 211, 153, 0.2);
-    color: #bbf7d0;
-  }
-  &--content {
-    background: rgba(251, 191, 36, 0.28);
-    color: #fef3c7;
-  }
-  &--ready {
-    background: rgba(94, 234, 212, 0.24);
-    color: #ccfbf1;
-  }
-  &--locked {
-    background: rgba(239, 68, 68, 0.25);
-    color: #fecdd3;
-  }
+.status[data-variant='COMPLETED'] {
+  background: #dcfce7;
+  color: #166534;
 }
 
 .card {

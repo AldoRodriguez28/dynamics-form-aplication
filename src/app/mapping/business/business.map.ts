@@ -43,6 +43,7 @@ export class BusinessMapping {
     versionNumber: business.versionNumber ?? business.businessVersion ?? null,
     advertiserId: business.advertiserId,
     commercialName: business.commercialName ?? commercialName,
+    status: business.state ?? (res as any).state ?? null,
 
     blocks: blocks
   } as BusinessForm;
