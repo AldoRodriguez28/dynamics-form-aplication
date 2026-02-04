@@ -37,6 +37,7 @@ export class BusinessListComponent {
   }
 
   goToForm(clientId: string, business: Business, advertiserName: string): void {
+    console.info('[UI] click ver formulario', { clientId, businessId: business?.businessId, versionNumber: 1 });
     const role = (this.tokenStore.getRole() ?? '').toUpperCase();
     if (role === 'CLIENT') {
       this.requestOtpAndRedirect(clientId, business, advertiserName);
@@ -94,6 +95,7 @@ export class BusinessListComponent {
 
   private requestOtpAndRedirect(clientId: string, business: Business, advertiserName: string): void {
     const targetClientId = clientId || this.clientId || '';
+    console.info('[OTP] requestOtpAndRedirect start', { targetClientId, businessId: business?.businessId });
     if (!targetClientId || !business?.businessId) {
       console.warn('No se pudo iniciar OTP: falta clientId o businessId.');
       return;
@@ -102,8 +104,10 @@ export class BusinessListComponent {
     this.businessService
       .getContactBlock(business.businessId, 1, ['nombreTitular', 'telWA'])
       .pipe(
+        tap((response) => console.info('[ContactBlock] response raw', response)),
         map((response) => this.extractContactPhone(response)),
         switchMap((phone) => {
+          console.info('[ContactBlock] extracted phone', { phone });
           if (!phone) {
             console.error('No se pudo obtener el teléfono de contacto para OTP.');
             return EMPTY;
@@ -119,6 +123,7 @@ export class BusinessListComponent {
             return EMPTY;
           }
 
+          console.info('[OTP] calling AuthService.getOtpUrl', { phone, businessId: business.businessId });
           return this.authService.getOtpUrl(phone, business.businessId).pipe(
             map((otpUrl) => ({ otpUrl, phone }))
           );

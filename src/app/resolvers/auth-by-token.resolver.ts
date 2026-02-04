@@ -11,12 +11,14 @@ export const authByTokenResolver: ResolveFn<boolean> = (route) => {
     const tokenFromPath = (!token && idClient && isNaN(Number(idClient))) ? idClient : null;
 
     const finalToken = token ?? tokenFromPath;
+    console.info('[Resolver] auth-by-token start', { url: route?.url?.map(s => s.path).join('/'), token: finalToken });
     if (!finalToken) return of(true);
 
     const auth = inject(AuthService);
     const storage = inject(TokenStorageService);
     const router = inject(Router);
 
+    console.info('[Resolver] calling AuthService.loginByToken');
     return auth.loginByToken(finalToken).pipe(
         tap(res => {
             storage.setToken(res.bearerToken);
@@ -37,6 +39,7 @@ export const authByTokenResolver: ResolveFn<boolean> = (route) => {
         }),
         map(() => true),
         catchError((err) => {
+            console.error('[Resolver] auth-by-token error', err);
             if (err?.status === 401) {
                 storage.clearToken();
                 router.navigateByUrl('/unauthorized');

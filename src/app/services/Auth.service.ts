@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { map, Observable } from 'rxjs';
+import { catchError, map, Observable, tap, throwError } from 'rxjs';
 import { AuthResponse } from './response/auth/auth-response';
 import { environment } from '../../environments/environment';
 import { AuthHeaderService } from './shared/auth-header.service';
@@ -39,10 +39,12 @@ export class AuthService {
   getOtpUrl(phone: string, businessId: string | number): Observable<string | null> {
     const url = `${this.baseUrl}/Auth/url-otp`;
     const redirectUri = `${window.location.origin}/otp/callback`;
+    console.info('[OTP] payload to /Auth/url-otp', { phone, businessId, redirectUri });
     const params = new HttpParams()
       .set('phone', phone)
       .set('businessid', String(businessId))
       .set('redirectUri', redirectUri);
+    console.info('[OTP] GET /Auth/url-otp', { url, params: params.toString() });
     return this.http
       .get(url, {
         headers: this.authHeader.build(),
@@ -50,6 +52,9 @@ export class AuthService {
         responseType: 'text'
       })
       .pipe(
+        tap((responseText) => {
+          console.info('[OTP] response /Auth/url-otp', responseText);
+        }),
         map((responseText) => {
           const trimmed = (responseText ?? '').trim();
           if (!trimmed) return null;
@@ -60,6 +65,10 @@ export class AuthService {
           } catch {
             return trimmed;
           }
+        }),
+        catchError((err) => {
+          console.error('[OTP] error /Auth/url-otp', err);
+          return throwError(() => err);
         })
       );
   }
