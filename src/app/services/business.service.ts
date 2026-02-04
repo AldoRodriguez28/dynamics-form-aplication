@@ -86,6 +86,7 @@ export class BusinessService {
     fields: string[] = ['nombreTitular', 'telWA']
   ): Observable<ContactBlockResponse> {
     const url = `${this.baseUrl}/businesses/${businessId}/VersionNumber/${versionNumber}/blocks/datos_contacto/query`;
+    console.info('[ContactBlock] request', { url, businessId, versionNumber, fields });
     return this.http.post<ContactBlockResponse>(
       url,
       { fields },
