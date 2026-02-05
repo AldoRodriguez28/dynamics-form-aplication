@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { getControl, getFieldOptions, optionKey, OptionValue, toggleOption } from '../utils';
+import { canFinalizeForm, getControl, getFieldOptions, optionKey, OptionValue, toggleOption } from '../utils';
 import { SaveBlocksRequest } from '../services/request/save-blocks.request';
 import { PayloadBuilder } from '../utils/payload.builder';
 import { BusinessForm, BusinessFormBlock } from '../models/form-schema.model';
@@ -81,6 +81,9 @@ export class DynamicFormComponent implements OnChanges {
   valueParsers: Record<string, FormValueParser> = {};
   private pendingSelectValues: Record<string, unknown> = {};
   getControl = getControl;
+  get canFinalize(): boolean {
+    return canFinalizeForm(this.userRole);
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['schema']?.currentValue) {
