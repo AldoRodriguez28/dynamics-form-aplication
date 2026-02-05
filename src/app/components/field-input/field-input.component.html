@@ -23,16 +23,41 @@
       {{ field.label }}
       @if (field.required) { <span class="required">*</span> }
     </label>
-    <input
-      class="field-control"
-      [id]="field.name"
-      [type]="inputType"
-      [formControl]="control"
-      [attr.required]="field.required || null"
-      [attr.maxLength]="maxLength"
-      [attr.pattern]="field.pattern"
-      [attr.placeholder]="field.placeholder"
-    />
+    @if (field.type === 'tel') {
+      <div class="field-row">
+        <select
+          class="field-control field-control--country"
+          [id]="field.name + '-country'"
+          [disabled]="readOnly"
+          (change)="onCountryChange($any($event.target)?.value)">
+          <option value="">Seleccione una opción</option>
+          @for (country of countries; track country.value) {
+            <option [value]="country.value">{{ country.label }}</option>
+          }
+        </select>
+        <input
+          class="field-control"
+          [id]="field.name"
+          type="tel"
+          [formControl]="control"
+          [attr.required]="field.required || null"
+          [attr.maxLength]="maxLength"
+          [attr.pattern]="field.pattern"
+          [attr.placeholder]="field.placeholder"
+        />
+      </div>
+    } @else {
+      <input
+        class="field-control"
+        [id]="field.name"
+        [type]="inputType"
+        [formControl]="control"
+        [attr.required]="field.required || null"
+        [attr.maxLength]="maxLength"
+        [attr.pattern]="field.pattern"
+        [attr.placeholder]="field.placeholder"
+      />
+    }
     @if (field.placeholder) {
       <p class="help">{{ field.placeholder }}</p>
     }
