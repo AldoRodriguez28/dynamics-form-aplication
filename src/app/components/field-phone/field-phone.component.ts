@@ -87,7 +87,7 @@ export class FieldPhoneComponent {
 
     keys.forEach((key) => {
       const validators = schema[key]?.required ? [Validators.required] : [];
-      const initialValue = key === 'country' ? 'MX' : '';
+      const initialValue = '';
       controls[key] = this.fb.control(initialValue, validators);
     });
 

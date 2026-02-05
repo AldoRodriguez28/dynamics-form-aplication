@@ -63,7 +63,18 @@ export class BusinessService {
    */
   saveBlocks(businessId: string | number, request: SaveBlocksRequest): Observable<boolean> {
     const url = `${this.baseUrl}/businesses/${businessId}/blocks`;
-    return this.http.put<boolean>(url, request, {
+    const payload: SaveBlocksRequest = { ...request, finalizeTask: false };
+    console.log("request: ", payload)
+    return this.http.put<boolean>(url, payload, {
+      headers: this.authHeader.build()
+    });
+  }
+
+  saveBlocksAndFinish(businessId: string | number, request: SaveBlocksRequest): Observable<boolean> {
+    const url = `${this.baseUrl}/businesses/${businessId}/blocks`;
+    const payload: SaveBlocksRequest = { ...request, finalizeTask: true };
+    console.log("request: ", payload)
+    return this.http.put<boolean>(url, payload, {
       headers: this.authHeader.build()
     });
   }
