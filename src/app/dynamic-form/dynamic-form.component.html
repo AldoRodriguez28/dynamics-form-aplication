@@ -143,9 +143,11 @@
         <button type="button" class="btn ghost" (click)="emitDraft()">
           Guardar avance
         </button>
+        @if (canFinalize) {
         <button type="submit" class="btn primary">
           Finalizar
         </button>
+        }
       </div>
       }
     </form>
