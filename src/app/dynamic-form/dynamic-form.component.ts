@@ -4,7 +4,7 @@ import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular
 import { canFinalizeForm, getControl, getFieldOptions, optionKey, OptionValue, toggleOption } from '../utils';
 import { SaveBlocksRequest } from '../services/request/save-blocks.request';
 import { PayloadBuilder } from '../utils/payload.builder';
-import { BusinessForm, BusinessFormBlock } from '../models/form-schema.model';
+import { BusinessForm, BusinessFormBlock, FormStatus } from '../models/form-schema.model';
 import {
   FieldArrayObjectComponent,
   FieldArrayPrimitiveComponent,
@@ -68,6 +68,7 @@ export class DynamicFormComponent implements OnChanges {
   @Input({ required: true }) schema!: BusinessForm;
   @Input() readOnly = false;
   @Input() userRole?: string | null;
+  @Input() formStatus?: FormStatus;
   @Output() submitForm = new EventEmitter<SaveBlocksRequest>();
 
   form!: FormGroup;
@@ -82,7 +83,7 @@ export class DynamicFormComponent implements OnChanges {
   private pendingSelectValues: Record<string, unknown> = {};
   getControl = getControl;
   get canFinalize(): boolean {
-    return canFinalizeForm(this.userRole);
+    return canFinalizeForm(this.userRole, this.formStatus ?? this.schema?.status);
   }
 
   ngOnChanges(changes: SimpleChanges): void {
