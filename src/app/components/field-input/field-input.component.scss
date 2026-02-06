@@ -23,6 +23,16 @@
   font-size: 0.95rem;
 }
 
+.field-row {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 0.6rem;
+}
+
+.field-control--country {
+  width: 100%;
+}
+
 .field-control.ng-invalid.ng-touched {
   border-color: #ef4444;
   background: #fef2f2;

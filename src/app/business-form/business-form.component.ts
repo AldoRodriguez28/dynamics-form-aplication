@@ -133,6 +133,25 @@ export class BusinessFormComponent {
     });
   }
 
+  handleFinalize(payload: SaveBlocksRequest): void {
+    const request = payload;
+    if (!request.actorId || !request.actorType) {
+      console.warn('Payload incompleto: falta actorId o actorType', request);
+      return;
+    }
+
+    this.businessService.saveBlocksAndFinish(this.businessId, request).subscribe({
+      next: () => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Finalización exitosa',
+          text: 'La tarea se finalizó correctamente.'
+        });
+      },
+      error: (error) => console.error('Error al finalizar tarea', error)
+    });
+  }
+
   goBack(): void {
     this.location.back();
   }

@@ -16,7 +16,18 @@
               {{ statusLabel(block.code, block.fieldCount) }}
             </p>
           </div>
-          <span class="sidebar__status" [ngClass]="statusClass(block.code, block.fieldCount)"></span>
+          <div class="sidebar__status-wrap">
+            @if (hasErrors(block.code, block.fieldCount)) {
+            <button
+              type="button"
+              class="sidebar__error-btn"
+              (click)="showErrors(block, $event)"
+              aria-label="Ver errores del bloque">
+              i
+            </button>
+            }
+            <span class="sidebar__status" [ngClass]="statusClass(block.code, block.fieldCount)"></span>
+          </div>
         </div>
         <div class="sidebar__progress-row">
           <div class="sidebar__progress-track">

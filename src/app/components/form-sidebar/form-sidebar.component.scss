@@ -126,6 +126,12 @@
   gap: 0.75rem;
 }
 
+.sidebar__status-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .sidebar__progress-row {
   display: flex;
   align-items: center;
@@ -151,4 +157,30 @@
   font-size: 0.78rem;
   font-weight: 700;
   color: #0ea5e9;
+}
+
+.sidebar__error-btn {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 1px solid #ef4444;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-weight: 700;
+  font-size: 0.7rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.sidebar__error-btn:hover {
+  background: #fecaca;
+}
+
+.sidebar__error-btn:focus-visible {
+  outline: 2px solid #ef4444;
+  outline-offset: 2px;
 }

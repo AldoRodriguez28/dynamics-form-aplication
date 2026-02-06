@@ -595,10 +595,12 @@ export class BlockFactoryService {
     const includeTipo = Object.prototype.hasOwnProperty.call(schema, 'tipo');
     const keys = includeTipo ? ['tipo', 'numero', 'country'] : ['numero', 'country'];
 
-    const normalizeCountry = (value: unknown): 'MX' | 'US' => {
+    const normalizeCountry = (value: unknown): '' | 'MX' | 'US' => {
       const normalized =
         typeof value === 'string' ? value.replace(/\s+/g, '').toUpperCase() : '';
-      return normalized === 'US' ? 'US' : 'MX';
+      if (normalized === 'US') return 'US';
+      if (normalized === 'MX') return 'MX';
+      return '';
     };
 
     let items: Record<string, unknown>[] = [];
@@ -624,7 +626,7 @@ export class BlockFactoryService {
     });
 
     const formArray = this.fb.array(
-      groups.length ? groups : [this.buildObjectGroup(keys, field, { country: 'MX' })]
+      groups.length ? groups : [this.buildObjectGroup(keys, field, {})]
     );
 
     formArray.controls.forEach((group, index) => {

@@ -1,12 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
-import { FormGroup } from '@angular/forms';
-
-type SidebarBlock = {
-  code: string;
-  title: string;
-  fieldCount: number;
-};
+import { AbstractControl, FormArray, FormGroup } from '@angular/forms';
+import Swal from 'sweetalert2';
+import { BlockView } from '../../dynamic-form/services/block-factory.service';
 
 type BlockState = 'incompleto' | 'completo' | 'editado' | 'con-error' | 'pendiente';
 
@@ -18,7 +14,7 @@ type BlockState = 'incompleto' | 'completo' | 'editado' | 'con-error' | 'pendien
   styleUrl: './form-sidebar.component.scss'
 })
 export class FormSidebarComponent {
-  @Input({ required: true }) blocks: SidebarBlock[] = [];
+  @Input({ required: true }) blocks: BlockView[] = [];
   @Input() form?: FormGroup;
   private initialValues = new Map<string, unknown>();
 
@@ -135,5 +131,61 @@ export class FormSidebarComponent {
     if (!el) return;
     el.setAttribute('open', 'true');
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  hasErrors(code: string, total: number): boolean {
+    return this.blockState(code, total) === 'con-error';
+  }
+
+  showErrors(block: BlockView, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+
+    const fields = this.getErrorFields(block);
+    if (!fields.length) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Sin errores detectados',
+        text: 'No se encontraron campos con error en este bloque.'
+      });
+      return;
+    }
+
+    const detail = fields.map((label) => `• ${label}`).join('<br>');
+
+    Swal.fire({
+      icon: 'error',
+      title: 'Campos con error',
+      html: detail
+    });
+  }
+
+  private getErrorFields(block: BlockView): string[] {
+    const group = this.form?.get(block.code);
+    if (!group) return [];
+    const labels = new Set<string>();
+
+    block.rows.forEach((row) => {
+      row.fields.forEach((field) => {
+        const control = this.form?.get([block.code, field.name]);
+        if (!control) return;
+        if (this.controlHasErrors(control)) {
+          labels.add(field.label || field.name);
+        }
+      });
+    });
+
+    return Array.from(labels);
+  }
+
+  private controlHasErrors(control: AbstractControl): boolean {
+    if (control.errors && Object.keys(control.errors).length > 0) return true;
+    if (control instanceof FormGroup) {
+      return Object.values(control.controls).some((child) => this.controlHasErrors(child));
+    }
+    if (control instanceof FormArray) {
+      return control.controls.some((child) => this.controlHasErrors(child));
+    }
+    return false;
   }
 }

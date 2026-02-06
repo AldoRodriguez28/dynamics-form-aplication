@@ -144,7 +144,7 @@
           Guardar avance
         </button>
         @if (canFinalize) {
-        <button type="submit" class="btn primary">
+        <button type="button" class="btn primary" (click)="onFinalize()">
           Finalizar
         </button>
         }

@@ -70,6 +70,7 @@ export class DynamicFormComponent implements OnChanges {
   @Input() userRole?: string | null;
   @Input() formStatus?: FormStatus;
   @Output() submitForm = new EventEmitter<SaveBlocksRequest>();
+  @Output() finalizeForm = new EventEmitter<SaveBlocksRequest>();
 
   form!: FormGroup;
   private readonly fallbackActorType = 'AGENT';
@@ -127,6 +128,32 @@ export class DynamicFormComponent implements OnChanges {
 
     if (this.form.valid) {
       this.submitForm.emit(this.buildPayload());
+    }
+  }
+
+  onFinalize(): void {
+    if (this.formReadOnly) return;
+    if (!this.form) return;
+    this.form.markAllAsTouched();
+
+    const missingRequired = findMissingRequiredFields(this.getBlocksWithCurrentValues());
+    if (missingRequired.length) {
+      const detail = missingRequired
+        .map((item) => `${item.blockName || item.blockCode}: ${item.label || item.fieldName}`)
+        .join('<br>');
+
+      Swal.fire({
+        icon: 'warning',
+        title: 'Faltan campos obligatorios',
+        html: detail,
+        confirmButtonText: 'Entendido'
+      });
+
+      return;
+    }
+
+    if (this.form.valid) {
+      this.finalizeForm.emit(this.buildPayload());
     }
   }
 
