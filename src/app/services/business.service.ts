@@ -51,7 +51,7 @@ export class BusinessService {
     businessId: string | number,
     versionNumber: string | number = 1
   ): Observable<BlocksResponse> {
-    const url = `${this.baseUrl}/businesses/${businessId}/versions/${versionNumber}/blocks`;
+    const url = `${this.baseUrl}/businesses/${businessId}/versionNumber/${versionNumber}/blocks?expand=definition`;
     return this.http.get<BusinessDetailWithBlocksResponse>(url, { headers: this.authHeader.build() });
   }
   //   getbusinessesById(businessId: string | number): Observable<BlocksResponse> {
@@ -150,7 +150,7 @@ export class BusinessService {
 
   uploadFiles(payload: UploadFilesPayload): Observable<unknown> {
     const { businessId, files, versionNumber, fieldName, usage } = payload;
-    const url = `${this.baseUrl}/business/${businessId}/files`;
+    const url = `${this.baseUrl}/businesses/${businessId}/files`;
     const formData = new FormData();
     const filesArray = Array.isArray(files) ? files : [files];
 

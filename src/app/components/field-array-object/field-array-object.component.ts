@@ -26,6 +26,11 @@ export class FieldArrayObjectComponent {
   @Input() readOnly = false;
   getControl = getControl;
 
+  readonly countries = [
+    { value: 'MX', label: '+52' },
+    { value: 'US', label: '+1' }
+  ];
+
   constructor(private fb: FormBuilder) {
   }
 
@@ -100,6 +105,15 @@ export class FieldArrayObjectComponent {
     return null;
   }
 
+  countryControlName(key: string): string {
+    return `${key}Country`;
+  }
+
+  hasCountryControl(group: AbstractControl, key: string): boolean {
+    const asGroup = group as FormGroup;
+    return !!asGroup.get(this.countryControlName(key));
+  }
+
   private buildEmptyGroup(): FormGroup {
     const controls: Record<string, FormControl> = {};
     const schema = this.field.itemSchema ?? {};
@@ -112,6 +126,13 @@ export class FieldArrayObjectComponent {
     keys.forEach((key) => {
       const validators = schema[key]?.required ? [Validators.required] : [];
       controls[key] = this.fb.control('', validators);
+
+      if (schema[key]?.type === 'tel') {
+        const countryKey = this.countryControlName(key);
+        if (!controls[countryKey]) {
+          controls[countryKey] = this.fb.control('', validators);
+        }
+      }
     });
 
     return this.fb.group(controls);

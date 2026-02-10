@@ -175,6 +175,10 @@
   gap: 0.35rem;
 }
 
+.array-field--phone {
+  grid-column: span 2;
+}
+
 .sub-label {
   font-weight: 700;
   color: #1f2937;
@@ -196,4 +200,30 @@
   border-color: #0f172a;
   box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.12);
   background: #fff;
+}
+
+.phone-combo {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.phone-combo__country {
+  width: 88px;
+  min-width: 72px;
+  padding: 0.72rem 0.6rem;
+  border-right: none;
+  border-radius: 0.85rem 0 0 0.85rem;
+  background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);
+}
+
+.phone-combo__input {
+  flex: 1;
+  border-left: none;
+  border-radius: 0 0.85rem 0.85rem 0;
+}
+
+.phone-combo__country:focus,
+.phone-combo__input:focus {
+  z-index: 1;
 }

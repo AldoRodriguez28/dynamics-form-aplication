@@ -44,6 +44,7 @@ type BlockField = FormField & {
   colSpan: number;
   itemKeys?: string[];
   itemType?: FormField['type'];
+  countryControlName?: string;
 };
 
 type RowView = { num: number; fields: BlockField[] };
@@ -117,6 +118,15 @@ export class BlockFactoryService {
           const skipRender = hasLocationMap && this.isDireccionField(fieldDef);
 
           controls[field.name] = control;
+
+          if (fieldDef.type === 'tel' && fieldDef.collection !== 'array') {
+            const countryControlName = this.getPhoneCountryControlName(fieldDef.name);
+            field.countryControlName = countryControlName;
+            controls[countryControlName] = this.fb.control(
+              this.normalizePhoneCountry(rawValue),
+              fieldDef.required ? [Validators.required] : []
+            );
+          }
 
           if (options) {
             optionsMap[optionKey(block.code, field.name)] = options;
@@ -315,6 +325,21 @@ export class BlockFactoryService {
     displayType: FieldDisplayType
   ): { value: unknown; parser?: FormValueParser } {
     const isArrayCollection = field.collection === 'array';
+
+    if (field.type === 'tel' && typeof rawValue === 'string') {
+      const parsed = this.parseJson(rawValue, blockCode, field.name);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        const record = parsed as Record<string, unknown>;
+        const number = record['number'] ?? record['numero'];
+        return { value: typeof number === 'string' || typeof number === 'number' ? number : '' };
+      }
+    }
+
+    if (field.type === 'tel' && rawValue && typeof rawValue === 'object' && !Array.isArray(rawValue)) {
+      const asRecord = rawValue as Record<string, unknown>;
+      const number = asRecord['number'] ?? asRecord['numero'];
+      return { value: typeof number === 'string' || typeof number === 'number' ? number : '' };
+    }
 
     if (field.type === 'opening_hours') {
       return { value: this.normalizeOpeningHours(field, rawValue) };
@@ -608,6 +633,19 @@ export class BlockFactoryService {
       const hasObject = rawValue.some((item) => item && typeof item === 'object');
       if (hasObject) {
         items = this.normalizeObjectArray(rawValue, field).items;
+      } else if (rawValue.some((item) => typeof item === 'string' && this.safeParseJsonObject(item))) {
+        items = rawValue.map((item) => {
+          if (typeof item === 'string') {
+            const parsed = this.safeParseJsonObject(item);
+            if (parsed) {
+              if (parsed['numero'] === undefined && parsed['number'] !== undefined) {
+                parsed['numero'] = parsed['number'];
+              }
+              return parsed;
+            }
+          }
+          return { numero: item };
+        });
       } else {
         items = rawValue.map((value) => ({ numero: value }));
       }
@@ -644,6 +682,27 @@ export class BlockFactoryService {
     keys.forEach((key) => {
       const fieldSchema = schema[key];
       const validators = fieldSchema?.required ? [Validators.required] : [];
+      if (fieldSchema?.type === 'tel') {
+        const raw = value?.[key];
+        let numberValue: unknown = raw;
+        if (typeof raw === 'string') {
+          const parsed = this.safeParseJsonObject(raw);
+          if (parsed) {
+            numberValue = parsed['number'] ?? parsed['numero'] ?? '';
+          }
+        } else if (raw && typeof raw === 'object') {
+          const record = raw as Record<string, unknown>;
+          numberValue = record['number'] ?? record['numero'] ?? '';
+        }
+
+        controls[key] = this.fb.control(this.coercePrimitive(numberValue), validators);
+        const countryKey = `${key}Country`;
+        if (!controls[countryKey]) {
+          controls[countryKey] = this.fb.control(this.normalizePhoneCountry(raw), validators);
+        }
+        return;
+      }
+
       controls[key] = this.fb.control(this.coercePrimitive(value?.[key]), validators);
     });
 
@@ -715,6 +774,39 @@ export class BlockFactoryService {
     if (!safeItems.length) safeItems.push({});
 
     return { items: safeItems, keys: Array.from(keySet) };
+  }
+
+  private getPhoneCountryControlName(fieldName: string): string {
+    return `${fieldName}Country`;
+  }
+
+  private normalizePhoneCountry(value: unknown): '' | 'MX' | 'US' {
+    if (typeof value === 'string') {
+      const parsed = this.safeParseJsonObject(value);
+      if (parsed) {
+        value = parsed;
+      }
+    }
+    if (!value || typeof value !== 'object') return '';
+    const raw = (value as Record<string, unknown>)['country'];
+    const normalized = typeof raw === 'string' ? raw.trim().toUpperCase() : '';
+    if (normalized === 'US') return 'US';
+    if (normalized === 'MX') return 'MX';
+    return '';
+  }
+
+  private safeParseJsonObject(raw: string): Record<string, unknown> | null {
+    const trimmed = raw.trim();
+    if (!trimmed) return null;
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+    } catch {
+      return null;
+    }
+    return null;
   }
 
   private coercePrimitive(value: unknown): string | number | boolean | null {

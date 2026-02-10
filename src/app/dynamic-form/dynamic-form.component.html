@@ -104,7 +104,12 @@
                 />
                 }
                 @case ('checkbox') {
-                <app-field-input [field]="field" [control]="getControl(form, [block.code, field.name])" [readOnly]="readOnly || block.readOnly" />
+                <app-field-input
+                  [field]="field"
+                  [control]="getControl(form, [block.code, field.name])"
+                  [countryControl]="field.countryControlName ? getControl(form, [block.code, field.countryControlName]) : undefined"
+                  [readOnly]="readOnly || block.readOnly"
+                />
                 }
                 @case ('url') {
                 <app-field-url [field]="field" [control]="getControl(form, [block.code, field.name])" [readOnly]="readOnly || block.readOnly" />
@@ -126,7 +131,12 @@
                 />
                 }
                 @default {
-                <app-field-input [field]="field" [control]="getControl(form, [block.code, field.name])" [readOnly]="readOnly || block.readOnly" />
+                <app-field-input
+                  [field]="field"
+                  [control]="getControl(form, [block.code, field.name])"
+                  [countryControl]="field.countryControlName ? getControl(form, [block.code, field.countryControlName]) : undefined"
+                  [readOnly]="readOnly || block.readOnly"
+                />
                 }
                 }
               </div>

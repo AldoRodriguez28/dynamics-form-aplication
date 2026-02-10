@@ -57,6 +57,29 @@
                   }
                 </select>
               }
+              @case ('tel') {
+                <div class="phone-combo">
+                  <select
+                    class="field-control field-control--country phone-combo__country"
+                    [id]="field.name + '-' + key + '-country-' + idx"
+                    [formControlName]="countryControlName(key)"
+                    [disabled]="readOnly || !hasCountryControl(group, key)">
+                    <option value="">Seleccione una opción</option>
+                    @for (country of countries; track country.value) {
+                      <option [value]="country.value">{{ country.label }}</option>
+                    }
+                  </select>
+                  <input
+                    class="field-control phone-combo__input"
+                    [id]="field.name + '-' + key + '-' + idx"
+                    type="tel"
+                    [placeholder]="placeholderForKey(key)"
+                    [formControlName]="key"
+                    [attr.maxLength]="maxLengthForKey(key)"
+                    [disabled]="readOnly"
+                  />
+                </div>
+              }
               @case ('textarea') {
                 <textarea
                   class="field-control"
