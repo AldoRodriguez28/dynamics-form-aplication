@@ -3,6 +3,7 @@ import { ExternalReferenceInterface } from "./external-reference.interface";
 export interface BusinessInterface {
   businessId?: number | null;
   businessVersion?: number | null;
+  versionNumber?: number | null;
   commercialName?: string | null;
   categoryCode?: string | null;
   townCode?: string | null;

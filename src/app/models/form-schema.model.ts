@@ -103,6 +103,7 @@ export interface BusinessForm {
   actorType?: string;
   actorId?: string;
   status?: FormStatus;
+  canEdit?: boolean;
   blocks: BusinessFormBlock[];
 }
 

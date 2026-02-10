@@ -258,7 +258,7 @@ export class DynamicFormComponent implements OnChanges {
     this.optionsMap = {};
     this.valueParsers = {};
 
-    const accessPolicy = new BlockAccessPolicy(this.readOnly, this.userRole);
+    const accessPolicy = new BlockAccessPolicy(this.readOnly, this.schema?.canEdit, this.userRole);
     const schemaBlocks = this.schema.blocks
       .filter((block) => accessPolicy.isBlockVisible(block))
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -286,8 +286,9 @@ export class DynamicFormComponent implements OnChanges {
     console.info('Campos requeridos detectados:', requiredFieldsSnapshot);
 
     this.form = this.fb.group(group);
-    this.formReadOnly = this.readOnly || !this.blocks.some((block) => !block.readOnly);
-    if (this.readOnly) {
+    this.formReadOnly =
+      this.readOnly || this.schema?.canEdit === false || !this.blocks.some((block) => !block.readOnly);
+    if (this.readOnly || this.schema?.canEdit === false) {
       this.form.disable({ emitEvent: false });
     }
     this.loadApiOptionsForBlocks();

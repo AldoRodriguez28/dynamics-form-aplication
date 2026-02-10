@@ -37,7 +37,13 @@ export class BusinessListComponent {
   }
 
   goToForm(clientId: string, business: Business, advertiserName: string): void {
-    console.info('[UI] click ver formulario', { clientId, businessId: business?.businessId, versionNumber: 1 });
+    const versionNumber =
+      (business as any)?.versionNumber ?? (business as any)?.businessVersion ?? 1;
+    console.info('[UI] click ver formulario', {
+      clientId,
+      businessId: business?.businessId,
+      versionNumber
+    });
     const role = (this.tokenStore.getRole() ?? '').toUpperCase();
     if (role === 'CLIENT') {
       this.requestOtpAndRedirect(clientId, business, advertiserName);
@@ -45,7 +51,11 @@ export class BusinessListComponent {
     }
 
     this.router.navigate(['/', clientId, business.businessId], {
-      state: { commercialName: business.commercialName, advertiserName: advertiserName }
+      state: {
+        commercialName: business.commercialName,
+        advertiserName: advertiserName,
+        versionNumber
+      }
     });
   }
 
@@ -101,8 +111,11 @@ export class BusinessListComponent {
       return;
     }
 
+    const versionNumber =
+      (business as any)?.versionNumber ?? (business as any)?.businessVersion ?? 1;
+
     this.businessService
-      .getContactBlock(business.businessId, 1, ['nombreTitular', 'telWA'])
+      .getContactBlock(business.businessId, versionNumber, ['nombreTitular', 'telWA'])
       .pipe(
         tap((response) => console.info('[ContactBlock] response raw', response)),
         map((response) => this.extractContactPhone(response)),
@@ -117,7 +130,8 @@ export class BusinessListComponent {
             this.router.navigate(['/', targetClientId, business.businessId], {
               state: {
                 commercialName: business.commercialName ?? '',
-                advertiserName: advertiserName || this.clientName || ''
+                advertiserName: advertiserName || this.clientName || '',
+                versionNumber
               }
             });
             return EMPTY;

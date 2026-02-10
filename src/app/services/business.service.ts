@@ -46,9 +46,12 @@ export class BusinessService {
   // }
 
 
-  /** GET /businesses/{id} con Authorization: Bearer <token> */
-  getbusinessesById(businessId: string | number): Observable<BlocksResponse> {
-    const url = `${this.baseUrl}/businesses/${businessId}`;
+  /** GET /businesses/{id}/versions/{version}/blocks con Authorization: Bearer <token> */
+  getbusinessesById(
+    businessId: string | number,
+    versionNumber: string | number = 1
+  ): Observable<BlocksResponse> {
+    const url = `${this.baseUrl}/businesses/${businessId}/versions/${versionNumber}/blocks`;
     return this.http.get<BusinessDetailWithBlocksResponse>(url, { headers: this.authHeader.build() });
   }
   //   getbusinessesById(businessId: string | number): Observable<BlocksResponse> {
