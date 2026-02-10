@@ -23,14 +23,25 @@
   font-size: 0.95rem;
 }
 
-.field-row {
-  display: grid;
-  grid-template-columns: 140px 1fr;
-  gap: 0.6rem;
+.phone-combo {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
 }
 
-.field-control--country {
-  width: 100%;
+.phone-combo__country {
+  width: 88px;
+  min-width: 72px;
+  padding: 0.7rem 0.6rem;
+  border-right: none;
+  border-radius: 0.8rem 0 0 0.8rem;
+  background: #f8fafc;
+}
+
+.phone-combo__input {
+  flex: 1;
+  border-left: none;
+  border-radius: 0 0.8rem 0.8rem 0;
 }
 
 .field-control.ng-invalid.ng-touched {
@@ -44,6 +55,11 @@
   border-color: #2563eb;
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
   background: #fff;
+}
+
+.phone-combo__country:focus,
+.phone-combo__input:focus {
+  z-index: 1;
 }
 
 .help {

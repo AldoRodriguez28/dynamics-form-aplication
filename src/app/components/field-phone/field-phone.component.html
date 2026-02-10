@@ -54,33 +54,29 @@
             </div>
           }
 
-          <div class="array-field">
-            <label class="sub-label" [for]="field.name + '-country-' + idx">
-              {{ labelForKey('country') }}
-            </label>
-            <select
-              class="field-control"
-              [id]="field.name + '-country-' + idx"
-              formControlName="country">
-              <option value="">Seleccione una opción</option>
-              @for (country of countries; track country.value) {
-                <option [value]="country.value">{{ country.label }}</option>
-              }
-            </select>
-          </div>
-
-          <div class="array-field">
+          <div class="array-field array-field--phone">
             <label class="sub-label" [for]="field.name + '-numero-' + idx">
               {{ labelForKey('numero') }}
             </label>
-            <input
-              class="field-control"
-              [id]="field.name + '-numero-' + idx"
-              type="tel"
-              [placeholder]="placeholderForKey('numero')"
-              formControlName="numero"
-              [attr.maxLength]="maxLengthForNumber()"
-            />
+            <div class="phone-combo">
+              <select
+                class="field-control phone-combo__country"
+                [id]="field.name + '-country-' + idx"
+                formControlName="country">
+                <option value="">Seleccione una opción</option>
+                @for (country of countries; track country.value) {
+                  <option [value]="country.value">{{ country.label }}</option>
+                }
+              </select>
+              <input
+                class="field-control phone-combo__input"
+                [id]="field.name + '-numero-' + idx"
+                type="tel"
+                [placeholder]="placeholderForKey('numero')"
+                formControlName="numero"
+                [attr.maxLength]="maxLengthForNumber()"
+              />
+            </div>
           </div>
         </div>
       </div>

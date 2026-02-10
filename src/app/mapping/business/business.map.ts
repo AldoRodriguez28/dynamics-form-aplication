@@ -12,7 +12,8 @@ export class BusinessMapping {
    */
   static MapBusinessResponseToInterface = (response: BusinessResponse): BusinessInterface => ({
     businessId: response.businessId ?? null,
-    businessVersion: response.businessVersion ?? null,
+    businessVersion: response.businessVersion ?? response.versionNumber ?? null,
+    versionNumber: response.versionNumber ?? response.businessVersion ?? null,
     commercialName: response.commercialName ?? null,
     categoryCode: response.categoryCode ?? null,
     townCode: response.townCode ?? null,
@@ -44,6 +45,7 @@ export class BusinessMapping {
     advertiserId: business.advertiserId,
     commercialName: business.commercialName ?? commercialName,
     status: business.state ?? (res as any).state ?? null,
+    canEdit: (res as any).canEdit ?? business.canEdit,
 
     blocks: blocks
   } as BusinessForm;

@@ -24,19 +24,19 @@
       @if (field.required) { <span class="required">*</span> }
     </label>
     @if (field.type === 'tel') {
-      <div class="field-row">
+      <div class="phone-combo">
         <select
-          class="field-control field-control--country"
+          class="field-control field-control--country phone-combo__country"
           [id]="field.name + '-country'"
           [disabled]="readOnly"
-          (change)="onCountryChange($any($event.target)?.value)">
+          [formControl]="resolvedCountryControl">
           <option value="">Seleccione una opción</option>
           @for (country of countries; track country.value) {
             <option [value]="country.value">{{ country.label }}</option>
           }
         </select>
         <input
-          class="field-control"
+          class="field-control phone-combo__input"
           [id]="field.name"
           type="tel"
           [formControl]="control"

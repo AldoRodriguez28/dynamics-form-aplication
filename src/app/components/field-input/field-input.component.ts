@@ -13,13 +13,14 @@ import { FormField } from '../../models/form-schema.model';
 export class FieldInputComponent {
   @Input({ required: true }) field!: FormField & { name: string };
   @Input({ required: true }) control!: FormControl;
+  @Input() countryControl?: FormControl;
   @Input() readOnly = false;
-  country = '';
 
   readonly countries = [
     { value: 'MX', label: '+52' },
     { value: 'US', label: '+1' }
   ];
+  readonly fallbackCountryControl = new FormControl('');
 
   get inputType(): string {
     switch (this.field.type) {
@@ -41,7 +42,7 @@ export class FieldInputComponent {
     return this.field.maxLength ?? null;
   }
 
-  onCountryChange(value: string): void {
-    this.country = value;
+  get resolvedCountryControl(): FormControl {
+    return this.countryControl ?? this.fallbackCountryControl;
   }
 }

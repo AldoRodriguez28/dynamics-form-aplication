@@ -258,7 +258,7 @@ export class DynamicFormComponent implements OnChanges {
     this.optionsMap = {};
     this.valueParsers = {};
 
-    const accessPolicy = new BlockAccessPolicy(this.readOnly, this.userRole);
+    const accessPolicy = new BlockAccessPolicy(this.readOnly, this.schema?.canEdit, this.userRole);
     const schemaBlocks = this.schema.blocks
       .filter((block) => accessPolicy.isBlockVisible(block))
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -286,8 +286,9 @@ export class DynamicFormComponent implements OnChanges {
     console.info('Campos requeridos detectados:', requiredFieldsSnapshot);
 
     this.form = this.fb.group(group);
-    this.formReadOnly = this.readOnly || !this.blocks.some((block) => !block.readOnly);
-    if (this.readOnly) {
+    this.formReadOnly =
+      this.readOnly || this.schema?.canEdit === false || !this.blocks.some((block) => !block.readOnly);
+    if (this.readOnly || this.schema?.canEdit === false) {
       this.form.disable({ emitEvent: false });
     }
     this.loadApiOptionsForBlocks();
@@ -327,6 +328,85 @@ export class DynamicFormComponent implements OnChanges {
     Object.entries(rawValues).forEach(([name, value]) => {
       const parser = this.valueParsers[optionKey(block.code, name)];
       parsedValues[name] = parser ? parser(value) : value;
+    });
+
+    (block.rows ?? []).forEach((row) => {
+      (row.fields ?? []).forEach((field) => {
+        if (field.type === 'tel' && field.collection !== 'array') {
+          const countryKey = `${field.name}Country`;
+          const numberValue = rawValues[field.name];
+          const countryValue = rawValues[countryKey];
+          const phonePayload = {
+            number: numberValue ?? '',
+            country: typeof countryValue === 'string' ? countryValue : ''
+          };
+          parsedValues[field.name] = JSON.stringify(phonePayload);
+          delete parsedValues[countryKey];
+          return;
+        }
+
+        const schema = field.itemSchema ?? {};
+        const isPhoneArray =
+          field.collection === 'array' &&
+          field.type === 'object' &&
+          Object.prototype.hasOwnProperty.call(schema, 'numero') &&
+          Object.prototype.hasOwnProperty.call(schema, 'country');
+
+        if (!isPhoneArray) return;
+
+        const rawArray = rawValues[field.name];
+        const items = Array.isArray(rawArray)
+          ? rawArray
+          : rawArray && typeof rawArray === 'object'
+            ? [rawArray]
+            : [];
+
+        parsedValues[field.name] = items.map((item) => {
+          const record = item && typeof item === 'object' ? (item as Record<string, unknown>) : {};
+          const number = record['number'] ?? record['numero'] ?? '';
+          const country = typeof record['country'] === 'string' ? record['country'] : '';
+          const next: Record<string, unknown> = { number, country };
+          if (record['tipo'] !== undefined) next['tipo'] = record['tipo'];
+          return JSON.stringify(next);
+        });
+      });
+    });
+
+    (block.rows ?? []).forEach((row) => {
+      (row.fields ?? []).forEach((field) => {
+        const schema = field.itemSchema ?? {};
+        const hasTelInArrayObject =
+          field.collection === 'array' &&
+          field.type === 'object' &&
+          Object.values(schema).some((item) => item?.type === 'tel') &&
+          !(Object.prototype.hasOwnProperty.call(schema, 'numero') &&
+            Object.prototype.hasOwnProperty.call(schema, 'country'));
+
+        if (!hasTelInArrayObject) return;
+
+        const rawArray = rawValues[field.name];
+        const items = Array.isArray(rawArray)
+          ? rawArray
+          : rawArray && typeof rawArray === 'object'
+            ? [rawArray]
+            : [];
+
+        parsedValues[field.name] = items.map((item) => {
+          const record = item && typeof item === 'object' ? { ...(item as Record<string, unknown>) } : {};
+          Object.entries(schema).forEach(([key, def]) => {
+            if (def?.type !== 'tel') return;
+            const countryKey = `${key}Country`;
+            const numberValue = record[key];
+            const countryValue = record[countryKey];
+            record[key] = JSON.stringify({
+              number: numberValue ?? '',
+              country: typeof countryValue === 'string' ? countryValue : ''
+            });
+            delete record[countryKey];
+          });
+          return record;
+        });
+      });
     });
 
     return {

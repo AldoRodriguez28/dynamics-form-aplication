@@ -14,5 +14,6 @@ export class BusinessDetailWithBlocksResponse {
     state?: string;
     versionCreatedAt?: Date;
     versionCreatedBy?: string;
+    canEdit?: boolean;
     blocks!: Block[];
 }
