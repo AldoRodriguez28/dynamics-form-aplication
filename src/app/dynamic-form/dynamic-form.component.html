@@ -132,6 +132,7 @@
                   [field]="field"
                   [formArray]="getArrayControl(block.code, field.name)"
                   [options]="getOptions(block.code, field.name)"
+                  [blockCode]="block.code"
                   [readOnly]="readOnly || block.readOnly"
                 />
                 }

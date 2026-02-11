@@ -54,9 +54,9 @@ export class FieldFileComponent implements OnDestroy {
         const maybeName = parsed['name'];
         if (typeof maybeName === 'string') return maybeName;
         const url = parsed['url'];
-        if (typeof url === 'string') return url;
+        if (typeof url === 'string') return this.extractFileName(url);
       }
-      return value;
+      return this.extractFileName(value);
     }
     if (typeof value === 'object' && 'name' in (value as Record<string, unknown>)) {
       const maybeName = (value as Record<string, unknown>)['name'];
@@ -174,5 +174,12 @@ export class FieldFileComponent implements OnDestroy {
       return null;
     }
     return null;
+  }
+
+  private extractFileName(raw: string): string {
+    const clean = raw.split('?')[0].split('#')[0];
+    const parts = clean.split('/');
+    const last = parts[parts.length - 1] || '';
+    return last || raw;
   }
 }

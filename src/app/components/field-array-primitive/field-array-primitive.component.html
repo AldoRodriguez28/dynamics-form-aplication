@@ -70,7 +70,12 @@
           </label>
         }
         @case ('file') {
-          <app-field-file [field]="field" [control]="control" [readOnly]="readOnly" />
+          <app-field-file
+            [field]="field"
+            [control]="control"
+            [blockCode]="blockCode"
+            [readOnly]="readOnly"
+          />
         }
         @default {
           <input

@@ -41,7 +41,12 @@ export class BusinessFormComponent {
       tap(res => console.log('Business form response:', res)),
       map(res => {
         const mapped = BusinessMapping.MapBlocksToBusinessForm(res, this.commercialName);
-        return { ...mapped, versionNumber: mapped.versionNumber ?? this.versionNumber };
+        return {
+          ...mapped,
+          businessId: mapped.businessId ?? this.businessId,
+          versionNumber: mapped.versionNumber ?? this.versionNumber,
+          businessVersion: mapped.businessVersion ?? this.versionNumber
+        };
       })
     );
   advertiserName =

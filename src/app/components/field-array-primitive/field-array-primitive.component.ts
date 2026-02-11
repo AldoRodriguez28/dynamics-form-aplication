@@ -18,6 +18,7 @@ export class FieldArrayPrimitiveComponent {
   @Input({ required: true }) formArray!: FormArray<FormControl>;
   @Input() options: OptionItemInterface[] = [];
   @Input() readOnly = false;
+  @Input() blockCode?: string;
 
   constructor(
     private fb: FormBuilder,
