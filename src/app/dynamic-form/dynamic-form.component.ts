@@ -345,6 +345,14 @@ export class DynamicFormComponent implements OnChanges {
           return;
         }
 
+        if (field.type === 'file' && field.collection !== 'array') {
+          const raw = rawValues[field.name];
+          if (raw && typeof raw === 'object' && !(raw instanceof File)) {
+            parsedValues[field.name] = JSON.stringify(raw);
+          }
+          return;
+        }
+
         const schema = field.itemSchema ?? {};
         const isPhoneArray =
           field.collection === 'array' &&

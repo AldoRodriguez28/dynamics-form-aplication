@@ -61,7 +61,12 @@
                   [readOnly]="readOnly || block.readOnly" />
                 }
                 @case ('file') {
-                <app-field-file [field]="field" [control]="getControl(form, [block.code, field.name])" [readOnly]="readOnly || block.readOnly" />
+                <app-field-file
+                  [field]="field"
+                  [control]="getControl(form, [block.code, field.name])"
+                  [blockCode]="block.code"
+                  [readOnly]="readOnly || block.readOnly"
+                />
                 }
                 @case ('opening-hours') {
                 <app-field-opening-hours [field]="field" [control]="getControl(form, [block.code, field.name])" [readOnly]="readOnly || block.readOnly" />
