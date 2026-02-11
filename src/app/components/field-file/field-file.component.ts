@@ -16,6 +16,7 @@ export class FieldFileComponent implements OnDestroy {
   @Input({ required: true }) field!: FormField & { name: string };
   @Input({ required: true }) control!: FormControl;
   @Input() readOnly = false;
+  @Input() blockCode?: string;
   private fileObjectUrl: string | null = null;
   uploading = false;
   uploadError: string | null = null;
@@ -47,7 +48,16 @@ export class FieldFileComponent implements OnDestroy {
     const value = this.control?.value;
     if (!value) return null;
     if (value instanceof File) return value.name;
-    if (typeof value === 'string') return value;
+    if (typeof value === 'string') {
+      const parsed = this.safeParseJsonObject(value);
+      if (parsed) {
+        const maybeName = parsed['name'];
+        if (typeof maybeName === 'string') return maybeName;
+        const url = parsed['url'];
+        if (typeof url === 'string') return this.extractFileName(url);
+      }
+      return this.extractFileName(value);
+    }
     if (typeof value === 'object' && 'name' in (value as Record<string, unknown>)) {
       const maybeName = (value as Record<string, unknown>)['name'];
       return typeof maybeName === 'string' ? maybeName : null;
@@ -62,7 +72,14 @@ export class FieldFileComponent implements OnDestroy {
       if (!this.fileObjectUrl) this.fileObjectUrl = URL.createObjectURL(value);
       return this.fileObjectUrl;
     }
-    if (typeof value === 'string') return value;
+    if (typeof value === 'string') {
+      const parsed = this.safeParseJsonObject(value);
+      if (parsed) {
+        const url = parsed['url'];
+        return typeof url === 'string' ? url : null;
+      }
+      return value;
+    }
     if (typeof value === 'object') {
       const url = (value as Record<string, unknown>)['url'];
       if (typeof url === 'string') return url;
@@ -109,10 +126,16 @@ export class FieldFileComponent implements OnDestroy {
         businessId,
         versionNumber: 1,
         fieldName: this.field.name,
-        usage: (this.field as any).usage || ''
+        usage: (this.field as any).usage || '',
+        blockCode: this.blockCode
       })
       .subscribe({
-        next: () => {
+        next: (response) => {
+          const payload = this.extractFilePayload(response);
+          if (payload) {
+            this.revokeObjectUrl();
+            this.control.setValue(payload);
+          }
           this.uploading = false;
           this.uploadSuccess = true;
           this.control.setErrors(null);
@@ -123,5 +146,40 @@ export class FieldFileComponent implements OnDestroy {
           this.control.setErrors({ ...(this.control.errors || {}), upload: true });
         }
       });
+  }
+
+  private extractFilePayload(response: unknown): { file_id: number; url: string } | null {
+    if (!response || typeof response !== 'object') return null;
+    const data = (response as Record<string, unknown>)['data'];
+    if (!Array.isArray(data) || !data.length) return null;
+    const item = data[0];
+    if (!item || typeof item !== 'object') return null;
+    const fileId = (item as Record<string, unknown>)['file_id'];
+    const url = (item as Record<string, unknown>)['url'];
+    if (typeof fileId === 'number' && typeof url === 'string') {
+      return { file_id: fileId, url };
+    }
+    return null;
+  }
+
+  private safeParseJsonObject(raw: string): Record<string, unknown> | null {
+    const trimmed = raw.trim();
+    if (!trimmed) return null;
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  }
+
+  private extractFileName(raw: string): string {
+    const clean = raw.split('?')[0].split('#')[0];
+    const parts = clean.split('/');
+    const last = parts[parts.length - 1] || '';
+    return last || raw;
   }
 }

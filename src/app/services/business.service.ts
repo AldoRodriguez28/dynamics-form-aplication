@@ -20,6 +20,7 @@ export interface UploadFilesPayload {
   versionNumber: number;
   fieldName: string;
   usage?: string;
+  blockCode?: string;
 }
 
 @Injectable({
@@ -149,17 +150,23 @@ export class BusinessService {
   }
 
   uploadFiles(payload: UploadFilesPayload): Observable<unknown> {
-    const { businessId, files, versionNumber, fieldName, usage } = payload;
-    const url = `${this.baseUrl}/businesses/${businessId}/files`;
+    const { businessId, files, versionNumber, fieldName, usage, blockCode } = payload;
+    const url = `${environment.API_URI}/Files/upload`;
     const formData = new FormData();
     const filesArray = Array.isArray(files) ? files : [files];
 
-    filesArray.forEach((file) => formData.append('files', file));
-    formData.append('versionNumber', versionNumber.toString());
-    formData.append('fieldName', fieldName);
+    filesArray.forEach((file) => formData.append('Files', file));
+    formData.append('BusinessId', businessId.toString());
+    formData.append('VersionNumber', versionNumber.toString());
+    formData.append('FieldName', fieldName);
     if (usage !== undefined && usage !== null) {
-      formData.append('usage', usage);
+      formData.append('Usage', usage);
     }
+    if (blockCode) {
+      formData.append('BlockCode', blockCode);
+    }
+    formData.append('FileIds', '');
+    console.log("formData",formData);
 
     return this.http.post(url, formData, {
       headers: this.authHeader.build({ contentType: 'form-data' })

@@ -20,9 +20,6 @@
   @if (uploadError) {
     <p class="status error">{{ uploadError }}</p>
   }
-  @if (currentName) {
-    <p class="file-hint">Archivo actual: {{ currentName }}</p>
-  }
   @if (previewUrl) {
     <div class="preview">
       <img [src]="previewUrl" alt="Vista previa" />
