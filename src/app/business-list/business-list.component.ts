@@ -28,6 +28,8 @@ export class BusinessListComponent {
 
   clientId: string | null = null;
   clientName:string | null = null;
+  userName: string | null = this.tokenStore.getAdvertiserName();
+  userRole: string | null = this.tokenStore.getRole();
   errorCode: '' | 'CLIENT_NOT_FOUND' | 'GENERIC' = '';
 
   clientData$: Observable<LegacyBusinessInterface | null> = EMPTY;

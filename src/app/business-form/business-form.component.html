@@ -13,17 +13,26 @@
       <p class="meta">Nombre comercial: {{ commercialName }}</p>
       }
     </div>
-    @if (formSchema$ | async; as schema) {
-    <span
-      class="status"
-      [attr.data-variant]="statusVariant(schema.status)"
-      [ngClass]="badgeClasses(schema.status)"
-    >
-      {{ statusLabel(schema.status) }}
-    </span>
-    } @else {
-    <span class="status" data-variant="DRAFT" [ngClass]="badgeClasses('DRAFT')">Draft</span>
-    }
+    <div class="header-aside">
+      <div class="user-card">
+        <div>
+          <p class="user-label">Usuario</p>
+          <p class="user-name">{{ userName || '-' }}</p>
+        </div>
+        <span class="role-chip">{{ userRole || '-' }}</span>
+      </div>
+      @if (formSchema$ | async; as schema) {
+      <span
+        class="status"
+        [attr.data-variant]="statusVariant(schema.status)"
+        [ngClass]="badgeClasses(schema.status)"
+      >
+        {{ statusLabel(schema.status) }}
+      </span>
+      } @else {
+      <span class="status" data-variant="DRAFT" [ngClass]="badgeClasses('DRAFT')">Draft</span>
+      }
+    </div>
   </header>
 
   @if (formSchema$ | async; as schema) {

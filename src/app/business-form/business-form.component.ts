@@ -54,6 +54,7 @@ export class BusinessFormComponent {
     history.state?.advertiserName ??
     '';
   userRole = this.tokenStore.getRole();
+  userName = this.tokenStore.getAdvertiserName();
 
   statusContainerClass(status?: FormStatus): string {
     const normalized = (status || 'draft').toString().toLowerCase();
