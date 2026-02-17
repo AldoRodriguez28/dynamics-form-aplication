@@ -18,6 +18,7 @@ export const authByTokenResolver: ResolveFn<boolean> = (route) => {
     const storage = inject(TokenStorageService);
     const router = inject(Router);
 
+    storage.setAccessToken(finalToken);
     console.info('[Resolver] calling AuthService.loginByToken');
     return auth.loginByToken(finalToken).pipe(
         tap(res => {

@@ -44,13 +44,26 @@
               <label class="sub-label" [for]="field.name + '-tipo-' + idx">
                 {{ labelForKey('tipo') }}
               </label>
-              <input
-                class="field-control"
-                [id]="field.name + '-tipo-' + idx"
-                type="text"
-                [placeholder]="placeholderForKey('tipo')"
-                formControlName="tipo"
-              />
+              @if (fieldTypeForKey('tipo') === 'select') {
+                <select
+                  class="field-control"
+                  [id]="field.name + '-tipo-' + idx"
+                  formControlName="tipo"
+                  [disabled]="readOnly">
+                  <option value="">Seleccione una opción</option>
+                  @for (opt of optionsForKey('tipo'); track opt.value) {
+                    <option [value]="opt.value">{{ opt.label }}</option>
+                  }
+                </select>
+              } @else {
+                <input
+                  class="field-control"
+                  [id]="field.name + '-tipo-' + idx"
+                  type="text"
+                  [placeholder]="placeholderForKey('tipo')"
+                  formControlName="tipo"
+                />
+              }
             </div>
           }
 

@@ -12,6 +12,7 @@ import {
 import { FormField, OptionSet } from '../../models/form-schema.model';
 import { getControl } from '../../utils';
 import { OptionItemInterface } from '../../dynamic-form/interface/OptionItem.intreface';
+import { canAppendFormArrayItem } from '../../utils/form-array-guards';
 @Component({
   selector: 'app-field-array-object',
   standalone: true,
@@ -46,6 +47,7 @@ export class FieldArrayObjectComponent {
 
   addItem(): void {
     if (this.readOnly) return;
+    if (!canAppendFormArrayItem(this.formArray)) return;
     this.formArray.push(this.buildEmptyGroup());
   }
 

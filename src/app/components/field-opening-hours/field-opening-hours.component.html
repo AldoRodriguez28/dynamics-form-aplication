@@ -27,6 +27,7 @@
             [value]="valueFor(dia, campo)"
             [disabled]="readOnly"
             (input)="updateValue(dia, campo, $any($event.target).value)"
+            [class.input-error]="inputHasError(dia, campo)"
           />
         </div>
         }

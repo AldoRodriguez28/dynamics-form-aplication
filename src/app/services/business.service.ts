@@ -12,16 +12,10 @@ import { CreateBusinesessResponse } from './response/business/create-businesses.
 import { ResolveTokenRequest } from './request/resolve-token.request';
 import { BusinessDetailWithBlocksResponse } from './response/business/Business-detail-withBlocks.response';
 import { ContactBlockResponse } from '../Interfaces/business/response/business.interface';
+import { BusinessVersionStateResponse } from '../Interfaces/business/response/business-version-state.response';
+import { UploadFilesPayload } from '../Interfaces/business/request/upload-files.request';
 
 export type DomainCheckResponse = string | string[] | { message?: string };
-export interface UploadFilesPayload {
-  files: File | File[];
-  businessId: string | number;
-  versionNumber: number;
-  fieldName: string;
-  usage?: string;
-  blockCode?: string;
-}
 
 @Injectable({
   providedIn: 'root'
@@ -54,6 +48,14 @@ export class BusinessService {
   ): Observable<BlocksResponse> {
     const url = `${this.baseUrl}/businesses/${businessId}/versionNumber/${versionNumber}/blocks?expand=definition`;
     return this.http.get<BusinessDetailWithBlocksResponse>(url, { headers: this.authHeader.build() });
+  }
+
+  getBusinessVersionState(
+    businessId: string | number,
+    versionNumber: string | number = 1
+  ): Observable<BusinessVersionStateResponse> {
+    const url = `${this.baseUrl}/businesses/${businessId}/VersionNumber/${versionNumber}`;
+    return this.http.get<BusinessVersionStateResponse>(url, { headers: this.authHeader.build() });
   }
   //   getbusinessesById(businessId: string | number): Observable<BlocksResponse> {
   //   const url = `assets/data/mock-blocks.json`;

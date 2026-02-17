@@ -10,6 +10,7 @@ import {
 } from '@angular/forms';
 import { FieldValidatorFactory } from '../../utils/field-validator.factory';
 import { optionKey } from '../../utils';
+import { phoneDigitsValidator, requiredIfSiblingFilled } from '../../utils/phone-validators';
 import {
   BlockUI,
   BusinessFormBlock,
@@ -122,10 +123,20 @@ export class BlockFactoryService {
           if (fieldDef.type === 'tel' && fieldDef.collection !== 'array') {
             const countryControlName = this.getPhoneCountryControlName(fieldDef.name);
             field.countryControlName = countryControlName;
-            controls[countryControlName] = this.fb.control(
-              this.normalizePhoneCountry(rawValue),
-              fieldDef.required ? [Validators.required] : []
-            );
+            const numberControl = control as FormControl;
+            numberControl.addValidators(phoneDigitsValidator());
+            numberControl.addValidators(requiredIfSiblingFilled(countryControlName));
+
+            const countryControl = this.fb.control(this.normalizePhoneCountry(rawValue), [
+              requiredIfSiblingFilled(fieldDef.name)
+            ]);
+            numberControl.valueChanges.subscribe(() => {
+              countryControl.updateValueAndValidity({ emitEvent: false });
+            });
+            countryControl.valueChanges.subscribe(() => {
+              numberControl.updateValueAndValidity({ emitEvent: false });
+            });
+            controls[countryControlName] = countryControl;
           }
 
           if (options) {
@@ -145,7 +156,7 @@ export class BlockFactoryService {
       });
     });
 
-    const fieldCount = Object.keys(controls).length;
+    const fieldCount = Object.keys(controls).filter((name) => !this.isPhoneCountryControl(name)).length;
 
     return { rows, controls, fieldCount, optionsMap, valueParsers };
   }
@@ -275,6 +286,7 @@ export class BlockFactoryService {
       requiredValidator: fieldDef.type === 'opening_hours' ? this.openingHoursRequiredValidator() : undefined
     });
     if (fieldDef.type === 'opening_hours') {
+      validators.push(this.openingHoursPairValidator());
       validators.push(this.openingHoursOrderValidator());
     }
 
@@ -499,6 +511,55 @@ export class BlockFactoryService {
     };
   }
 
+  private openingHoursPairValidator(): ValidatorFn {
+    return (control: AbstractControl) => {
+      const value = control.value as Record<string, Record<string, string>> | null | undefined;
+      if (!value) return null;
+
+      for (const dia of Object.values(value)) {
+        const abre = dia?.['abre'];
+        const cierra = dia?.['cierra'];
+        const hasAbre = this.hasTimeValue(abre);
+        const hasCierra = this.hasTimeValue(cierra);
+        if (hasAbre !== hasCierra) {
+          return { openingHoursPair: true };
+        }
+      }
+
+      return null;
+    };
+  }
+
+  private openingHoursAdvancedPairValidator(): ValidatorFn {
+    return (control: AbstractControl) => {
+      const group = control as FormGroup | null;
+      if (!group) return null;
+
+      const abre = group.get('abre')?.value;
+      const comidaSale = group.get('comidaSale')?.value;
+      const comidaRegresa = group.get('comidaRegresa')?.value;
+      const cierra = group.get('cierra')?.value;
+
+      const hasAbre = this.hasTimeValue(abre);
+      const hasComidaSale = this.hasTimeValue(comidaSale);
+      const hasComidaRegresa = this.hasTimeValue(comidaRegresa);
+      const hasCierra = this.hasTimeValue(cierra);
+
+      const hasComidaKeys = comidaSale !== undefined || comidaRegresa !== undefined;
+      if (hasComidaKeys) {
+        if (hasAbre !== hasComidaSale) return { openingHoursPair: true };
+        if (hasComidaRegresa !== hasCierra) return { openingHoursPair: true };
+        return null;
+      }
+
+      if (abre === undefined && cierra === undefined) return null;
+      if (hasAbre !== hasCierra) {
+        return { openingHoursPair: true };
+      }
+      return null;
+    };
+  }
+
   private openingHoursAdvancedValidator(timeKeys: string[]): ValidatorFn {
     return (control: AbstractControl) => {
       const group = control as FormGroup | null;
@@ -513,6 +574,25 @@ export class BlockFactoryService {
         const nextMinutes = this.timeToMinutes(next);
         if (currentMinutes === null || nextMinutes === null || currentMinutes >= nextMinutes) {
           return { openingHoursOrder: true };
+        }
+      }
+
+      return null;
+    };
+  }
+
+  private openingHoursAdvancedArrayCompleteValidator(requiredKeys: string[]): ValidatorFn {
+    return (control: AbstractControl) => {
+      const array = control as FormArray | null;
+      if (!array || !array.controls?.length) return null;
+
+      for (const item of array.controls) {
+        const group = item as FormGroup;
+        for (const key of requiredKeys) {
+          const value = group.get(key)?.value;
+          if (!this.hasTimeValue(value)) {
+            return { openingHoursComplete: true };
+          }
         }
       }
 
@@ -540,6 +620,12 @@ export class BlockFactoryService {
     const ordered = preferred.filter((key) => base.includes(key));
     const remaining = base.filter((key) => !preferred.includes(key));
     return [...ordered, ...remaining];
+  }
+
+  private getAdvancedRequiredKeys(keys: string[], field: FormField): string[] {
+    const timeKeys = this.getAdvancedTimeSequence(keys, field);
+    const required = ['dia', ...timeKeys];
+    return Array.from(new Set(required)).filter((key) => keys.includes(key) || key === 'dia');
   }
 
   private isObjectArrayField(field: FormField): boolean {
@@ -611,7 +697,13 @@ export class BlockFactoryService {
   ): { control: FormArray<FormGroup>; itemKeys: string[] } {
     const { items, keys } = this.normalizeObjectArray(rawValue, field);
     const groups = items.map((item) => this.buildObjectGroup(keys, field, item));
-    const control = this.fb.array(groups.length ? groups : [this.buildObjectGroup(keys, field, {})]);
+    const arrayValidators = this.isAdvancedOpeningHoursField(field)
+      ? [this.openingHoursAdvancedArrayCompleteValidator(this.getAdvancedRequiredKeys(keys, field))]
+      : [];
+    const control = this.fb.array(
+      groups.length ? groups : [this.buildObjectGroup(keys, field, {})],
+      arrayValidators
+    );
     return { control, itemKeys: keys };
   }
 
@@ -670,6 +762,18 @@ export class BlockFactoryService {
     formArray.controls.forEach((group, index) => {
       const country = normalizeCountry((items[index] as Record<string, unknown>)?.['country']);
       group.get('country')?.setValue(country, { emitEvent: false });
+
+      const numberControl = group.get('numero') as FormControl | null;
+      const countryControl = group.get('country') as FormControl | null;
+      numberControl?.addValidators(phoneDigitsValidator());
+      numberControl?.addValidators(requiredIfSiblingFilled('country'));
+      countryControl?.addValidators(requiredIfSiblingFilled('numero'));
+      numberControl?.valueChanges.subscribe(() => {
+        countryControl?.updateValueAndValidity({ emitEvent: false });
+      });
+      countryControl?.valueChanges.subscribe(() => {
+        numberControl?.updateValueAndValidity({ emitEvent: false });
+      });
     });
 
     return formArray;
@@ -678,6 +782,8 @@ export class BlockFactoryService {
   private buildObjectGroup(keys: string[], field: FormField, value: Record<string, unknown>): FormGroup {
     const schema = field.itemSchema ?? {};
     const controls: Record<string, FormControl> = {};
+    const hasExplicitCountryField =
+      keys.includes('country') || Object.prototype.hasOwnProperty.call(schema, 'country');
 
     keys.forEach((key) => {
       const fieldSchema = schema[key];
@@ -695,10 +801,22 @@ export class BlockFactoryService {
           numberValue = record['number'] ?? record['numero'] ?? '';
         }
 
-        controls[key] = this.fb.control(this.coercePrimitive(numberValue), validators);
+        const numberControl = this.fb.control(this.coercePrimitive(numberValue), validators);
+        numberControl.addValidators(phoneDigitsValidator());
+        controls[key] = numberControl;
         const countryKey = `${key}Country`;
-        if (!controls[countryKey]) {
-          controls[countryKey] = this.fb.control(this.normalizePhoneCountry(raw), validators);
+        if (!controls[countryKey] && !(hasExplicitCountryField && key === 'numero')) {
+          const countryControl = this.fb.control(this.normalizePhoneCountry(raw), [
+            requiredIfSiblingFilled(key)
+          ]);
+          numberControl.valueChanges.subscribe(() => {
+            countryControl.updateValueAndValidity({ emitEvent: false });
+          });
+          countryControl.valueChanges.subscribe(() => {
+            numberControl.updateValueAndValidity({ emitEvent: false });
+          });
+          numberControl.addValidators(requiredIfSiblingFilled(countryKey));
+          controls[countryKey] = countryControl;
         }
         return;
       }
@@ -707,7 +825,10 @@ export class BlockFactoryService {
     });
 
     const validators = this.isAdvancedOpeningHoursField(field)
-      ? [this.openingHoursAdvancedValidator(this.getAdvancedTimeSequence(keys, field))]
+      ? [
+          this.openingHoursAdvancedPairValidator(),
+          this.openingHoursAdvancedValidator(this.getAdvancedTimeSequence(keys, field))
+        ]
       : [];
 
     return this.fb.group(controls, { validators });
@@ -779,6 +900,11 @@ export class BlockFactoryService {
   private getPhoneCountryControlName(fieldName: string): string {
     return `${fieldName}Country`;
   }
+
+  private isPhoneCountryControl(name: string): boolean {
+    return name === 'country' || name.endsWith('Country');
+  }
+
 
   private normalizePhoneCountry(value: unknown): '' | 'MX' | 'US' {
     if (typeof value === 'string') {

@@ -1,7 +1,7 @@
 import { CommonModule, Location } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { map, Observable, tap } from 'rxjs';
+import { BehaviorSubject, catchError, map, Observable, of, switchMap, tap } from 'rxjs';
 import Swal from 'sweetalert2';
 import { BusinessService } from '../services/business.service';
 import { BusinessForm, FormStatus } from '../models/form-schema.model';
@@ -23,6 +23,7 @@ export class BusinessFormComponent {
   private readonly location = inject(Location);
   private readonly businessService = inject(BusinessService);
   private readonly tokenStore = inject(TokenStorageService);
+  private readonly formSchemaSubject = new BehaviorSubject<BusinessForm | null>(null);
 
   clientId = this.route.snapshot.paramMap.get('idClient') ?? '';
   businessId = this.route.snapshot.paramMap.get('businessId') ?? '';
@@ -35,26 +36,17 @@ export class BusinessFormComponent {
     history.state?.versionNumber ??
     1;
 
-  formSchema$: Observable<BusinessForm> = this.businessService
-    .getbusinessesById(this.businessId, this.versionNumber)
-    .pipe(
-      tap(res => console.log('Business form response:', res)),
-      map(res => {
-        const mapped = BusinessMapping.MapBlocksToBusinessForm(res, this.commercialName);
-        return {
-          ...mapped,
-          businessId: mapped.businessId ?? this.businessId,
-          versionNumber: mapped.versionNumber ?? this.versionNumber,
-          businessVersion: mapped.businessVersion ?? this.versionNumber
-        };
-      })
-    );
+  formSchema$: Observable<BusinessForm | null> = this.formSchemaSubject.asObservable();
   advertiserName =
     this.router.getCurrentNavigation()?.extras.state?.['advertiserName'] ??
     history.state?.advertiserName ??
     '';
   userRole = this.tokenStore.getRole();
   userName = this.tokenStore.getAdvertiserName();
+
+  constructor() {
+    this.loadForm();
+  }
 
   statusContainerClass(status?: FormStatus): string {
     const normalized = (status || 'draft').toString().toLowerCase();
@@ -133,7 +125,6 @@ export class BusinessFormComponent {
       return;
     }
 
-
     this.businessService.saveBlocks(this.businessId, request).subscribe({
       next: () => {
         Swal.fire({
@@ -141,6 +132,7 @@ export class BusinessFormComponent {
           title: 'Guardado exitoso',
           text: 'Los cambios se guardaron correctamente.'
         });
+        this.refreshStatus();
       },
       error: (error) => console.error('Error al guardar bloques', error)
     });
@@ -160,12 +152,59 @@ export class BusinessFormComponent {
           title: 'Finalización exitosa',
           text: 'La tarea se finalizó correctamente.'
         });
+        this.refreshStatus();
       },
       error: (error) => console.error('Error al finalizar tarea', error)
     });
   }
 
   goBack(): void {
+    const accessToken = this.tokenStore.getAccessToken();
+    if (accessToken) {
+      this.router.navigateByUrl(`/${accessToken}`);
+      return;
+    }
     this.location.back();
+  }
+
+  private loadForm(): void {
+    this.businessService
+      .getbusinessesById(this.businessId, this.versionNumber)
+      .pipe(
+        tap(res => console.log('Business form response:', res)),
+        map(res => {
+          const mapped = BusinessMapping.MapBlocksToBusinessForm(res, this.commercialName);
+          return {
+            ...mapped,
+            businessId: mapped.businessId ?? this.businessId,
+            versionNumber: mapped.versionNumber ?? this.versionNumber,
+            businessVersion: mapped.businessVersion ?? this.versionNumber
+          };
+        }),
+        switchMap((schema) =>
+          this.businessService.getBusinessVersionState(this.businessId, schema.versionNumber ?? this.versionNumber).pipe(
+            map((state) => ({ ...schema, status: state?.state ?? schema.status })),
+            catchError(() => of(schema))
+          )
+        )
+      )
+      .subscribe({
+        next: (schema) => this.formSchemaSubject.next(schema),
+        error: (error) => console.error('Error al cargar formulario', error)
+      });
+  }
+
+  private refreshStatus(): void {
+    const current = this.formSchemaSubject.value;
+    if (!current) return;
+    const version = current.versionNumber ?? this.versionNumber;
+    this.businessService.getBusinessVersionState(this.businessId, version).subscribe({
+      next: (res) => {
+        const state = res?.state ?? current.status;
+        if (!state) return;
+        this.formSchemaSubject.next({ ...current, status: state });
+      },
+      error: (error) => console.error('Error al actualizar estatus', error)
+    });
   }
 }

@@ -86,6 +86,13 @@
   width: 100%;
 }
 
+.day-select.input-error,
+.day-select.inline.input-error {
+  border-color: #ef4444;
+  background: #fef2f2;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+
 .btn.ghost {
   background: #fff;
   border: 1px solid #e2e8f0;
@@ -263,6 +270,12 @@
   background: #fff;
   font-size: 0.95rem;
   transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
+}
+
+.field input.input-error {
+  border-color: #ef4444;
+  background: #fef2f2;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
 }
 
 .field input:focus {

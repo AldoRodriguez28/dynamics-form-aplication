@@ -6,6 +6,7 @@ export class TokenStorageService {
   private static readonly ADVERTISER_KEY = 'ADVERTISER_KEY';
   private static readonly ADVERTISER_NAME = 'ADVERTISER_NAME';
   private static readonly ROLE_KEY = 'ROLE_KEY';
+  private static readonly ACCESS_TOKEN_KEY = 'ACCESS_TOKEN_KEY';
   private static readonly OTP_VERIFIED_KEY = 'OTP_VERIFIED';
   private static readonly OTP_TARGET_KEY = 'OTP_TARGET';
   private static readonly OTP_VERIFIED_NUMBERS_KEY = 'number_otp_verified';
@@ -87,6 +88,7 @@ export class TokenStorageService {
     localStorage.removeItem(TokenStorageService.ADVERTISER_NAME);
     localStorage.removeItem(TokenStorageService.ROLE_KEY);
     sessionStorage.removeItem(TokenStorageService.ROLE_KEY);
+    sessionStorage.removeItem(TokenStorageService.ACCESS_TOKEN_KEY);
     this.clearOtpVerified();
     this.clearOtpTarget();
     this.clearOtpVerifiedNumbers();
@@ -121,6 +123,16 @@ export class TokenStorageService {
   /** Lee role */
   getRole(): string | null {
     return sessionStorage.getItem(TokenStorageService.ROLE_KEY) ?? localStorage.getItem(TokenStorageService.ROLE_KEY);
+  }
+
+  /** Guarda el token de acceso recibido en la URL (session) */
+  setAccessToken(token: string): void {
+    sessionStorage.setItem(TokenStorageService.ACCESS_TOKEN_KEY, token);
+  }
+
+  /** Lee el token de acceso recibido en la URL (session) */
+  getAccessToken(): string | null {
+    return sessionStorage.getItem(TokenStorageService.ACCESS_TOKEN_KEY);
   }
 }
 

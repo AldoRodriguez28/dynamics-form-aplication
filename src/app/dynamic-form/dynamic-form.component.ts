@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { AbstractControl, FormArray, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { canFinalizeForm, getControl, getFieldOptions, optionKey, OptionValue, toggleOption } from '../utils';
 import { SaveBlocksRequest } from '../services/request/save-blocks.request';
 import { PayloadBuilder } from '../utils/payload.builder';
@@ -248,7 +248,35 @@ export class DynamicFormComponent implements OnChanges {
   emitDraft(): void {
     if (this.formReadOnly) return;
     if (!this.form) return;
+    this.form.markAllAsTouched();
+    if (this.hasFormatErrors(this.form)) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Corrige los formatos',
+        text: 'Hay campos con formato inválido. Corrige esos datos antes de guardar el avance.',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
     this.submitForm.emit(this.buildPayload());
+  }
+
+  private hasFormatErrors(control: AbstractControl): boolean {
+    if (control.errors) {
+      const errorKeys = Object.keys(control.errors);
+      const hasNonRequired = errorKeys.some((key) => key !== 'required');
+      if (hasNonRequired) return true;
+    }
+
+    if (control instanceof FormGroup) {
+      return Object.values(control.controls).some((child) => this.hasFormatErrors(child));
+    }
+
+    if (control instanceof FormArray) {
+      return control.controls.some((child) => this.hasFormatErrors(child));
+    }
+
+    return false;
   }
 
   private setupForm(): void {

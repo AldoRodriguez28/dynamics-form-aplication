@@ -9,7 +9,10 @@ import {
   ReactiveFormsModule,
   Validators
 } from '@angular/forms';
-import { FormField } from '../../models/form-schema.model';
+import { FormField, OptionSet } from '../../models/form-schema.model';
+import { OptionItemInterface } from '../../dynamic-form/interface/OptionItem.intreface';
+import { phoneDigitsValidator, requiredIfSiblingFilled } from '../../utils/phone-validators';
+import { canAppendFormArrayItem } from '../../utils/form-array-guards';
 
 @Component({
   selector: 'app-field-phone',
@@ -21,6 +24,7 @@ import { FormField } from '../../models/form-schema.model';
 export class FieldPhoneComponent {
   @Input({ required: true }) field!: FormField & { name: string };
   @Input({ required: true }) formArray!: FormArray<FormGroup>;
+  @Input() optionSets: Record<string, OptionSet> = {};
   @Input() readOnly = false;
 
   readonly countries = [
@@ -48,6 +52,7 @@ export class FieldPhoneComponent {
 
   addItem(): void {
     if (this.readOnly) return;
+    if (!canAppendFormArrayItem(this.formArray)) return;
     this.formArray.push(this.buildEmptyGroup());
   }
 
@@ -76,6 +81,19 @@ export class FieldPhoneComponent {
     return Object.prototype.hasOwnProperty.call(this.field.itemSchema ?? {}, 'tipo');
   }
 
+  fieldTypeForKey(key: string): string | undefined {
+    return this.field.itemSchema?.[key]?.type;
+  }
+
+  optionsForKey(key: string): OptionItemInterface[] {
+    const type = this.fieldTypeForKey(key);
+    if (type !== 'select') return [];
+    const ref = this.field.itemSchema?.[key]?.optionsRef;
+    if (!ref) return [];
+    const set = this.optionSets?.[ref];
+    return set?.items ?? [];
+  }
+
   maxLengthForNumber(): number {
     return 10;
   }
@@ -91,6 +109,21 @@ export class FieldPhoneComponent {
       controls[key] = this.fb.control(initialValue, validators);
     });
 
-    return this.fb.group(controls);
+    const group = this.fb.group(controls);
+    const numberControl = group.get('numero') as FormControl | null;
+    const countryControl = group.get('country') as FormControl | null;
+    if (numberControl && countryControl) {
+      numberControl.addValidators(phoneDigitsValidator());
+      numberControl.addValidators(requiredIfSiblingFilled('country'));
+      countryControl.addValidators(requiredIfSiblingFilled('numero'));
+      numberControl.valueChanges.subscribe(() => {
+        countryControl.updateValueAndValidity({ emitEvent: false });
+      });
+      countryControl.valueChanges.subscribe(() => {
+        numberControl.updateValueAndValidity({ emitEvent: false });
+      });
+    }
+
+    return group;
   }
 }

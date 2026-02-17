@@ -37,12 +37,19 @@ export function collectRequiredFields(schema: BusinessForm | BusinessFormBlock[]
         }
 
         if (field.collection === 'array' && field.type === 'object' && field.itemSchema) {
+          const isPhoneArray =
+            Object.prototype.hasOwnProperty.call(field.itemSchema, 'numero') &&
+            Object.prototype.hasOwnProperty.call(field.itemSchema, 'country');
           const items = normalizeObjectArray(values[field.name]);
           const itemEntries = Object.entries(field.itemSchema);
 
           items.forEach((item, itemIndex) => {
             itemEntries.forEach(([key, schemaField]) => {
               if (!schemaField?.required) return;
+              if (isPhoneArray && key === 'country') {
+                const numberValue = item?.['numero'] ?? item?.['number'];
+                if (!hasValue(numberValue)) return;
+              }
               const path = `${field.name}[${itemIndex}].${key}`;
               const compositeKey = `${block.code}.${path}`;
               if (seen.has(compositeKey)) return;
@@ -104,7 +111,20 @@ function normalizeObjectArray(value: unknown): Record<string, unknown>[] {
   }
 
   if (Array.isArray(value)) {
-    return value.map((item) => (isPlainObject(item) ? { ...item } : {}));
+    return value.map((item) => {
+      if (isPlainObject(item)) return { ...item };
+      if (typeof item === 'string') {
+        const trimmed = item.trim();
+        if (!trimmed) return {};
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (isPlainObject(parsed)) return { ...(parsed as Record<string, unknown>) };
+        } catch {
+          return {};
+        }
+      }
+      return {};
+    });
   }
   if (isPlainObject(value)) return [{ ...(value as Record<string, unknown>) }];
   return [];

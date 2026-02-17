@@ -106,6 +106,12 @@
   background: #fff;
 }
 
+.field-control.input-error {
+  border-color: #ef4444;
+  background: #fef2f2;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+
 .error-message {
   margin: 0.35rem 0 0;
   font-size: 0.9rem;

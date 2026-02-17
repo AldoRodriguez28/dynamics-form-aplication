@@ -128,6 +128,18 @@ export class BusinessListComponent {
             return EMPTY;
           }
 
+          const role = (this.tokenStore.getRole() ?? '').toUpperCase();
+          if (role !== 'CLIENT') {
+            this.router.navigate(['/', targetClientId, business.businessId], {
+              state: {
+                commercialName: business.commercialName ?? '',
+                advertiserName: advertiserName || this.clientName || '',
+                versionNumber
+              }
+            });
+            return EMPTY;
+          }
+
           if (this.tokenStore.isOtpNumberVerified(phone)) {
             this.router.navigate(['/', targetClientId, business.businessId], {
               state: {
@@ -174,7 +186,40 @@ export class BusinessListComponent {
   private extractContactPhone(response: ContactBlockResponse | null | undefined): string | null {
     const direct = response?.values?.telWA ?? response?.blocks?.[0]?.values?.telWA;
     if (!direct) return null;
-    const normalized = String(direct).trim();
+    const normalized = this.normalizePhoneValue(direct);
     return normalized.length ? normalized : null;
+  }
+
+  private normalizePhoneValue(value: unknown): string {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) return '';
+      const parsed = this.tryParseJson(trimmed);
+      if (parsed && typeof parsed === 'object') {
+        const record = parsed as Record<string, unknown>;
+        const number = record['number'] ?? record['numero'];
+        return number ? String(number).trim() : '';
+      }
+      return trimmed;
+    }
+    if (typeof value === 'object') {
+      const record = value as Record<string, unknown>;
+      const number = record['number'] ?? record['numero'];
+      return number ? String(number).trim() : '';
+    }
+    return String(value).trim();
+  }
+
+  private tryParseJson(raw: string): Record<string, unknown> | null {
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+    } catch {
+      return null;
+    }
+    return null;
   }
 }

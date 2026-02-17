@@ -5,6 +5,7 @@ import { FormField } from '../../models/form-schema.model';
 import { FieldValidatorFactory } from '../../utils/field-validator.factory';
 import { OptionItemInterface } from '../../dynamic-form/interface/OptionItem.intreface';
 import { FieldFileComponent } from '../field-file/field-file.component';
+import { canAppendFormArrayItem } from '../../utils/form-array-guards';
 
 @Component({
   selector: 'app-field-array-primitive',
@@ -27,6 +28,7 @@ export class FieldArrayPrimitiveComponent {
 
   addItem(): void {
     if (this.readOnly) return;
+    if (!canAppendFormArrayItem(this.formArray)) return;
     this.formArray.push(this.fb.control(this.defaultValue(), this.controlValidators()));
   }
 
