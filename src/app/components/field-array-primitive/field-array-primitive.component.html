@@ -40,7 +40,11 @@
 
       @switch (itemType) {
         @case ('select') {
-          <select class="field-control" [id]="field.name + '-' + idx" [formControl]="control">
+          <select
+            class="field-control"
+            [id]="field.name + '-' + idx"
+            [formControl]="control"
+            [class.input-error]="inputHasError(control)">
             <option value="">Seleccione una opción</option>
             @for (opt of options; track opt.value) {
               <option [value]="opt.value">{{ opt.label }}</option>
@@ -85,6 +89,7 @@
             [placeholder]="field.placeholder || ''"
             [formControl]="control"
             [attr.maxLength]="maxLength()"
+            [class.input-error]="inputHasError(control)"
           />
         }
       }

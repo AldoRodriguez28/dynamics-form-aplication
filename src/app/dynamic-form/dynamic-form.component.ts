@@ -30,6 +30,7 @@ import { EMPTY, map, Observable, shareReplay, take } from 'rxjs';
 import { OptionItemInterface } from './interface/OptionItem.intreface';
 import { CatalogMapping } from '../mapping/catalog/catalog.map';
 import { BusinessService } from '../services/business.service';
+import { TokenStorageService } from '../services/shared/token-storage.service';
 import { BlockAccessPolicy } from './services/block-access.policy';
 import { BlockFactoryService, BlockView, FormValueParser } from './services/block-factory.service';
 
@@ -64,6 +65,7 @@ export class DynamicFormComponent implements OnChanges {
   private readonly businessService = inject(BusinessService);
   private readonly blockFactory = inject(BlockFactoryService);
   private readonly fb = inject(FormBuilder);
+  private readonly tokenStore = inject(TokenStorageService);
 
   @Input({ required: true }) schema!: BusinessForm;
   @Input() readOnly = false;
@@ -328,11 +330,19 @@ export class DynamicFormComponent implements OnChanges {
 
   private buildPayloadForBlocks(blocks: BusinessFormBlock[]): SaveBlocksRequest {
     const builder = new PayloadBuilder(
-      this.schema.actorType || this.fallbackActorType,
-      this.schema.actorId || this.fallbackActorId
+      this.schema.actorType || this.getFallbackActorType(),
+      this.schema.actorId || this.getFallbackActorId()
     );
 
     return builder.withBlocks(blocks).build();
+  }
+
+  private getFallbackActorType(): string {
+    return this.tokenStore.getRole() || this.fallbackActorType;
+  }
+
+  private getFallbackActorId(): string {
+    return this.tokenStore.getAdvertiserId() || this.fallbackActorId;
   }
 
   private getBlocksWithCurrentValues(): BusinessFormBlock[] {

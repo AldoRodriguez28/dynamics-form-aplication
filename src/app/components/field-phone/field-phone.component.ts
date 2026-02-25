@@ -98,6 +98,19 @@ export class FieldPhoneComponent {
     return 10;
   }
 
+  inputHasError(group: AbstractControl, key: string): boolean {
+    const asGroup = group as FormGroup;
+    const control = asGroup.get(key);
+    const touched = !!(control?.touched || asGroup.touched || this.formArray?.touched);
+    if (!touched) return false;
+
+    if (control?.errors?.['required']) return true;
+    if (this.formArray?.errors?.['arrayItemIncomplete']) {
+      return !this.hasNonEmptyValue(control?.value);
+    }
+    return false;
+  }
+
   private buildEmptyGroup(): FormGroup {
     const schema = this.field.itemSchema ?? {};
     const controls: Record<string, FormControl> = {};
@@ -125,5 +138,15 @@ export class FieldPhoneComponent {
     }
 
     return group;
+  }
+
+  private hasNonEmptyValue(value: unknown): boolean {
+    if (value === null || value === undefined) return false;
+    if (typeof value === 'string') return value.trim() !== '';
+    if (typeof value === 'number') return true;
+    if (typeof value === 'boolean') return true;
+    if (Array.isArray(value)) return value.length > 0;
+    if (typeof value === 'object') return Object.keys(value as Record<string, unknown>).length > 0;
+    return true;
   }
 }

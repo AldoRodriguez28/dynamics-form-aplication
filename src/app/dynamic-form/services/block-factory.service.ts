@@ -600,8 +600,37 @@ export class BlockFactoryService {
     };
   }
 
+  private objectArrayCompleteValidator(requiredKeys: string[]): ValidatorFn {
+    return (control: AbstractControl) => {
+      const array = control as FormArray | null;
+      if (!array || !array.controls?.length) return null;
+
+      for (const item of array.controls) {
+        const group = item as FormGroup;
+        for (const key of requiredKeys) {
+          const value = group.get(key)?.value;
+          if (!this.hasNonEmptyValue(value)) {
+            return { arrayItemIncomplete: true };
+          }
+        }
+      }
+
+      return null;
+    };
+  }
+
   private hasTimeValue(value: unknown): value is string {
     return typeof value === 'string' && value.trim() !== '';
+  }
+
+  private hasNonEmptyValue(value: unknown): boolean {
+    if (value === null || value === undefined) return false;
+    if (typeof value === 'string') return value.trim() !== '';
+    if (typeof value === 'number') return true;
+    if (typeof value === 'boolean') return true;
+    if (Array.isArray(value)) return value.length > 0;
+    if (typeof value === 'object') return Object.keys(value as Record<string, unknown>).length > 0;
+    return true;
   }
 
   private timeToMinutes(value: string): number | null {
@@ -626,6 +655,10 @@ export class BlockFactoryService {
     const timeKeys = this.getAdvancedTimeSequence(keys, field);
     const required = ['dia', ...timeKeys];
     return Array.from(new Set(required)).filter((key) => keys.includes(key) || key === 'dia');
+  }
+
+  private getObjectArrayRequiredKeys(keys: string[], field: FormField): string[] {
+    return keys;
   }
 
   private isObjectArrayField(field: FormField): boolean {
@@ -697,9 +730,11 @@ export class BlockFactoryService {
   ): { control: FormArray<FormGroup>; itemKeys: string[] } {
     const { items, keys } = this.normalizeObjectArray(rawValue, field);
     const groups = items.map((item) => this.buildObjectGroup(keys, field, item));
-    const arrayValidators = this.isAdvancedOpeningHoursField(field)
-      ? [this.openingHoursAdvancedArrayCompleteValidator(this.getAdvancedRequiredKeys(keys, field))]
-      : [];
+    const arrayValidators: ValidatorFn[] = [];
+    if (this.isAdvancedOpeningHoursField(field)) {
+      arrayValidators.push(this.openingHoursAdvancedArrayCompleteValidator(this.getAdvancedRequiredKeys(keys, field)));
+    }
+    arrayValidators.push(this.objectArrayCompleteValidator(this.getObjectArrayRequiredKeys(keys, field)));
     const control = this.fb.array(
       groups.length ? groups : [this.buildObjectGroup(keys, field, {})],
       arrayValidators
@@ -756,7 +791,8 @@ export class BlockFactoryService {
     });
 
     const formArray = this.fb.array(
-      groups.length ? groups : [this.buildObjectGroup(keys, field, {})]
+      groups.length ? groups : [this.buildObjectGroup(keys, field, {})],
+      [this.objectArrayCompleteValidator(this.getObjectArrayRequiredKeys(keys, field))]
     );
 
     formArray.controls.forEach((group, index) => {
@@ -840,7 +876,21 @@ export class BlockFactoryService {
     const controls = values.length
       ? values.map((v) => this.fb.control(this.coercePrimitiveArrayValue(field, v), validators))
       : [this.fb.control(this.defaultPrimitiveArrayValue(field), validators)];
-    return this.fb.array(controls);
+    return this.fb.array(controls, [this.primitiveArrayCompleteValidator()]);
+  }
+
+  private primitiveArrayCompleteValidator(): ValidatorFn {
+    return (control: AbstractControl) => {
+      const array = control as FormArray | null;
+      if (!array || !array.controls?.length) return null;
+
+      for (const item of array.controls) {
+        if (!this.hasNonEmptyValue(item.value)) {
+          return { arrayItemIncomplete: true };
+        }
+      }
+      return null;
+    };
   }
 
   private defaultPrimitiveArrayValue(field: FormField): Primitive | '' {
