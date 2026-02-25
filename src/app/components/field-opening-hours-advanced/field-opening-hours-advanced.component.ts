@@ -3,6 +3,7 @@ import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { FormField, OptionSet } from '../../models/form-schema.model';
 import { OptionItemInterface } from '../../dynamic-form/interface/OptionItem.intreface';
+import { canAppendFormArrayItem } from '../../utils/form-array-guards';
 
 type DayOption = { value: string; label: string; index: number };
 type ItemSchema = NonNullable<FormField['itemSchema']>;
@@ -74,6 +75,58 @@ export class FieldOpeningHoursAdvancedComponent implements OnChanges {
     return Boolean(group?.touched && group?.errors?.['openingHoursOrder']);
   }
 
+  hasPairError(index: number): boolean {
+    const group = this.getGroupForDayByIndex(index);
+    return Boolean((group?.touched || this.formArray?.touched) && group?.errors?.['openingHoursPair']);
+  }
+
+  hasCompleteError(index: number): boolean {
+    const group = this.getGroupForDayByIndex(index);
+    if (!group) return false;
+    if (!(group.touched || this.formArray?.touched)) return false;
+    if (!this.formArray?.errors?.['openingHoursComplete']) return false;
+
+    // Muestra el error solo en el día incompleto
+    if (!group.get('dia')?.value) return true;
+    return this.timeKeys.some((key) => !this.hasTimeValue(group.get(key)?.value));
+  }
+
+  dayHasError(index: number): boolean {
+    if (!this.hasCompleteError(index)) return false;
+    const group = this.getGroupForDayByIndex(index);
+    return !group?.get('dia')?.value;
+  }
+
+  inputHasError(index: number, key: string): boolean {
+    const group = this.getGroupForDayByIndex(index);
+    if (!group) return false;
+    if (!(group.touched || this.formArray?.touched)) return false;
+
+    const value = group.get(key)?.value;
+    const hasValue = this.hasTimeValue(value);
+
+    if (this.hasCompleteError(index) && this.timeKeys.includes(key) && !hasValue) return true;
+
+    if (this.hasPairError(index)) {
+      const abre = group.get('abre')?.value;
+      const comidaSale = group.get('comidaSale')?.value;
+      const comidaRegresa = group.get('comidaRegresa')?.value;
+      const cierra = group.get('cierra')?.value;
+
+      const hasAbre = this.hasTimeValue(abre);
+      const hasComidaSale = this.hasTimeValue(comidaSale);
+      const hasComidaRegresa = this.hasTimeValue(comidaRegresa);
+      const hasCierra = this.hasTimeValue(cierra);
+
+      if (key === 'abre' && !hasAbre && hasComidaSale) return true;
+      if (key === 'comidaSale' && !hasComidaSale && hasAbre) return true;
+      if (key === 'comidaRegresa' && !hasComidaRegresa && hasCierra) return true;
+      if (key === 'cierra' && !hasCierra && hasComidaRegresa) return true;
+    }
+
+    return false;
+  }
+
   copyFirstToAll(): void {
     if (this.readOnly) return;
     const first = this.days[0];
@@ -97,6 +150,7 @@ export class FieldOpeningHoursAdvancedComponent implements OnChanges {
 
   addDay(): void {
     if (this.readOnly) return;
+    if (!canAppendFormArrayItem(this.formArray)) return;
     const schema: ItemSchema = (this.field.itemSchema as ItemSchema) ?? {};
     const newGroup = this.buildEmptyGroup('', schema);
     this.formArray.push(newGroup);
@@ -201,5 +255,9 @@ export class FieldOpeningHoursAdvancedComponent implements OnChanges {
     if (!group) return;
     group.get('dia')?.setValue(value);
     this.days = this.getDays();
+  }
+
+  private hasTimeValue(value: unknown): value is string {
+    return typeof value === 'string' && value.trim() !== '';
   }
 }

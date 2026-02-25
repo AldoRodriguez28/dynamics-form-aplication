@@ -9,8 +9,17 @@
       <p class="meta">Advertiser ID: {{ clientData.legacyAdvertiserId || clientId || '-' }}</p>
     </div>
 
-    <div class="badge">
-      Negocios: {{ clientData.businesses?.length || 0 }}
+    <div class="header-aside">
+      <div class="user-card">
+        <div>
+          <p class="user-label">Usuario</p>
+          <p class="user-name">{{ userName || '-' }}</p>
+        </div>
+        <span class="role-chip">{{ userRole || '-' }}</span>
+      </div>
+      <div class="badge">
+        Negocios: {{ clientData.businesses?.length || 0 }}
+      </div>
     </div>
   </header>
 

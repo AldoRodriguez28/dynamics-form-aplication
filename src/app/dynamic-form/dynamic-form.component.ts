@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { AbstractControl, FormArray, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { canFinalizeForm, getControl, getFieldOptions, optionKey, OptionValue, toggleOption } from '../utils';
 import { SaveBlocksRequest } from '../services/request/save-blocks.request';
 import { PayloadBuilder } from '../utils/payload.builder';
@@ -30,6 +30,7 @@ import { EMPTY, map, Observable, shareReplay, take } from 'rxjs';
 import { OptionItemInterface } from './interface/OptionItem.intreface';
 import { CatalogMapping } from '../mapping/catalog/catalog.map';
 import { BusinessService } from '../services/business.service';
+import { TokenStorageService } from '../services/shared/token-storage.service';
 import { BlockAccessPolicy } from './services/block-access.policy';
 import { BlockFactoryService, BlockView, FormValueParser } from './services/block-factory.service';
 
@@ -64,6 +65,7 @@ export class DynamicFormComponent implements OnChanges {
   private readonly businessService = inject(BusinessService);
   private readonly blockFactory = inject(BlockFactoryService);
   private readonly fb = inject(FormBuilder);
+  private readonly tokenStore = inject(TokenStorageService);
 
   @Input({ required: true }) schema!: BusinessForm;
   @Input() readOnly = false;
@@ -248,7 +250,35 @@ export class DynamicFormComponent implements OnChanges {
   emitDraft(): void {
     if (this.formReadOnly) return;
     if (!this.form) return;
+    this.form.markAllAsTouched();
+    if (this.hasFormatErrors(this.form)) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Corrige los formatos',
+        text: 'Hay campos con formato inválido. Corrige esos datos antes de guardar el avance.',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
     this.submitForm.emit(this.buildPayload());
+  }
+
+  private hasFormatErrors(control: AbstractControl): boolean {
+    if (control.errors) {
+      const errorKeys = Object.keys(control.errors);
+      const hasNonRequired = errorKeys.some((key) => key !== 'required');
+      if (hasNonRequired) return true;
+    }
+
+    if (control instanceof FormGroup) {
+      return Object.values(control.controls).some((child) => this.hasFormatErrors(child));
+    }
+
+    if (control instanceof FormArray) {
+      return control.controls.some((child) => this.hasFormatErrors(child));
+    }
+
+    return false;
   }
 
   private setupForm(): void {
@@ -300,11 +330,19 @@ export class DynamicFormComponent implements OnChanges {
 
   private buildPayloadForBlocks(blocks: BusinessFormBlock[]): SaveBlocksRequest {
     const builder = new PayloadBuilder(
-      this.schema.actorType || this.fallbackActorType,
-      this.schema.actorId || this.fallbackActorId
+      this.schema.actorType || this.getFallbackActorType(),
+      this.schema.actorId || this.getFallbackActorId()
     );
 
     return builder.withBlocks(blocks).build();
+  }
+
+  private getFallbackActorType(): string {
+    return this.tokenStore.getRole() || this.fallbackActorType;
+  }
+
+  private getFallbackActorId(): string {
+    return this.tokenStore.getAdvertiserId() || this.fallbackActorId;
   }
 
   private getBlocksWithCurrentValues(): BusinessFormBlock[] {

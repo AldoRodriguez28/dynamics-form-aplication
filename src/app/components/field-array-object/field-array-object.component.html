@@ -50,7 +50,8 @@
                 <select
                   class="field-control"
                   [id]="field.name + '-' + key + '-' + idx"
-                  [formControlName]="key">
+                  [formControlName]="key"
+                  [class.input-error]="inputHasError(group, key)">
                   <option value="">Seleccione una opción</option>
                   @for (opt of optionsForKey(key); track opt.value) {
                     <option [value]="opt.value">{{ opt.label }}</option>
@@ -63,7 +64,8 @@
                     class="field-control field-control--country phone-combo__country"
                     [id]="field.name + '-' + key + '-country-' + idx"
                     [formControlName]="countryControlName(key)"
-                    [disabled]="readOnly || !hasCountryControl(group, key)">
+                    [disabled]="readOnly || !hasCountryControl(group, key)"
+                    [class.input-error]="inputHasError(group, countryControlName(key))">
                     <option value="">Seleccione una opción</option>
                     @for (country of countries; track country.value) {
                       <option [value]="country.value">{{ country.label }}</option>
@@ -77,6 +79,7 @@
                     [formControlName]="key"
                     [attr.maxLength]="maxLengthForKey(key)"
                     [disabled]="readOnly"
+                    [class.input-error]="inputHasError(group, key)"
                   />
                 </div>
               }
@@ -85,7 +88,8 @@
                   class="field-control"
                   [id]="field.name + '-' + key + '-' + idx"
                   [placeholder]="placeholderForKey(key)"
-                  [formControlName]="key">
+                  [formControlName]="key"
+                  [class.input-error]="inputHasError(group, key)">
                 </textarea>
               }
               @default {
@@ -96,6 +100,7 @@
                   [placeholder]="placeholderForKey(key)"
                   [formControlName]="key"
                   [attr.maxLength]="maxLengthForKey(key)"
+                  [class.input-error]="inputHasError(group, key)"
                 />
               }
             }
@@ -107,6 +112,7 @@
               [placeholder]="placeholderForKey(key)"
               [formControlName]="key"
               [attr.maxLength]="maxLengthForKey(key)"
+              [class.input-error]="inputHasError(group, key)"
             />
           }
         </div>

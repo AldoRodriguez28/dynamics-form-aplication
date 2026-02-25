@@ -23,7 +23,13 @@ export class FormSidebarComponent {
     if (!group) return 0;
     const value = group.value as Record<string, unknown>;
     let count = 0;
-    Object.values(value || {}).forEach((v) => {
+    Object.entries(value || {}).forEach(([key, v]) => {
+      if (this.isPhoneCountryKey(key)) return;
+      if (this.hasPhoneCountrySibling(key, value)) {
+        const countryValue = value[`${key}Country`];
+        if (this.isFilled(v) && this.isFilled(countryValue)) count++;
+        return;
+      }
       if (this.isFilled(v)) count++;
     });
     return count;
@@ -86,11 +92,12 @@ export class FormSidebarComponent {
   private hasRequiredMissing(control: FormGroup): boolean {
     const check = (c: any): boolean => {
       if (!c) return false;
-      if (c.controls) {
-        return Object.values(c.controls).some(check);
-      }
       const errors = c.errors as Record<string, unknown> | null;
-      return !!errors?.['required'];
+      const hasOwnRequired = !!errors?.['required'];
+      if (c.controls) {
+        return hasOwnRequired || Object.values(c.controls).some(check);
+      }
+      return hasOwnRequired;
     };
     return check(control);
   }
@@ -98,13 +105,12 @@ export class FormSidebarComponent {
   private hasNonRequiredErrors(control: FormGroup): boolean {
     const check = (c: any): boolean => {
       if (!c) return false;
-      if (c.controls) {
-        return Object.values(c.controls).some(check);
-      }
       const errors = c.errors as Record<string, unknown> | null;
-      if (!errors) return false;
-      const keys = Object.keys(errors);
-      return keys.some((k) => k !== 'required');
+      const hasOwnNonRequired = !!errors && Object.keys(errors).some((k) => k !== 'required');
+      if (c.controls) {
+        return hasOwnNonRequired || Object.values(c.controls).some(check);
+      }
+      return hasOwnNonRequired;
     };
     return check(control);
   }
@@ -121,9 +127,32 @@ export class FormSidebarComponent {
     if (value === null || value === undefined) return false;
     if (typeof value === 'string') return value.trim().length > 0;
     if (Array.isArray(value)) return value.some((v) => this.isFilled(v));
-    if (typeof value === 'object') return Object.values(value).some((v) => this.isFilled(v));
+    if (typeof value === 'object') {
+      const record = value as Record<string, unknown>;
+      if (this.isPhoneObject(record)) {
+        return this.isFilled(record['numero'] ?? record['number']) && this.isFilled(record['country']);
+      }
+      return Object.entries(record).some(([key, v]) => {
+        if (key === 'country' || key.endsWith('Country')) return false;
+        return this.isFilled(v);
+      });
+    }
     if (typeof value === 'boolean') return value === true;
     return true;
+  }
+
+  private isPhoneCountryKey(key: string): boolean {
+    return key === 'country' || key.endsWith('Country');
+  }
+
+  private hasPhoneCountrySibling(key: string, value: Record<string, unknown>): boolean {
+    return Object.prototype.hasOwnProperty.call(value, `${key}Country`);
+  }
+
+  private isPhoneObject(record: Record<string, unknown>): boolean {
+    const hasNumero = Object.prototype.hasOwnProperty.call(record, 'numero') || Object.prototype.hasOwnProperty.call(record, 'number');
+    const hasCountry = Object.prototype.hasOwnProperty.call(record, 'country');
+    return hasNumero && hasCountry;
   }
 
   onSelect(code: string): void {

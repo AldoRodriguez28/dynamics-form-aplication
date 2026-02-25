@@ -54,6 +54,20 @@ export class FieldOpeningHoursComponent {
     return start >= end;
   }
 
+  inputHasError(dia: string, campo: string): boolean {
+    if (!this.control.touched) return false;
+    if (this.control.errors?.['required']) return true;
+    if (this.hasOrderErrorFor(dia)) return true;
+
+    const current = (this.control.value as OpeningHoursValue) || {};
+    const abre = current[dia]?.['abre'];
+    const cierra = current[dia]?.['cierra'];
+    const hasAbre = this.hasTimeValue(abre);
+    const hasCierra = this.hasTimeValue(cierra);
+    if (hasAbre === hasCierra) return false;
+    return campo === (hasAbre ? 'cierra' : 'abre');
+  }
+
   private hasTimeValue(value: unknown): value is string {
     return typeof value === 'string' && value.trim() !== '';
   }

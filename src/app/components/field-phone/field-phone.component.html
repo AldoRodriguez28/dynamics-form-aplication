@@ -44,13 +44,28 @@
               <label class="sub-label" [for]="field.name + '-tipo-' + idx">
                 {{ labelForKey('tipo') }}
               </label>
-              <input
-                class="field-control"
-                [id]="field.name + '-tipo-' + idx"
-                type="text"
-                [placeholder]="placeholderForKey('tipo')"
-                formControlName="tipo"
-              />
+              @if (fieldTypeForKey('tipo') === 'select') {
+                <select
+                  class="field-control"
+                  [id]="field.name + '-tipo-' + idx"
+                  formControlName="tipo"
+                  [disabled]="readOnly"
+                  [class.input-error]="inputHasError(group, 'tipo')">
+                  <option value="">Seleccione una opción</option>
+                  @for (opt of optionsForKey('tipo'); track opt.value) {
+                    <option [value]="opt.value">{{ opt.label }}</option>
+                  }
+                </select>
+              } @else {
+                <input
+                  class="field-control"
+                  [id]="field.name + '-tipo-' + idx"
+                  type="text"
+                  [placeholder]="placeholderForKey('tipo')"
+                  formControlName="tipo"
+                  [class.input-error]="inputHasError(group, 'tipo')"
+                />
+              }
             </div>
           }
 
@@ -62,7 +77,8 @@
               <select
                 class="field-control phone-combo__country"
                 [id]="field.name + '-country-' + idx"
-                formControlName="country">
+                formControlName="country"
+                [class.input-error]="inputHasError(group, 'country')">
                 <option value="">Seleccione una opción</option>
                 @for (country of countries; track country.value) {
                   <option [value]="country.value">{{ country.label }}</option>
@@ -75,6 +91,7 @@
                 [placeholder]="placeholderForKey('numero')"
                 formControlName="numero"
                 [attr.maxLength]="maxLengthForNumber()"
+                [class.input-error]="inputHasError(group, 'numero')"
               />
             </div>
           </div>

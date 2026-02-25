@@ -5,6 +5,7 @@ import { FormField } from '../../models/form-schema.model';
 import { FieldValidatorFactory } from '../../utils/field-validator.factory';
 import { OptionItemInterface } from '../../dynamic-form/interface/OptionItem.intreface';
 import { FieldFileComponent } from '../field-file/field-file.component';
+import { canAppendFormArrayItem } from '../../utils/form-array-guards';
 
 @Component({
   selector: 'app-field-array-primitive',
@@ -27,6 +28,7 @@ export class FieldArrayPrimitiveComponent {
 
   addItem(): void {
     if (this.readOnly) return;
+    if (!canAppendFormArrayItem(this.formArray)) return;
     this.formArray.push(this.fb.control(this.defaultValue(), this.controlValidators()));
   }
 
@@ -38,6 +40,16 @@ export class FieldArrayPrimitiveComponent {
 
   trackByIndex(index: number): number {
     return index;
+  }
+
+  inputHasError(control: FormControl): boolean {
+    const touched = !!(control?.touched || this.formArray?.touched);
+    if (!touched) return false;
+    if (control?.errors?.['required']) return true;
+    if (this.formArray?.errors?.['arrayItemIncomplete']) {
+      return !this.hasNonEmptyValue(control?.value);
+    }
+    return false;
   }
 
   get itemType(): FormField['type'] | undefined {
@@ -93,5 +105,15 @@ export class FieldArrayPrimitiveComponent {
       requiredValidator: this.field.required ? Validators.required : null,
       skipRequired: !this.field.required
     });
+  }
+
+  private hasNonEmptyValue(value: unknown): boolean {
+    if (value === null || value === undefined) return false;
+    if (typeof value === 'string') return value.trim() !== '';
+    if (typeof value === 'number') return true;
+    if (typeof value === 'boolean') return true;
+    if (Array.isArray(value)) return value.length > 0;
+    if (typeof value === 'object') return Object.keys(value as Record<string, unknown>).length > 0;
+    return true;
   }
 }

@@ -105,6 +105,7 @@
                 <app-field-phone
                   [field]="field"
                   [formArray]="getArrayControl(block.code, field.name)"
+                  [optionSets]="block.optionSets || {}"
                   [readOnly]="readOnly || block.readOnly"
                 />
                 }

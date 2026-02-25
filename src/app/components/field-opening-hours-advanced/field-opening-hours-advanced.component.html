@@ -30,7 +30,13 @@
           <div class="avatar">{{ day.label | slice: 0 : 1 }}</div>
           <div>
             <p class="day-name">
-              <select class="day-select inline" [ngModel]="day.value" (ngModelChange)="onDayChange(day.index, $event)" [disabled]="readOnly">
+              <select
+                class="day-select inline"
+                [ngModel]="day.value"
+                (ngModelChange)="onDayChange(day.index, $event)"
+                [disabled]="readOnly"
+                [class.input-error]="dayHasError(day.index)"
+              >
                 <option value="">Selecciona un día de la semana</option>
                 @for (opt of dayOptionsFor(day.value); track opt.value) {
                 <option [value]="opt.value">{{ opt.label }}</option>
@@ -60,6 +66,7 @@
               [value]="valueFor(day.index, key)"
               [disabled]="readOnly"
               (input)="updateTime(day.index, key, $any($event.target).value)"
+              [class.input-error]="inputHasError(day.index, key)"
             />
           </div>
           }
@@ -78,12 +85,17 @@
               [value]="valueFor(day.index, key)"
               [disabled]="readOnly"
               (input)="updateTime(day.index, key, $any($event.target).value)"
+              [class.input-error]="inputHasError(day.index, key)"
             />
           </div>
           }
         </div>
       </div>
-      @if (hasOrderError(day.index)) {
+      @if (hasCompleteError(day.index)) {
+        <p class="error-message">Completa el día y todos los turnos.</p>
+      } @else if (hasPairError(day.index)) {
+        <p class="error-message">Completa los pares de horarios.</p>
+      } @else if (hasOrderError(day.index)) {
         <p class="error-message">El orden de horarios no es válido.</p>
       }
     </div>

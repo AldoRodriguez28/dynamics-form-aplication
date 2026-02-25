@@ -238,6 +238,18 @@
   background: #fff;
 }
 
+.field-control.ng-invalid.ng-touched {
+  border-color: #ef4444;
+  background: #fef2f2;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+
+.field-control.input-error {
+  border-color: #ef4444;
+  background: #fef2f2;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+
 .phone-combo__country:focus,
 .phone-combo__input:focus {
   z-index: 1;
