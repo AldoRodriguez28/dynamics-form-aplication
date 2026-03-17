@@ -7,6 +7,8 @@ export class BusinessResponse {
   commercialName!: string;
   categoryCode!: string;
   townCode!: string;
+  categoryName?: string | null;
+  townName?: string | null;
   state!: string;
   lastUpdate?: string | Date;
   externalData!: string;

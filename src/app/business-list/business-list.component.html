@@ -34,8 +34,10 @@
     <div class="table">
       <div class="table__header">
         <span>Negocio</span>
+        <span>Categoría</span>
+        <span>Población</span>
         <span>Estado</span>
-        <span>Última actualización</span>
+        <!-- <span>Última actualización</span> -->
         <span class="actions-col">Acciones</span>
       </div>
 
@@ -47,16 +49,31 @@
         </div>
 
         <div>
+          <span class="cell-label">Categoría</span>
+          <p class="title">{{ business?.categoryName || 'Sin categoría' }}</p>
+          <p class="sub">Código: {{ business?.categoryCode || '-' }}</p>
+        </div>
+
+        <div>
+          <span class="cell-label">Población</span>
+          <p class="title">{{ business?.townName || 'Sin población' }}</p>
+          <p class="sub">Código: {{ business?.townCode || '-' }}</p>
+        </div>
+
+        <div>
+          <span class="cell-label">Estado</span>
           <span class="status" [attr.data-variant]="business.state">
             {{ statusLabel(business.state) }}
           </span>
         </div>
 
-        <div>
+        <!-- <div>
+          <span class="cell-label">Última actualización</span>
           <p>{{ formatDate(business?.lastUpdate ?? null) }}</p>
-        </div>
+        </div> -->
 
         <div class="actions-col">
+          <span class="cell-label">Acciones</span>
           <button type="button"
             (click)="goToForm((clientId ?? clientData.legacyAdvertiserId) ?? '', $any(business), '')">
             Ver formulario

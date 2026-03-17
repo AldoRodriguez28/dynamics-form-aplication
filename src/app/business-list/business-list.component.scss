@@ -155,7 +155,7 @@ h2 {
 .table__header,
 .table__row {
   display: grid;
-  grid-template-columns: 2fr 1.2fr 1fr 1.3fr;
+  grid-template-columns: 2.2fr 1.2fr 1.2fr 0.9fr 1fr;
   align-items: center;
   gap: 1rem;
   padding: 1.05rem 1.8rem;
@@ -184,14 +184,24 @@ h2 {
   box-shadow: inset 4px 0 0 #2563eb, 0 8px 18px rgba(15, 23, 42, 0.06);
 }
 
-.table__header span:nth-child(3),
-.table__row > div:nth-child(3) {
-  text-align: right;
+.table__header span {
+  justify-self: start;
+}
+
+.table__row > div {
+  justify-self: start;
 }
 
 .table__header span:nth-child(4),
-.table__row > div:nth-child(4) {
+.table__header span:nth-child(5) {
   text-align: right;
+  justify-self: end;
+}
+
+.table__row > div:nth-child(4),
+.table__row > div:nth-child(5) {
+  text-align: right;
+  justify-self: end;
 }
 
 .title {
@@ -206,6 +216,15 @@ h2 {
   margin: 0.15rem 0 0;
   color: #6b7280;
   font-size: 0.9rem;
+}
+
+.cell-label {
+  display: none;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9ca3af;
+  margin-bottom: 0.25rem;
 }
 
 .code {
@@ -288,6 +307,12 @@ button:focus-visible {
   justify-content: flex-end;
 }
 
+.table__header .actions-col {
+  display: block;
+  justify-self: end;
+  text-align: right;
+}
+
 .loading {
   padding: 2rem;
   text-align: center;
@@ -298,11 +323,11 @@ button:focus-visible {
 
   .table__header,
   .table__row {
-    grid-template-columns: 1.6fr 1fr 0.9fr 1fr;
+    grid-template-columns: 1.6fr 1fr 1fr 0.8fr 0.9fr;
   }
 
   .actions-col {
-    grid-column: span 4;
+    grid-column: span 5;
     justify-content: flex-start;
     margin-top: 0.5rem;
   }
@@ -325,6 +350,10 @@ button:focus-visible {
 
   .actions-col {
     justify-content: flex-start;
+  }
+
+  .cell-label {
+    display: inline-block;
   }
 }
 
