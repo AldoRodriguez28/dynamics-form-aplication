@@ -8,9 +8,18 @@
     <div>
       <p class="eyebrow">Cliente</p>
       <h1>{{ advertiserName || clientId }}</h1>
-      <p class="meta">Negocio: {{ businessId }}</p>
-      @if (commercialName) {
-      <p class="meta">Nombre comercial: {{ commercialName }}</p>
+      <p class="meta">ID del cliente: {{ clientId || '-' }}</p>
+      @if (advertiserName) {
+      <p class="meta">Nombre del cliente: {{ advertiserName }}</p>
+      }
+      @if (contractId) {
+      <p class="meta">Contrato: {{ contractId }}</p>
+      }
+      <p class="meta">ID negocio: {{ businessId }} @if (commercialName) { - {{ commercialName }} }</p>
+      <p class="meta">Categoría: {{ categoryName || 'Sin categoría' }} ({{ categoryCode || '-' }})</p>
+      <p class="meta">Población: {{ townName || 'Sin población' }} ({{ townCode || '-' }})</p>
+      @if (renewal) {
+      <p class="meta">Renovación: {{ renewal }}</p>
       }
     </div>
     <div class="header-aside">

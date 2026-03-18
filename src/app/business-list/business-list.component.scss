@@ -184,24 +184,14 @@ h2 {
   box-shadow: inset 4px 0 0 #2563eb, 0 8px 18px rgba(15, 23, 42, 0.06);
 }
 
-.table__header span {
-  justify-self: start;
-}
-
+.table__header span,
 .table__row > div {
-  justify-self: start;
+  justify-self: stretch;
 }
 
-.table__header span:nth-child(4),
-.table__header span:nth-child(5) {
+.col-estado,
+.col-acciones {
   text-align: right;
-  justify-self: end;
-}
-
-.table__row > div:nth-child(4),
-.table__row > div:nth-child(5) {
-  text-align: right;
-  justify-self: end;
 }
 
 .title {
@@ -309,8 +299,6 @@ button:focus-visible {
 
 .table__header .actions-col {
   display: block;
-  justify-self: end;
-  text-align: right;
 }
 
 .loading {

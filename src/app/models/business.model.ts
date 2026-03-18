@@ -7,6 +7,7 @@ export interface Business {
   categoryCode?: string | null;
   townName?: string | null;
   townCode?: string | null;
+  externalData?: string | null;
   formStatus: 'IN_PROGRESS' | 'PENDING' | 'COMPLETED' | string;
   lastUpdate: string | null;
 }

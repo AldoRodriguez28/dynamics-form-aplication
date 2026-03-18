@@ -9,6 +9,8 @@ import { DynamicFormComponent } from '../dynamic-form/dynamic-form.component';
 import { SaveBlocksRequest } from '../services/request/save-blocks.request';
 import { BusinessMapping } from '../mapping/business/business.map';
 import { TokenStorageService } from '../services/shared/token-storage.service';
+import { ExternalData } from '../models/external-data.model';
+import { coerceExternalValue, parseExternalData } from '../utils/external-data.utils';
 
 @Component({
   selector: 'app-business-form',
@@ -27,20 +29,24 @@ export class BusinessFormComponent {
 
   clientId = this.route.snapshot.paramMap.get('idClient') ?? '';
   businessId = this.route.snapshot.paramMap.get('businessId') ?? '';
-  commercialName =
-    this.router.getCurrentNavigation()?.extras.state?.['commercialName'] ??
-    history.state?.commercialName ??
-    '';
-  versionNumber =
-    this.router.getCurrentNavigation()?.extras.state?.['versionNumber'] ??
-    history.state?.versionNumber ??
-    1;
+  private readonly navState: Record<string, unknown> =
+    (this.router.getCurrentNavigation()?.extras.state as Record<string, unknown>) ??
+    (history.state as Record<string, unknown>) ??
+    {};
+
+  commercialName = (this.navState['commercialName'] as string) ?? '';
+  versionNumber = (this.navState['versionNumber'] as number) ?? 1;
 
   formSchema$: Observable<BusinessForm | null> = this.formSchemaSubject.asObservable();
-  advertiserName =
-    this.router.getCurrentNavigation()?.extras.state?.['advertiserName'] ??
-    history.state?.advertiserName ??
-    '';
+  advertiserName = (this.navState['advertiserName'] as string) ?? '';
+  categoryName = (this.navState['categoryName'] as string) ?? '';
+  categoryCode = (this.navState['categoryCode'] as string) ?? '';
+  townName = (this.navState['townName'] as string) ?? '';
+  townCode = (this.navState['townCode'] as string) ?? '';
+  externalDataRaw = this.navState['externalData'] ?? '';
+  externalData: ExternalData | null = parseExternalData(this.externalDataRaw);
+  contractId = coerceExternalValue(this.externalData?.contractId);
+  renewal = coerceExternalValue(this.externalData?.renewal);
   userRole = this.tokenStore.getRole();
   userName = this.tokenStore.getAdvertiserName();
 
@@ -207,4 +213,6 @@ export class BusinessFormComponent {
       error: (error) => console.error('Error al actualizar estatus', error)
     });
   }
+
+  // External data parsing handled by utils.
 }
