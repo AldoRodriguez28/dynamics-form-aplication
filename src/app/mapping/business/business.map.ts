@@ -17,6 +17,8 @@ export class BusinessMapping {
     commercialName: response.commercialName ?? null,
     categoryCode: response.categoryCode ?? null,
     townCode: response.townCode ?? null,
+    categoryName: response.categoryName ?? null,
+    townName: response.townName ?? null,
     state: response.state ?? null,
     lastUpdate: response.lastUpdate ?? null,
     externalData: response.externalData ?? null,

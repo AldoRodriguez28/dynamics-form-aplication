@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { EMPTY, map, Observable, of, switchMap, tap } from 'rxjs';
+import { EMPTY, map, Observable, of, switchMap, tap, catchError } from 'rxjs';
 import { Business } from '../models/business.model';
 import { BusinessService } from '../services/business.service';
 import { ContactBlockResponse } from '../Interfaces/business/response/business.interface';
@@ -56,7 +56,12 @@ export class BusinessListComponent {
       state: {
         commercialName: business.commercialName,
         advertiserName: advertiserName,
-        versionNumber
+        versionNumber,
+        externalData: business.externalData ?? null,
+        categoryName: business.categoryName ?? null,
+        categoryCode: business.categoryCode ?? null,
+        townName: business.townName ?? null,
+        townCode: business.townCode ?? null
       }
     });
   }
@@ -80,6 +85,7 @@ export class BusinessListComponent {
 
         this.clientId = this.tokenStore.getAdvertiserId();
         this.clientName = this.tokenStore.getAdvertiserName();
+        this.errorCode = '';
         return this.clientId;
       }),
       switchMap(clientId => {
@@ -89,7 +95,11 @@ export class BusinessListComponent {
           .getLegacy(clientId)
           .pipe(
             tap(response => console.log('dataClient', response)),
-            map(BusinessMapping.MapLegacyResponseToLegacyInterface)
+            map(BusinessMapping.MapLegacyResponseToLegacyInterface),
+            catchError((err: any) => {
+              this.errorCode = err?.status === 404 ? 'CLIENT_NOT_FOUND' : 'GENERIC';
+              return of<LegacyBusinessInterface | null>(null);
+            })
           );
       })
     );    

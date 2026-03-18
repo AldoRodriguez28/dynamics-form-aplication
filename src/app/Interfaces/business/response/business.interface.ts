@@ -7,6 +7,8 @@ export interface BusinessInterface {
   commercialName?: string | null;
   categoryCode?: string | null;
   townCode?: string | null;
+  categoryName?: string | null;
+  townName?: string | null;
   state?: string | null;
   lastUpdate?: string | Date | null;
   externalData?: string | null;
