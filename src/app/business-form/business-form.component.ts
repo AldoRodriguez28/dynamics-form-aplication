@@ -45,6 +45,12 @@ export class BusinessFormComponent {
   townCode = (this.navState['townCode'] as string) ?? '';
   externalDataRaw = this.navState['externalData'] ?? '';
   externalData: ExternalData | null = parseExternalData(this.externalDataRaw);
+  // Debug: inspeccionar cómo llega externalData/renewal desde navegación
+  // eslint-disable-next-line no-console
+  private readonly _logExternalData = console.log('[business-form] externalData raw/parsed', {
+    raw: this.externalDataRaw,
+    parsed: this.externalData
+  });
   contractId = coerceExternalValue(this.externalData?.contractId);
   renewal = coerceExternalValue(this.externalData?.renewal);
   userRole = this.tokenStore.getRole();
