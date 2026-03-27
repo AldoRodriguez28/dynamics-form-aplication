@@ -172,22 +172,6 @@ export class DynamicFormComponent implements OnChanges {
     const blockWithValues = this.getBlockWithCurrentValues(block.code);
     if (!blockWithValues) return;
 
-    const missingRequired = findMissingRequiredFields([blockWithValues]);
-    if (missingRequired.length) {
-      const detail = missingRequired
-        .map((item) => `${item.blockName || item.blockCode}: ${item.label || item.fieldName}`)
-        .join('<br>');
-
-      Swal.fire({
-        icon: 'warning',
-        title: 'Faltan campos obligatorios',
-        html: detail,
-        confirmButtonText: 'Entendido'
-      });
-
-      return;
-    }
-
     if (!blockGroup?.valid) {
       const formatErrors = blockGroup ? this.getFormatErrors(blockGroup, [block.code]) : [];
       if (formatErrors.length) return;
@@ -228,22 +212,6 @@ export class DynamicFormComponent implements OnChanges {
 
     const blockWithValues = this.getBlockWithCurrentValues(block.code);
     if (!blockWithValues) return;
-
-    const missingRequired = findMissingRequiredFields([blockWithValues]);
-    if (missingRequired.length) {
-      const detail = missingRequired
-        .map((item) => `${item.blockName || item.blockCode}: ${item.label || item.fieldName}`)
-        .join('<br>');
-
-      Swal.fire({
-        icon: 'warning',
-        title: 'Faltan campos obligatorios',
-        html: detail,
-        confirmButtonText: 'Entendido'
-      });
-
-      return;
-    }
 
     if (!blockGroup?.valid) {
       const formatErrors = blockGroup ? this.getFormatErrors(blockGroup, [block.code]) : [];
