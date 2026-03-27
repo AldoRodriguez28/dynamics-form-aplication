@@ -95,7 +95,7 @@ export class BusinessService {
     blockCode: string,
     request: SaveBlocksRequest
   ): Observable<boolean> {
-    const url = `${this.baseUrl}/businesses/${businessId}/VersionNumber/${versionNumber}/blocks/${blockCode}`;
+    const url = `${this.baseUrl}/businesses/${businessId}/VersionNumber/${versionNumber}/blocks/${blockCode}?skipRequiredValidation=true`;
     return this.http.put<boolean>(url, request, {
       headers: this.authHeader.build()
     });
