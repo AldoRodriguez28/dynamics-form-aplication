@@ -251,7 +251,10 @@ export class DynamicFormComponent implements OnChanges {
     if (this.formReadOnly) return;
     if (!this.form) return;
     this.form.markAllAsTouched();
-    if (this.hasFormatErrors(this.form)) {
+    const formatErrors = this.getFormatErrors(this.form);
+    if (formatErrors.length) {
+      // eslint-disable-next-line no-console
+      console.warn('[Guardar avance] Campos con formato invalido:', formatErrors);
       Swal.fire({
         icon: 'warning',
         title: 'Corrige los formatos',
@@ -265,6 +268,8 @@ export class DynamicFormComponent implements OnChanges {
 
   private hasFormatErrors(control: AbstractControl): boolean {
     if (control.errors) {
+      const value = control.value;
+      if (this.isEmptyValueDeep(value)) return false;
       const errorKeys = Object.keys(control.errors);
       const hasNonRequired = errorKeys.some((key) => key !== 'required');
       if (hasNonRequired) return true;
@@ -278,6 +283,52 @@ export class DynamicFormComponent implements OnChanges {
       return control.controls.some((child) => this.hasFormatErrors(child));
     }
 
+    return false;
+  }
+
+  private getFormatErrors(
+    control: AbstractControl,
+    path: string[] = []
+  ): Array<{ path: string; errors: string[] }> {
+    const results: Array<{ path: string; errors: string[] }> = [];
+
+    if (control.errors && !this.isEmptyValueDeep(control.value)) {
+      const errorKeys = Object.keys(control.errors).filter((key) => key !== 'required');
+      if (errorKeys.length) {
+        results.push({
+          path: path.join('.'),
+          errors: errorKeys
+        });
+      }
+    }
+
+    if (control instanceof FormGroup) {
+      Object.entries(control.controls).forEach(([key, child]) => {
+        results.push(...this.getFormatErrors(child, [...path, key]));
+      });
+    }
+
+    if (control instanceof FormArray) {
+      control.controls.forEach((child, index) => {
+        results.push(...this.getFormatErrors(child, [...path, String(index)]));
+      });
+    }
+
+    return results;
+  }
+
+  private isEmptyValueDeep(value: unknown): boolean {
+    if (value === null || value === undefined) return true;
+    if (typeof value === 'string') return value.trim().length === 0;
+    if (Array.isArray(value)) {
+      if (value.length === 0) return true;
+      return value.every((item) => this.isEmptyValueDeep(item));
+    }
+    if (typeof value === 'object') {
+      const entries = Object.values(value as Record<string, unknown>);
+      if (entries.length === 0) return true;
+      return entries.every((item) => this.isEmptyValueDeep(item));
+    }
     return false;
   }
 
