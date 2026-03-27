@@ -41,11 +41,13 @@
       @if (status === 'taken' && suggestions.length) {
         <div class="suggestions">
           <p>Prueba con:</p>
-          <ul>
+          <div class="suggestion-chips">
             @for (suggestion of suggestions; track suggestion) {
-              <li>{{ suggestion }}</li>
+              <button type="button" class="suggestion-chip" (click)="applySuggestion(suggestion)">
+                {{ suggestion }}
+              </button>
             }
-          </ul>
+          </div>
         </div>
       }
     </div>

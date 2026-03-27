@@ -65,6 +65,28 @@ export class FieldDomainOptionComponent {
   }
 
   private handleResponse(response: DomainCheckResponse): void {
+    if (response && typeof response === 'object' && !Array.isArray(response)) {
+      const availableFlag = (response as { available?: boolean }).available;
+      const domains = (response as { domains?: string[] }).domains;
+      const message = (response as { message?: string }).message;
+
+      if (availableFlag === true) {
+        this.status = 'available';
+        this.suggestions = [];
+        this.message = message || 'Dominio disponible.';
+        this.setDomainError(false);
+        return;
+      }
+
+      if (availableFlag === false) {
+        this.status = 'taken';
+        this.suggestions = Array.isArray(domains) ? domains : [];
+        this.message = message || 'No disponible. Prueba una sugerencia:';
+        this.setDomainError(true);
+        return;
+      }
+    }
+
     if (Array.isArray(response)) {
       this.status = 'taken';
       this.suggestions = response.filter((item) => typeof item === 'string') as string[];
@@ -88,6 +110,15 @@ export class FieldDomainOptionComponent {
       this.message = text || 'No disponible. Prueba otra opción.';
       this.setDomainError(true);
     }
+  }
+
+  applySuggestion(domain: string): void {
+    if (this.readOnly) return;
+    this.control.setValue(domain);
+    this.status = 'idle';
+    this.suggestions = [];
+    this.message = 'Ingresa el dominio para revisar su disponibilidad.';
+    this.clearDomainError();
   }
 
   private setDomainError(isTaken: boolean): void {

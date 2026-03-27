@@ -172,23 +172,10 @@ export class DynamicFormComponent implements OnChanges {
     const blockWithValues = this.getBlockWithCurrentValues(block.code);
     if (!blockWithValues) return;
 
-    const missingRequired = findMissingRequiredFields([blockWithValues]);
-    if (missingRequired.length) {
-      const detail = missingRequired
-        .map((item) => `${item.blockName || item.blockCode}: ${item.label || item.fieldName}`)
-        .join('<br>');
-
-      Swal.fire({
-        icon: 'warning',
-        title: 'Faltan campos obligatorios',
-        html: detail,
-        confirmButtonText: 'Entendido'
-      });
-
-      return;
+    if (!blockGroup?.valid) {
+      const formatErrors = blockGroup ? this.getFormatErrors(blockGroup, [block.code]) : [];
+      if (formatErrors.length) return;
     }
-
-    if (!blockGroup?.valid) return;
 
     const businessId = this.schema?.businessId;
     const versionNumber = this.schema?.versionNumber ?? this.schema?.businessVersion;
@@ -226,25 +213,29 @@ export class DynamicFormComponent implements OnChanges {
     const blockWithValues = this.getBlockWithCurrentValues(block.code);
     if (!blockWithValues) return;
 
-    const missingRequired = findMissingRequiredFields([blockWithValues]);
-    if (missingRequired.length) {
-      const detail = missingRequired
-        .map((item) => `${item.blockName || item.blockCode}: ${item.label || item.fieldName}`)
-        .join('<br>');
+    if (!blockGroup?.valid) {
+      const formatErrors = blockGroup ? this.getFormatErrors(blockGroup, [block.code]) : [];
+      if (formatErrors.length) {
+        // eslint-disable-next-line no-console
+        console.warn('[Guardar bloque] Campos con formato invalido:', formatErrors);
+        const detail = formatErrors
+          .map((item) => {
+            const label = this.getFieldLabelByPath(item.path) || item.path;
+            return `${label}: ${item.errors.join(', ')}`;
+          })
+          .join('<br>');
 
-      Swal.fire({
-        icon: 'warning',
-        title: 'Faltan campos obligatorios',
-        html: detail,
-        confirmButtonText: 'Entendido'
-      });
-
-      return;
+        Swal.fire({
+          icon: 'warning',
+          title: 'Corrige los formatos',
+          html: detail,
+          confirmButtonText: 'Entendido'
+        });
+        return;
+      }
     }
 
-    if (blockGroup?.valid) {
-      this.submitForm.emit(this.buildPayloadForBlocks([blockWithValues]));
-    }
+    this.submitForm.emit(this.buildPayloadForBlocks([blockWithValues]));
   }
 
   emitDraft(): void {
@@ -330,6 +321,21 @@ export class DynamicFormComponent implements OnChanges {
       return entries.every((item) => this.isEmptyValueDeep(item));
     }
     return false;
+  }
+
+  private getFieldLabelByPath(path: string): string | null {
+    if (!this.schema?.blocks?.length || !path) return null;
+    const parts = path.split('.').filter(Boolean);
+    if (parts.length < 2) return null;
+    const blockCode = parts[0];
+    const fieldName = parts[1];
+    const block = this.schema.blocks.find((b) => b.code === blockCode);
+    if (!block) return null;
+    const field =
+      (block.rows ?? [])
+        .flatMap((row) => row.fields ?? [])
+        .find((f) => f.name === fieldName);
+    return field?.label ?? field?.name ?? null;
   }
 
   private setupForm(): void {
