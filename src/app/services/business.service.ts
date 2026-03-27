@@ -15,7 +15,11 @@ import { ContactBlockResponse } from '../Interfaces/business/response/business.i
 import { BusinessVersionStateResponse } from '../Interfaces/business/response/business-version-state.response';
 import { UploadFilesPayload } from '../Interfaces/business/request/upload-files.request';
 
-export type DomainCheckResponse = string | string[] | { message?: string };
+export type DomainCheckResponse =
+  | string
+  | string[]
+  | { message?: string }
+  | { available: boolean; domains?: string[]; message?: string };
 
 @Injectable({
   providedIn: 'root'
