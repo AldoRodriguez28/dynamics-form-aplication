@@ -876,7 +876,11 @@ export class BlockFactoryService {
     const controls = values.length
       ? values.map((v) => this.fb.control(this.coercePrimitiveArrayValue(field, v), validators))
       : [this.fb.control(this.defaultPrimitiveArrayValue(field), validators)];
-    return this.fb.array(controls, [this.primitiveArrayCompleteValidator()]);
+    const arrayValidators = [this.primitiveArrayCompleteValidator()];
+    if (field.name === 'productosServicios') {
+      return this.fb.array(controls, [this.primitiveArrayAtLeastOneValidator()]);
+    }
+    return this.fb.array(controls, arrayValidators);
   }
 
   private primitiveArrayCompleteValidator(): ValidatorFn {
@@ -890,6 +894,15 @@ export class BlockFactoryService {
         }
       }
       return null;
+    };
+  }
+
+  private primitiveArrayAtLeastOneValidator(): ValidatorFn {
+    return (control: AbstractControl) => {
+      const array = control as FormArray | null;
+      if (!array || !array.controls?.length) return { arrayItemIncomplete: true };
+      const hasAny = array.controls.some((item) => this.hasNonEmptyValue(item.value));
+      return hasAny ? null : { arrayItemIncomplete: true };
     };
   }
 
