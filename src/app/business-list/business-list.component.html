@@ -1,12 +1,17 @@
 @if (clientData$ | async; as clientData) {
 <section class="page">
   <header class="page__header">
-    <div>
+    <div class="page__headline">
       <p class="eyebrow">Cliente</p>
       <!-- En legacy no viene nombre; mostramos '-' -->
-      <h1 class="bussine-name">{{ clientName || '-' }}</h1>
+      <h1 class="business-name">{{ clientName || '-' }}</h1>
       <!-- ID desde legacy; si faltara, usa this.clientId -->
-      <p class="meta">Advertiser ID: {{ clientData.legacyAdvertiserId || clientId || '-' }}</p>
+      <dl class="meta-grid">
+        <div class="meta-row">
+          <dt>Advertiser ID</dt>
+          <dd>{{ clientData.legacyAdvertiserId || clientId || '-' }}</dd>
+        </div>
+      </dl>
     </div>
 
     <div class="header-aside">
@@ -74,7 +79,7 @@
 
         <div class="actions-col col-acciones">
           <span class="cell-label">Acciones</span>
-          <button type="button"
+          <button type="button" class="btn"
             (click)="goToForm((clientId ?? clientData.legacyAdvertiserId) ?? '', $any(business), '')">
             Ver formulario
           </button>
@@ -98,8 +103,8 @@
     <h2 class="empty-state__title">No pudimos cargar los datos</h2>
     <p class="empty-state__hint">Intenta de nuevo en unos segundos o vuelve al inicio.</p>
     <div class="empty-state__actions">
-      <button type="button" (click)="retry()">Reintentar</button>
-      <button type="button" class="ghost" (click)="goHome()">Ir al inicio</button>
+      <button type="button" class="btn" (click)="retry()">Reintentar</button>
+      <button type="button" class="btn ghost" (click)="goHome()">Ir al inicio</button>
     </div>
   </div>
 </section>
