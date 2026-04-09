@@ -13,6 +13,7 @@ import { ResolveTokenRequest } from './request/resolve-token.request';
 import { BusinessDetailWithBlocksResponse } from './response/business/Business-detail-withBlocks.response';
 import { ContactBlockResponse } from '../Interfaces/business/response/business.interface';
 import { BusinessVersionStateResponse } from '../Interfaces/business/response/business-version-state.response';
+import { BusinessVersionDetailResponse } from '../Interfaces/business/response/business-version-detail.response';
 import { UploadFilesPayload } from '../Interfaces/business/request/upload-files.request';
 
 export type DomainCheckResponse =
@@ -60,6 +61,14 @@ export class BusinessService {
   ): Observable<BusinessVersionStateResponse> {
     const url = `${this.baseUrl}/businesses/${businessId}/VersionNumber/${versionNumber}`;
     return this.http.get<BusinessVersionStateResponse>(url, { headers: this.authHeader.build() });
+  }
+
+  getBusinessVersionDetail(
+    businessId: string | number,
+    versionNumber: string | number = 1
+  ): Observable<BusinessVersionDetailResponse> {
+    const url = `${this.baseUrl}/businesses/${businessId}/VersionNumber/${versionNumber}`;
+    return this.http.get<BusinessVersionDetailResponse>(url, { headers: this.authHeader.build() });
   }
   //   getbusinessesById(businessId: string | number): Observable<BlocksResponse> {
   //   const url = `assets/data/mock-blocks.json`;
