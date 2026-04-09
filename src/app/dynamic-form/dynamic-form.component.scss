@@ -2,6 +2,7 @@
   display: grid;
   grid-template-columns: 320px 1fr;
   gap: 1rem;
+  align-items: start;
 }
 
 .df-sidebar {
@@ -42,18 +43,29 @@
   border-radius: 1.25rem;
   border: 1px solid #e5e7eb;
   box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
-  padding: 12px;
+  padding: 1rem 1.1rem;
 }
 
 .section {
   border-radius: 1rem;
   overflow: hidden;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.06);
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+
+.section:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
 }
 
 .section__summary {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
   padding: 1rem 1.25rem;
   cursor: pointer;
   background: #f5f7fb;
@@ -62,10 +74,45 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
+.section__summary::-webkit-details-marker {
+  display: none;
+}
+
+.section__summary::marker {
+  content: '';
+}
+
 .section__actions {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
+  margin-left: auto;
+}
+
+.section__chevron {
+  width: 1.9rem;
+  height: 1.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.6rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  color: #64748b;
+  font-size: 1.1rem;
+  margin-left: 0.5rem;
+  transition: transform 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+details[open] .section__chevron {
+  transform: rotate(180deg);
+  color: #0ea5e9;
+  border-color: #bae6fd;
+}
+
+.section__chevron::before {
+  content: '▾';
+  line-height: 1;
 }
 
 .section__content {
@@ -83,7 +130,7 @@
 
 .pill {
   display: inline-flex;
-  min-width: 7rem;
+  min-width: 5.5rem;
   height: 2rem;
   align-items: center;
   justify-content: center;
@@ -92,7 +139,7 @@
   background: #0ea5e9;
   color: #ffffff;
   font-weight: 600;
-  margin-left: 0.5rem;
+  font-size: 0.85rem;
 }
 
 .meta {
@@ -146,6 +193,10 @@
   grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: 1rem;
   margin-bottom: 0.75rem;
+}
+
+.field-grid:last-child {
+  margin-bottom: 0;
 }
 
 @media (max-width: 640px) {
@@ -211,6 +262,20 @@
 }
 
 @media (max-width: 640px) {
+  .section__summary {
+    gap: 0.75rem;
+  }
+
+  .section__actions {
+    width: 100%;
+    justify-content: flex-start;
+    margin-left: 0;
+  }
+
+  .section__chevron {
+    margin-left: 0;
+  }
+
   .actions {
     flex-direction: column;
     align-items: stretch;

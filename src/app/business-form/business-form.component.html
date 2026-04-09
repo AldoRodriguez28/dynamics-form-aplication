@@ -5,22 +5,50 @@
     </button>
   </div>
   <header class="page__header">
-    <div>
+    <div class="page__headline">
       <p class="eyebrow">Cliente</p>
       <h1>{{ advertiserName || clientId }}</h1>
-      <p class="meta">ID del cliente: {{ clientId || '-' }}</p>
-      @if (advertiserName) {
-      <p class="meta">Nombre del cliente: {{ advertiserName }}</p>
-      }
-      @if (contractId) {
-      <p class="meta">Contrato: {{ contractId }}</p>
-      }
-      <p class="meta">ID negocio: {{ businessId }} @if (commercialName) { - {{ commercialName }} }</p>
-      <p class="meta">Categoría: {{ categoryName || 'Sin categoría' }} ({{ categoryCode || '-' }})</p>
-      <p class="meta">Población: {{ townName || 'Sin población' }} ({{ townCode || '-' }})</p>
-      @if (renewal) {
-      <p class="meta">Renovación: {{ renewal }}</p>
-      }
+      <dl class="meta-grid">
+        <div class="meta-row">
+          <dt>ID del cliente</dt>
+          <dd>{{ clientId || '-' }}</dd>
+        </div>
+        @if (advertiserName) {
+        <div class="meta-row">
+          <dt>Nombre del cliente</dt>
+          <dd>{{ advertiserName }}</dd>
+        </div>
+        }
+        @if (contractId) {
+        <div class="meta-row">
+          <dt>Contrato</dt>
+          <dd>{{ contractId }}</dd>
+        </div>
+        }
+        <div class="meta-row">
+          <dt>ID negocio</dt>
+          <dd>
+            {{ businessId }}
+            @if (commercialName) {
+            <span class="meta-inline">- {{ commercialName }}</span>
+            }
+          </dd>
+        </div>
+        <div class="meta-row">
+          <dt>Categoría</dt>
+          <dd>{{ categoryName || 'Sin categoría' }} ({{ categoryCode || '-' }})</dd>
+        </div>
+        <div class="meta-row">
+          <dt>Población</dt>
+          <dd>{{ townName || 'Sin población' }} ({{ townCode || '-' }})</dd>
+        </div>
+        @if (renewal) {
+        <div class="meta-row">
+          <dt>Renovación</dt>
+          <dd>{{ renewal }}</dd>
+        </div>
+        }
+      </dl>
     </div>
     <div class="header-aside">
       <div class="user-card">
@@ -39,7 +67,7 @@
         {{ statusLabel(schema.status) }}
       </span>
       } @else {
-      <span class="status" data-variant="DRAFT" [ngClass]="badgeClasses('DRAFT')">Draft</span>
+      <span class="status" data-variant="DRAFT" [ngClass]="badgeClasses('DRAFT')">Borrador</span>
       }
     </div>
   </header>
