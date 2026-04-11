@@ -1,16 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { EMPTY, map, Observable, of, switchMap, tap, catchError } from 'rxjs';
+import { EMPTY, map, Observable, of, switchMap, tap, catchError, finalize } from 'rxjs';
 import { Business } from '../models/business.model';
 import { BusinessService } from '../services/business.service';
-import { ContactBlockResponse } from '../Interfaces/business/response/business.interface';
+import { BusinessInterface, ContactBlockResponse } from '../Interfaces/business/response/business.interface';
 import { AuthService } from '../services/Auth.service';
 import { OtpRedirectTarget, TokenStorageService } from '../services/shared/token-storage.service';
 import { BusinessMapping } from '../mapping/business/business.map';
 import { LegacyBusinessInterface } from '../Interfaces/business/response/legacy-business.interface';
 import { ClientNotFoundComponent } from '../components/client-not-found/client-not-found.component';
 import { BusinessEmptyStateComponent } from '../components/business-empty-state/business-empty-state.component';
+import { decodeJwtPayload } from '../utils/jwt.utils';
 
 @Component({
   selector: 'app-business-list',
@@ -31,6 +32,11 @@ export class BusinessListComponent {
   userName: string | null = this.tokenStore.getAdvertiserName();
   userRole: string | null = this.tokenStore.getRole();
   errorCode: '' | 'CLIENT_NOT_FOUND' | 'GENERIC' = '';
+  isSharingList = false;
+  isUnlockingList = false;
+  shareUrl: string | null = null;
+  shareModalOpen = false;
+  shareCopied = false;
 
   clientData$: Observable<LegacyBusinessInterface | null> = EMPTY;
 
@@ -78,6 +84,144 @@ export class BusinessListComponent {
     return status ?? 'Sin estado';
   }
 
+  statusVariant(status: string | null | undefined): string {
+    return this.normalizeStatus(status) || 'DRAFT';
+  }
+
+  canShare(business: BusinessInterface | null | undefined): boolean {
+    if (!business) return false;
+    const role = this.normalizeRole(this.userRole);
+    if (!['CAC', 'IC_EDITOR', 'IC_OPERATOR'].includes(role)) return false;
+    const status = this.normalizeStatus(this.getBusinessStatus(business));
+    return ['IN_PROGRESS', 'CONTENT_IN_CREATION', 'DRAFT'].includes(status);
+  }
+
+  canShareList(clientData: LegacyBusinessInterface | null): boolean {
+    const role = this.normalizeRole(this.userRole);
+    if (!['CAC', 'IC_EDITOR', 'IC_OPERATOR'].includes(role)) return false;
+    const list = clientData?.businesses ?? [];
+    if (!Array.isArray(list) || list.length === 0) return false;
+    return list.some((business) => this.canShare(business));
+  }
+
+  canUnlock(business: BusinessInterface | null | undefined): boolean {
+    if (!business) return false;
+    const role = this.normalizeRole(this.userRole);
+    if (!['CAC', 'IC_EDITOR', 'IC_OPERATOR'].includes(role)) return false;
+    const status = this.normalizeStatus(this.getBusinessStatus(business));
+    return status === 'LOCKED';
+  }
+
+  canUnlockList(clientData: LegacyBusinessInterface | null): boolean {
+    const role = this.normalizeRole(this.userRole);
+    if (!['CAC', 'IC_EDITOR', 'IC_OPERATOR'].includes(role)) return false;
+    const list = clientData?.businesses ?? [];
+    if (!Array.isArray(list) || list.length === 0) return false;
+    return list.some((business) => this.canUnlock(business));
+  }
+
+  shareBusinessList(clientData: LegacyBusinessInterface | null): void {
+    if (!clientData?.businesses?.length) return;
+    if (!this.canShareList(clientData)) return;
+    if (this.isSharingList) return;
+
+    const bearer = this.tokenStore.getToken();
+    const payload = bearer ? decodeJwtPayload(bearer) : null;
+    const bcmToken = payload?.['bcm.token'] ?? payload?.bcm?.token;
+    if (!bcmToken) {
+      console.error('No se pudo obtener el token BCM para compartir.');
+      return;
+    }
+
+    const businesses = clientData.businesses.map((business) => ({
+      businessId: business.businessId ?? '',
+      versionNumber: business.versionNumber ?? business.businessVersion ?? 1
+    }));
+    const host = window.location.origin;
+
+    this.shareUrl = null;
+    this.shareModalOpen = true;
+    this.isSharingList = true;
+    this.businessService
+      .createShareUrl(String(bcmToken), businesses, host)
+      .pipe(finalize(() => (this.isSharingList = false)))
+      .subscribe({
+        next: (response) => {
+          const shareUrl = this.extractShareUrl(response);
+          if (!shareUrl) {
+            console.error('No se pudo obtener la URL.');
+            return;
+          }
+          this.shareUrl = shareUrl;
+          clientData.businesses?.forEach((business) => {
+            this.setBusinessState(business, this.extractState(response) ?? 'LOCKED');
+          });
+        },
+        error: (error) => {
+          console.error('Error al crear URL de compartición', error);
+        }
+      });
+  }
+
+  unlockBusinessList(clientData: LegacyBusinessInterface | null): void {
+    if (!clientData?.businesses?.length) return;
+    if (!this.canUnlockList(clientData)) return;
+    if (this.isUnlockingList) return;
+
+    const bearer = this.tokenStore.getToken();
+    const payload = bearer ? decodeJwtPayload(bearer) : null;
+    const bcmToken = payload?.['bcm.token'] ?? payload?.bcm?.token;
+    if (!bcmToken) {
+      console.error('No se pudo obtener el token BCM para desbloquear.');
+      return;
+    }
+
+    const businesses = clientData.businesses
+      .filter((business) => this.canUnlock(business))
+      .map((business) => ({
+        businessId: business.businessId ?? '',
+        versionNumber: business.versionNumber ?? business.businessVersion ?? 1
+      }));
+
+    if (!businesses.length) return;
+
+    this.isUnlockingList = true;
+    this.businessService
+      .unlockShareUrl(String(bcmToken), businesses)
+      .pipe(finalize(() => (this.isUnlockingList = false)))
+      .subscribe({
+        next: (response) => {
+          const state = this.extractState(response);
+          if (state) {
+            clientData.businesses?.forEach((business) => {
+              if (this.canUnlock(business)) this.setBusinessState(business, state);
+            });
+          } else {
+            this.loadClientData();
+          }
+        },
+        error: (error) => {
+          console.error('Error al desbloquear negocios', error);
+        }
+      });
+  }
+
+  closeShareModal(): void {
+    this.shareModalOpen = false;
+    this.shareCopied = false;
+  }
+
+  async copyShareUrl(): Promise<void> {
+    if (!this.shareUrl) return;
+    const copied = await this.copyToClipboard(this.shareUrl);
+    if (!copied) return;
+    this.shareCopied = true;
+    setTimeout(() => {
+      this.shareCopied = false;
+    }, 2000);
+  }
+
+
   loadClientData(): void {
 
     this.clientData$ = this.route.paramMap.pipe(
@@ -86,6 +230,9 @@ export class BusinessListComponent {
         this.clientId = this.tokenStore.getAdvertiserId();
         this.clientName = this.tokenStore.getAdvertiserName();
         this.errorCode = '';
+        this.shareUrl = null;
+        this.shareModalOpen = false;
+        this.shareCopied = false;
         return this.clientId;
       }),
       switchMap(clientId => {
@@ -231,5 +378,67 @@ export class BusinessListComponent {
       return null;
     }
     return null;
+  }
+
+  private getBusinessId(business: BusinessInterface | null | undefined): string | null {
+    if (!business?.businessId) return null;
+    return String(business.businessId);
+  }
+
+  private getBusinessStatus(business: BusinessInterface | null | undefined): string | null {
+    if (!business) return null;
+    return (business as any)?.state ?? (business as any)?.formStatus ?? null;
+  }
+
+  private normalizeRole(role: string | null | undefined): string {
+    return (role ?? '').toString().trim().toUpperCase();
+  }
+
+  private normalizeStatus(status: string | null | undefined): string {
+    return (status ?? '').toString().trim().toUpperCase().replace(/[\s-]+/g, '_');
+  }
+
+  private extractShareUrl(
+    response: string | { url?: string; shareUrl?: string; link?: string } | null | undefined
+  ): string | null {
+    if (!response) return null;
+    if (typeof response === 'string') {
+      const trimmed = response.trim();
+      if (!trimmed) return null;
+      if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+        try {
+          const parsed = JSON.parse(trimmed) as { url?: string; shareUrl?: string; link?: string };
+          return parsed.url ?? parsed.shareUrl ?? parsed.link ?? trimmed;
+        } catch {
+          return trimmed;
+        }
+      }
+      return trimmed;
+    }
+    return response.url ?? response.shareUrl ?? response.link ?? null;
+  }
+
+  private extractState(
+    response: string | { state?: string; status?: string } | boolean | null | undefined
+  ): string | null {
+    if (!response || typeof response === 'string' || typeof response === 'boolean') return null;
+    return response.state ?? response.status ?? null;
+  }
+
+  private setBusinessState(business: BusinessInterface, state: string): void {
+    (business as any).state = state;
+  }
+
+  private async copyToClipboard(text: string): Promise<boolean> {
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch {
+      // Ignore and fallback
+    }
+    window.prompt('URL para compartir', text);
+    return false;
   }
 }

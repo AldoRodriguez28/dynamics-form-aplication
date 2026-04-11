@@ -33,6 +33,37 @@
       <div>
         <h2>Formularios asignados</h2>
       </div>
+      @if (canShareList(clientData) || canUnlockList(clientData)) {
+      <div class="card__head-actions">
+        <span class="share-label">Compartir URL</span>
+        <div class="share-actions">
+          @if (canShareList(clientData)) {
+          <button type="button" class="btn btn--share-head"
+            [disabled]="isSharingList"
+            [attr.data-loading]="isSharingList ? 'true' : null"
+            (click)="shareBusinessList(clientData)">
+            @if (isSharingList) {
+            Generando URL...
+            } @else {
+            Compartir
+            }
+          </button>
+          }
+          @if (canUnlockList(clientData)) {
+          <button type="button" class="btn btn--unlock-head"
+            [disabled]="isUnlockingList"
+            [attr.data-loading]="isUnlockingList ? 'true' : null"
+            (click)="unlockBusinessList(clientData)">
+            @if (isUnlockingList) {
+            Desbloqueando...
+            } @else {
+            Desbloquear
+            }
+          </button>
+          }
+        </div>
+      </div>
+      }
     </div>
 
     @if (clientData.businesses?.length) {
@@ -67,7 +98,7 @@
 
         <div class="col-estado">
           <span class="cell-label">Estado</span>
-          <span class="status" [attr.data-variant]="business.state">
+          <span class="status" [attr.data-variant]="statusVariant(business?.state)">
             {{ statusLabel(business.state) }}
           </span>
         </div>
@@ -91,6 +122,39 @@
     <app-business-empty-state (home)="goHome()" (retry)="retry()" />
     }
   </div>
+  @if (shareModalOpen) {
+  <div class="modal-overlay" (click)="closeShareModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <div>
+          <h3 class="modal__title">URL para compartir</h3>
+          <p class="modal__subtitle">Comparte esta liga con el cliente.</p>
+        </div>
+        <button type="button" class="modal__close" (click)="closeShareModal()" aria-label="Cerrar">
+          ×
+        </button>
+      </div>
+      <div class="modal__url-row">
+        <input class="modal__url-input" [value]="shareUrl || ''" readonly />
+        <button type="button" class="btn btn--copy" (click)="copyShareUrl()">
+          @if (shareCopied) {
+          <span class="copy-check" aria-hidden="true">✔</span>
+          }
+          @if (!shareUrl) {
+          Generando...
+          } @else {
+          {{ shareCopied ? 'URL copiada' : 'Copiar URL' }}
+          }
+        </button>
+      </div>
+      @if (!shareUrl) {
+      <div class="modal__loading">
+        Generando la liga...
+      </div>
+      }
+    </div>
+  </div>
+  }
 </section>
 } @else if (errorCode === 'CLIENT_NOT_FOUND') {
 <section class="page page--centered hero-style">

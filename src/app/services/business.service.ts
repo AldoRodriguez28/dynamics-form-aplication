@@ -22,6 +22,15 @@ export type DomainCheckResponse =
   | { message?: string }
   | { available: boolean; domains?: string[]; message?: string };
 
+export type ShareUrlResponse =
+  | string
+  | { url?: string; shareUrl?: string; link?: string; state?: string; status?: string };
+
+export type UnlockShareResponse =
+  | boolean
+  | string
+  | { state?: string; status?: string };
+
 @Injectable({
   providedIn: 'root'
 })
@@ -185,6 +194,42 @@ export class BusinessService {
 
     return this.http.post(url, formData, {
       headers: this.authHeader.build({ contentType: 'form-data' })
+    });
+  }
+
+  createShareUrl(
+    token: string,
+    businesses: Array<{ businessId: string | number; versionNumber?: string | number }>,
+    host: string
+  ): Observable<ShareUrlResponse> {
+    const url = `${environment.API_URI}/Auth/share/client?host=${encodeURIComponent(host)}`;
+    const payload = {
+      token,
+      business: businesses.map((item) => ({
+        businessId: item.businessId,
+        versionNumber: item.versionNumber ?? 1
+      }))
+    };
+    return this.http.post<ShareUrlResponse>(url, payload, {
+      headers: this.authHeader.build(),
+      responseType: 'text' as 'json'
+    });
+  }
+
+  unlockShareUrl(
+    token: string,
+    businesses: Array<{ businessId: string | number; versionNumber?: string | number }>
+  ): Observable<UnlockShareResponse> {
+    const url = `${this.baseUrl}/businesses/revocation`;
+    const payload = {
+      token,
+      business: businesses.map((item) => ({
+        businessId: item.businessId,
+        versionNumber: item.versionNumber ?? 1
+      }))
+    };
+    return this.http.post<UnlockShareResponse>(url, payload, {
+      headers: this.authHeader.build()
     });
   }
 }
