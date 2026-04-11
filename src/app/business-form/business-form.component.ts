@@ -57,6 +57,7 @@ export class BusinessFormComponent {
   userName = this.tokenStore.getAdvertiserName();
 
   constructor() {
+    this.loadHeaderData();
     this.loadForm();
   }
 
@@ -218,6 +219,48 @@ export class BusinessFormComponent {
       },
       error: (error) => console.error('Error al actualizar estatus', error)
     });
+  }
+
+  private loadHeaderData(): void {
+    const role = (this.userRole ?? '').toUpperCase();
+    const isClient = role === 'CLIENT';
+    if (!isClient && this.hasNavHeaderData()) return;
+
+    const version = this.versionNumber ?? 1;
+    this.businessService.getBusinessVersionDetail(this.businessId, version).subscribe({
+      next: (detail) => {
+        if (!detail) return;
+
+        this.commercialName = this.commercialName || detail.businessName || '';
+        this.categoryName = this.categoryName || detail.categoryName || '';
+        this.townName = this.townName || detail.townName || '';
+        if (!this.categoryCode) this.categoryCode = '';
+        if (!this.townCode) this.townCode = '';
+
+        const legacyId = detail.legacyAdvertiserId;
+        if (!this.clientId && legacyId !== null && legacyId !== undefined) {
+          this.clientId = String(legacyId);
+        }
+
+        if (!this.externalDataRaw) this.externalDataRaw = detail.externalData ?? '';
+        this.externalData = parseExternalData(this.externalDataRaw);
+        if (!this.contractId) this.contractId = coerceExternalValue(this.externalData?.contractId);
+        if (!this.renewal) this.renewal = coerceExternalValue(this.externalData?.renewal);
+      },
+      error: (error) => console.error('Error al cargar datos de encabezado', error)
+    });
+  }
+
+  private hasNavHeaderData(): boolean {
+    return Boolean(
+      this.advertiserName ||
+        this.commercialName ||
+        this.categoryName ||
+        this.townName ||
+        this.categoryCode ||
+        this.townCode ||
+        this.externalDataRaw
+    );
   }
 
   // External data parsing handled by utils.
