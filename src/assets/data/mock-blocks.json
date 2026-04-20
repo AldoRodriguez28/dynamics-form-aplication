@@ -525,43 +525,22 @@
             {
               "name": "horariosPersonalizados",
               "label": "Horario personalizado",
-              "type": "object",
+              "type": "opening_hours",
               "required": false,
               "placeholder": "",
               "colSpan": 12,
-              "collection": "array",
-              "itemSchema": {
-                "dia": {
-                  "label": "Día",
-                  "type": "select",
-                  "optionsRef": "diasSemana",
-                  "required": false,
-                  "placeholder": ""
-                },
-                "abre": {
-                  "label": "Apertura",
-                  "type": "time",
-                  "required": false,
-                  "placeholder": ""
-                },
-                "comidaSale": {
-                  "label": "Comida salida",
-                  "type": "time",
-                  "required": false,
-                  "placeholder": ""
-                },
-                "comidaRegresa": {
-                  "label": "Comida regreso",
-                  "type": "time",
-                  "required": false,
-                  "placeholder": ""
-                },
-                "cierra": {
-                  "label": "Cierre",
-                  "type": "time",
-                  "required": false,
-                  "placeholder": ""
-                }
+              "collection": "static",
+              "optionsRef": "diasSemana",
+              "schema": {
+                "dias": [
+                  "Lunes",
+                  "Martes",
+                  "Miércoles",
+                  "Jueves",
+                  "Viernes",
+                  "Sábado",
+                  "Domingo"
+                ]
               }
             }
           ]
@@ -644,17 +623,17 @@
         "horariosPersonalizados": [
           {
             "dia": "Lunes",
-            "abre": "08:00",
-            "comidaSale": "14:00",
-            "comidaRegresa": "15:00",
-            "cierra": "19:00"
+            "turnos": [
+              { "abre": "08:00", "cierra": "14:00" },
+              { "abre": "15:00", "cierra": "19:00" }
+            ]
           },
           {
             "dia": "Viernes",
-            "abre": "08:00",
-            "comidaSale": "14:30",
-            "comidaRegresa": "15:30",
-            "cierra": "18:00"
+            "turnos": [
+              { "abre": "08:00", "cierra": "14:30" },
+              { "abre": "15:30", "cierra": "18:00" }
+            ]
           }
         ],
         "formasPago": ["EFECTIVO", "VISA", "MC", "AMEX", "TRANSFERENCIA"]

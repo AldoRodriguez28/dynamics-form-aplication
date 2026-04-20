@@ -31,7 +31,7 @@ export type FieldDisplayType =
   | 'file'
   | 'domain-option'
   | 'opening-hours'
-  | 'opening-hours-advanced'
+  | 'opening-hours-flexible'
   | 'location-map'
   | 'phones'
   | 'pill-multiselect'
@@ -170,13 +170,12 @@ export class BlockFactoryService {
     const isObjectArrayField = this.isObjectArrayField(fieldDef);
     const isPrimitiveArrayField = this.isPrimitiveArrayField(fieldDef);
     const isDomainOption = this.isDomainOptionField(fieldDef);
-    const isAdvancedOpening = this.isAdvancedOpeningHoursField(fieldDef);
     const isLocationMap = this.isLocationMapField(fieldDef);
     const isPhonesField = this.isPhonesField(fieldDef);
     let displayType: FieldDisplayType;
 
-    if (isAdvancedOpening) {
-      displayType = 'opening-hours-advanced';
+    if (this.isFlexibleHorariosPersonalizadosField(fieldDef)) {
+      displayType = 'opening-hours-flexible';
     } else if (isLocationMap) {
       displayType = 'location-map';
     } else if (fieldDef.collection === 'array' && fieldDef.type === 'checkbox-group') {
@@ -282,10 +281,19 @@ export class BlockFactoryService {
       label: fieldDef.label || this.toLabel(fieldDef.name)
     };
 
+    const openingHoursRequired = this.isFlexibleHorariosPersonalizadosField(fieldDef)
+      ? this.flexibleOpeningHoursRequiredValidator()
+      : fieldDef.type === 'opening_hours'
+        ? this.openingHoursRequiredValidator()
+        : undefined;
+
     const validators = this.validatorFactory.build(fieldDef, {
-      requiredValidator: fieldDef.type === 'opening_hours' ? this.openingHoursRequiredValidator() : undefined
+      requiredValidator: openingHoursRequired
     });
-    if (fieldDef.type === 'opening_hours') {
+    if (this.isFlexibleHorariosPersonalizadosField(fieldDef)) {
+      validators.push(this.flexibleHorariosTurnsValidator());
+      validators.push(this.flexibleHorariosDuplicateDiaValidator());
+    } else if (fieldDef.type === 'opening_hours') {
       validators.push(this.openingHoursPairValidator());
       validators.push(this.openingHoursOrderValidator());
     }
@@ -351,6 +359,10 @@ export class BlockFactoryService {
       const asRecord = rawValue as Record<string, unknown>;
       const number = asRecord['number'] ?? asRecord['numero'];
       return { value: typeof number === 'string' || typeof number === 'number' ? number : '' };
+    }
+
+    if (this.isFlexibleHorariosPersonalizadosField(field)) {
+      return { value: this.normalizeFlexibleHorariosPersonalizados(field, rawValue) };
     }
 
     if (field.type === 'opening_hours') {
@@ -420,6 +432,158 @@ export class BlockFactoryService {
     }
 
     return base;
+  }
+
+  /**
+   * Valor: lista de `{ dia, turnos: [{ abre, cierra }, ...] }`.
+   * Acepta: nuevo array, legado `[{ dia, abre, … }]`, y `Record<día, turnos[]>` guardado antes.
+   */
+  private normalizeFlexibleHorariosPersonalizados(
+    field: FormField,
+    rawValue: unknown
+  ): { dia: string; turnos: { abre: string; cierra: string }[] }[] {
+    if (rawValue === undefined || rawValue === null) {
+      return [];
+    }
+
+    if (typeof rawValue === 'string' && rawValue.trim()) {
+      try {
+        return this.normalizeFlexibleHorariosPersonalizados(field, JSON.parse(rawValue));
+      } catch {
+        return [];
+      }
+    }
+
+    if (Array.isArray(rawValue)) {
+      if (rawValue.length === 0) return [];
+      const first = rawValue[0];
+      if (first && typeof first === 'object' && 'turnos' in (first as object)) {
+        return rawValue.map((item) => this.normalizeFlexibleDiaEntry(item));
+      }
+      const byDay = this.migrateLegacyHorariosPersonalizadosRows(rawValue);
+      return this.recordTurnosMapToDiaEntries(byDay);
+    }
+
+    if (typeof rawValue === 'object' && !Array.isArray(rawValue)) {
+      const incoming = rawValue as Record<string, unknown>;
+      const keys = Object.keys(incoming);
+      if (keys.length === 0) return [];
+
+      const firstVal = incoming[keys[0]];
+      const looksLikeTurnosPerDay =
+        firstVal &&
+        typeof firstVal === 'object' &&
+        Array.isArray(firstVal);
+
+      if (looksLikeTurnosPerDay) {
+        return keys
+          .filter((k) => Array.isArray(incoming[k]))
+          .map((dia) => ({
+            dia,
+            turnos: this.normalizeTurnosArray(incoming[dia])
+          }));
+      }
+
+      const looksLikeCompact =
+        firstVal &&
+        typeof firstVal === 'object' &&
+        !Array.isArray(firstVal) &&
+        ('abre' in (firstVal as object) || 'cierra' in (firstVal as object));
+
+      if (looksLikeCompact) {
+        const out: { dia: string; turnos: { abre: string; cierra: string }[] }[] = [];
+        keys.forEach((dia) => {
+          const dayVal = incoming[dia] as Record<string, string> | undefined;
+          if (
+            dayVal &&
+            !Array.isArray(dayVal) &&
+            (this.hasTimeValue(dayVal['abre']) || this.hasTimeValue(dayVal['cierra']))
+          ) {
+            out.push({
+              dia,
+              turnos: [
+                {
+                  abre: typeof dayVal['abre'] === 'string' ? dayVal['abre'] : '',
+                  cierra: typeof dayVal['cierra'] === 'string' ? dayVal['cierra'] : ''
+                }
+              ]
+            });
+          }
+        });
+        return out;
+      }
+    }
+
+    return [];
+  }
+
+  private normalizeFlexibleDiaEntry(item: unknown): {
+    dia: string;
+    turnos: { abre: string; cierra: string }[];
+  } {
+    if (!item || typeof item !== 'object') {
+      return { dia: '', turnos: [] };
+    }
+    const o = item as Record<string, unknown>;
+    const dia = typeof o['dia'] === 'string' ? o['dia'] : '';
+    const turnos = Array.isArray(o['turnos'])
+      ? this.normalizeTurnosArray(o['turnos'])
+      : [];
+    return { dia, turnos };
+  }
+
+  private normalizeTurnosArray(arr: unknown): { abre: string; cierra: string }[] {
+    if (!Array.isArray(arr)) return [];
+    return arr
+      .filter((t) => t && typeof t === 'object')
+      .map((t) => {
+        const o = t as Record<string, unknown>;
+        return {
+          abre: typeof o['abre'] === 'string' ? o['abre'] : '',
+          cierra: typeof o['cierra'] === 'string' ? o['cierra'] : ''
+        };
+      });
+  }
+
+  private recordTurnosMapToDiaEntries(
+    byDay: Record<string, { abre: string; cierra: string }[]>
+  ): { dia: string; turnos: { abre: string; cierra: string }[] }[] {
+    return Object.keys(byDay).map((dia) => ({
+      dia,
+      turnos: byDay[dia] ? byDay[dia].map((t) => ({ ...t })) : []
+    }));
+  }
+
+  /** Formato legado: `[{ dia, abre, comidaSale?, comidaRegresa?, cierra }]` */
+  private migrateLegacyHorariosPersonalizadosRows(
+    items: unknown[]
+  ): Record<string, { abre: string; cierra: string }[]> {
+    const byDay: Record<string, { abre: string; cierra: string }[]> = {};
+    for (const raw of items) {
+      if (!raw || typeof raw !== 'object') continue;
+      const item = raw as Record<string, unknown>;
+      const dia = String(item['dia'] ?? '');
+      if (!dia) continue;
+      if (!byDay[dia]) byDay[dia] = [];
+
+      const abre = typeof item['abre'] === 'string' ? item['abre'] : '';
+      const comidaSale = typeof item['comidaSale'] === 'string' ? item['comidaSale'] : '';
+      const comidaRegresa = typeof item['comidaRegresa'] === 'string' ? item['comidaRegresa'] : '';
+      const cierra = typeof item['cierra'] === 'string' ? item['cierra'] : '';
+
+      const hasComida = this.hasTimeValue(comidaSale) || this.hasTimeValue(comidaRegresa);
+      if (hasComida) {
+        if (this.hasTimeValue(abre) || this.hasTimeValue(comidaSale)) {
+          byDay[dia].push({ abre, cierra: comidaSale });
+        }
+        if (this.hasTimeValue(comidaRegresa) || this.hasTimeValue(cierra)) {
+          byDay[dia].push({ abre: comidaRegresa, cierra });
+        }
+      } else if (this.hasTimeValue(abre) || this.hasTimeValue(cierra)) {
+        byDay[dia].push({ abre, cierra });
+      }
+    }
+    return byDay;
   }
 
   private resolveOptions(
@@ -530,72 +694,66 @@ export class BlockFactoryService {
     };
   }
 
-  private openingHoursAdvancedPairValidator(): ValidatorFn {
+  private flexibleOpeningHoursRequiredValidator(): ValidatorFn {
     return (control: AbstractControl) => {
-      const group = control as FormGroup | null;
-      if (!group) return null;
-
-      const abre = group.get('abre')?.value;
-      const comidaSale = group.get('comidaSale')?.value;
-      const comidaRegresa = group.get('comidaRegresa')?.value;
-      const cierra = group.get('cierra')?.value;
-
-      const hasAbre = this.hasTimeValue(abre);
-      const hasComidaSale = this.hasTimeValue(comidaSale);
-      const hasComidaRegresa = this.hasTimeValue(comidaRegresa);
-      const hasCierra = this.hasTimeValue(cierra);
-
-      const hasComidaKeys = comidaSale !== undefined || comidaRegresa !== undefined;
-      if (hasComidaKeys) {
-        if (hasAbre !== hasComidaSale) return { openingHoursPair: true };
-        if (hasComidaRegresa !== hasCierra) return { openingHoursPair: true };
-        return null;
-      }
-
-      if (abre === undefined && cierra === undefined) return null;
-      if (hasAbre !== hasCierra) {
-        return { openingHoursPair: true };
-      }
-      return null;
+      const value = control.value as
+        | { dia: string; turnos: { abre: string; cierra: string }[] }[]
+        | null
+        | undefined;
+      if (!value || !Array.isArray(value)) return { required: true };
+      const hasCompleteTurn = value.some(
+        (e) =>
+          e?.dia?.trim() &&
+          Array.isArray(e.turnos) &&
+          e.turnos.some((t) => t && this.hasTimeValue(t.abre) && this.hasTimeValue(t.cierra))
+      );
+      return hasCompleteTurn ? null : { required: true };
     };
   }
 
-  private openingHoursAdvancedValidator(timeKeys: string[]): ValidatorFn {
+  private flexibleHorariosTurnsValidator(): ValidatorFn {
     return (control: AbstractControl) => {
-      const group = control as FormGroup | null;
-      if (!group) return null;
+      const value = control.value as
+        | { dia: string; turnos: { abre: string; cierra: string }[] }[]
+        | null
+        | undefined;
+      if (!value || !Array.isArray(value)) return null;
 
-      for (let i = 0; i < timeKeys.length - 1; i += 1) {
-        const current = group.get(timeKeys[i])?.value;
-        const next = group.get(timeKeys[i + 1])?.value;
-        if (!this.hasTimeValue(current) || !this.hasTimeValue(next)) continue;
-
-        const currentMinutes = this.timeToMinutes(current);
-        const nextMinutes = this.timeToMinutes(next);
-        if (currentMinutes === null || nextMinutes === null || currentMinutes >= nextMinutes) {
-          return { openingHoursOrder: true };
-        }
-      }
-
-      return null;
-    };
-  }
-
-  private openingHoursAdvancedArrayCompleteValidator(requiredKeys: string[]): ValidatorFn {
-    return (control: AbstractControl) => {
-      const array = control as FormArray | null;
-      if (!array || !array.controls?.length) return null;
-
-      for (const item of array.controls) {
-        const group = item as FormGroup;
-        for (const key of requiredKeys) {
-          const value = group.get(key)?.value;
-          if (!this.hasTimeValue(value)) {
-            return { openingHoursComplete: true };
+      for (const entry of value) {
+        const turns = entry?.turnos;
+        if (!Array.isArray(turns)) continue;
+        for (const t of turns) {
+          if (!t || typeof t !== 'object') continue;
+          const ha = this.hasTimeValue(t.abre);
+          const hc = this.hasTimeValue(t.cierra);
+          if (ha !== hc) return { openingHoursPair: true };
+          if (ha && hc) {
+            const start = this.timeToMinutes(t.abre);
+            const end = this.timeToMinutes(t.cierra);
+            if (start === null || end === null || start >= end) {
+              return { openingHoursOrder: true };
+            }
           }
         }
       }
+      return null;
+    };
+  }
 
+  private flexibleHorariosDuplicateDiaValidator(): ValidatorFn {
+    return (control: AbstractControl) => {
+      const value = control.value as
+        | { dia: string; turnos: { abre: string; cierra: string }[] }[]
+        | null
+        | undefined;
+      if (!value || !Array.isArray(value)) return null;
+      const seen = new Set<string>();
+      for (const e of value) {
+        const d = String(e?.dia ?? '').trim();
+        if (!d) continue;
+        if (seen.has(d)) return { duplicateHorariosDia: true };
+        seen.add(d);
+      }
       return null;
     };
   }
@@ -641,28 +799,16 @@ export class BlockFactoryService {
     return hours * 60 + minutes;
   }
 
-  private getAdvancedTimeSequence(keys: string[], field: FormField): string[] {
-    const schema = field.itemSchema ?? {};
-    const schemaTimeKeys = Object.keys(schema).filter((key) => schema[key]?.type === 'time');
-    const base = schemaTimeKeys.length ? schemaTimeKeys : keys.filter((key) => key !== 'dia');
-    const preferred = ['abre', 'comidaSale', 'comidaRegresa', 'cierra'];
-    const ordered = preferred.filter((key) => base.includes(key));
-    const remaining = base.filter((key) => !preferred.includes(key));
-    return [...ordered, ...remaining];
-  }
-
-  private getAdvancedRequiredKeys(keys: string[], field: FormField): string[] {
-    const timeKeys = this.getAdvancedTimeSequence(keys, field);
-    const required = ['dia', ...timeKeys];
-    return Array.from(new Set(required)).filter((key) => keys.includes(key) || key === 'dia');
-  }
-
   private getObjectArrayRequiredKeys(keys: string[], field: FormField): string[] {
     return keys;
   }
 
   private isObjectArrayField(field: FormField): boolean {
-    return field.collection === 'array' && field.type === 'object';
+    return (
+      field.collection === 'array' &&
+      field.type === 'object' &&
+      !this.isFlexibleHorariosPersonalizadosField(field)
+    );
   }
 
   private isPrimitiveArrayField(field: FormField): boolean {
@@ -687,8 +833,12 @@ export class BlockFactoryService {
     return field.name === 'productosServicios' && field.collection === 'array';
   }
 
-  private isAdvancedOpeningHoursField(field: FormField): boolean {
-    return field.name === 'horariosPersonalizados' && field.collection === 'array' && field.type === 'object';
+  /**
+   * Horarios personalizados: siempre UI flexible (turnos por día), aunque el API aún envíe
+   * el esquema antiguo (`type: object` + `collection: array`).
+   */
+  private isFlexibleHorariosPersonalizadosField(field: FormField): boolean {
+    return field.name === 'horariosPersonalizados';
   }
 
   private isLocationMapField(field: FormField): boolean {
@@ -731,9 +881,6 @@ export class BlockFactoryService {
     const { items, keys } = this.normalizeObjectArray(rawValue, field);
     const groups = items.map((item) => this.buildObjectGroup(keys, field, item));
     const arrayValidators: ValidatorFn[] = [];
-    if (this.isAdvancedOpeningHoursField(field)) {
-      arrayValidators.push(this.openingHoursAdvancedArrayCompleteValidator(this.getAdvancedRequiredKeys(keys, field)));
-    }
     arrayValidators.push(this.objectArrayCompleteValidator(this.getObjectArrayRequiredKeys(keys, field)));
     const control = this.fb.array(
       groups.length ? groups : [this.buildObjectGroup(keys, field, {})],
@@ -860,14 +1007,7 @@ export class BlockFactoryService {
       controls[key] = this.fb.control(this.coercePrimitive(value?.[key]), validators);
     });
 
-    const validators = this.isAdvancedOpeningHoursField(field)
-      ? [
-          this.openingHoursAdvancedPairValidator(),
-          this.openingHoursAdvancedValidator(this.getAdvancedTimeSequence(keys, field))
-        ]
-      : [];
-
-    return this.fb.group(controls, { validators });
+    return this.fb.group(controls);
   }
 
   private buildPrimitiveArrayControl(field: FormField, rawValue: unknown): FormArray<FormControl> {

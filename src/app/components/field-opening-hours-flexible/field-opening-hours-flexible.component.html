@@ -1,0 +1,171 @@
+<div class="field-wrapper">
+  <div class="field-label-row">
+    <div class="field-label">
+      <p class="eyebrow">Colección</p>
+      <div class="field-title-row">
+        <span class="field-title">{{ field.label || 'Horario personalizado' }}</span>
+        @if (field.required) {
+        <span class="required">Obligatorio</span>
+        }
+      </div>
+      @if (field.placeholder) {
+      <p class="help">{{ field.placeholder }}</p>
+      }
+    </div>
+    <div class="label-actions">
+      <span class="pill" [attr.title]="'Días configurados y total de turnos'">{{ resumenHorariosLabel }}</span>
+      @if (!readOnly) {
+      <button type="button" class="btn-clear-all" (click)="clearAll()">Limpiar todo</button>
+      }
+    </div>
+  </div>
+
+  @if (control.errors?.['required'] && control.touched) {
+  <p class="error-banner" role="alert">Indica al menos un día, con un turno completo (apertura y cierre).</p>
+  }
+  @if (control.errors?.['openingHoursPair'] && control.touched) {
+  <p class="error-banner" role="alert">Completa apertura y cierre en cada turno que empieces.</p>
+  }
+  @if (control.errors?.['openingHoursOrder'] && control.touched) {
+  <p class="error-banner" role="alert">La apertura debe ser anterior al cierre en cada turno.</p>
+  }
+  @if (control.errors?.['duplicateHorariosDia'] && control.touched) {
+  <p class="error-banner" role="alert">No repitas el mismo día en dos filas.</p>
+  }
+
+  <div class="array-list">
+    @for (entry of entriesList; track trackByIndex($index); let entryIndex = $index) {
+    <section
+      class="day-card"
+      [class.day-card--stripe]="entryIndex % 2 === 1"
+      [attr.aria-label]="'Horario para ' + (entry.dia || 'día sin elegir')"
+    >
+      <header class="day-card__top">
+        <div class="day-card__identity">
+          <div class="avatar" aria-hidden="true">{{ (entry.dia || '?') | slice : 0 : 1 }}</div>
+          <div class="day-card__fields">
+            <label class="field-label-inline" [attr.for]="field.name + '-dia-' + entryIndex">Día de la semana</label>
+            <div class="day-select-wrap">
+              <select
+                class="field-control day-select"
+                [id]="field.name + '-dia-' + entryIndex"
+                [ngModel]="entry.dia"
+                (ngModelChange)="onDayChange(entryIndex, $event)"
+                [disabled]="readOnly"
+              >
+                <option value="">Selecciona un día</option>
+                @for (opt of dayOptionsFor(entry.dia); track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+            </div>
+            <p class="day-hint">Puedes añadir varios bloques de horario (mañana, tarde, etc.).</p>
+          </div>
+        </div>
+
+        @if (!readOnly) {
+        <div class="day-toolbar" role="toolbar" [attr.aria-label]="'Acciones para ' + (entry.dia || 'esta fila')">
+          <div class="day-toolbar__group day-toolbar__group--primary">
+            <button type="button" class="btn-primary-soft" (click)="addTurn(entryIndex)">+ Agregar turno</button>
+            <button
+              type="button"
+              class="btn-neutral-outline"
+              (click)="clearDayTurnos(entryIndex)"
+              title="Borra solo las horas de esta fila; el día sigue seleccionado"
+            >
+              Vaciar horarios
+            </button>
+          </div>
+          <button
+            type="button"
+            class="btn-remove-row"
+            (click)="removeDay(entryIndex)"
+            title="Quita esta fila por completo"
+          >
+            Eliminar fila
+          </button>
+        </div>
+        }
+      </header>
+
+      <div class="day-card__body">
+        @if (turnos(entryIndex).length === 0) {
+        <div class="empty-turns" role="status">
+          <p class="empty-turns__text">No hay turnos en esta fila.</p>
+          <p class="empty-turns__hint">Pulsa «Agregar turno» para indicar apertura y cierre.</p>
+        </div>
+        }
+
+        <div class="day-turns">
+          @for (turn of turnos(entryIndex); track trackByIndex($index)) {
+          <div class="turn" [class.turn--alt]="$index % 2 === 1">
+            <div class="turn__head">
+              <span class="turn__title">Turno {{ $index + 1 }}</span>
+            </div>
+            <div class="turn__grid array-grid">
+              <div class="array-field">
+                <label class="sub-label" [attr.for]="field.name + '-' + entryIndex + '-abre-' + $index">Apertura</label>
+                <input
+                  class="field-control"
+                  type="time"
+                  [id]="field.name + '-' + entryIndex + '-abre-' + $index"
+                  [value]="valueFor(entryIndex, $index, 'abre')"
+                  [disabled]="readOnly"
+                  (input)="updateTime(entryIndex, $index, 'abre', $any($event.target).value)"
+                  [class.input-error]="inputHasError(entryIndex, $index, 'abre')"
+                />
+              </div>
+              <div class="array-field">
+                <label class="sub-label" [attr.for]="field.name + '-' + entryIndex + '-cierra-' + $index">Cierre</label>
+                <input
+                  class="field-control"
+                  type="time"
+                  [id]="field.name + '-' + entryIndex + '-cierra-' + $index"
+                  [value]="valueFor(entryIndex, $index, 'cierra')"
+                  [disabled]="readOnly"
+                  (input)="updateTime(entryIndex, $index, 'cierra', $any($event.target).value)"
+                  [class.input-error]="inputHasError(entryIndex, $index, 'cierra')"
+                />
+              </div>
+            </div>
+            @if (!readOnly) {
+            <div class="turn__footer">
+              <button
+                type="button"
+                class="link-remove"
+                (click)="removeTurn(entryIndex, $index)"
+              >
+                Quitar turno
+              </button>
+            </div>
+            }
+          </div>
+          }
+        </div>
+      </div>
+    </section>
+    }
+
+    @if (!readOnly && canAddDay() && entriesList.length > 0) {
+    <div class="add-day-row">
+      <button type="button" class="btn-add-day" (click)="addDay()">
+        <span class="btn-add-day__icon" aria-hidden="true">+</span>
+        Agregar otro día
+      </button>
+    </div>
+    }
+
+    @if (entriesList.length === 0 && !readOnly) {
+    <div class="empty-days" role="region" aria-label="Sin días configurados">
+      <div class="empty-days__card">
+        <p class="empty-days__title">Configura tus horarios por día</p>
+        <p class="empty-days__text">Añade un día, elige la jornada en el listado y define uno o más turnos (apertura y cierre).</p>
+        <button type="button" class="btn-add-day btn-add-day--emphasis" (click)="addDay()">
+          <span class="btn-add-day__icon" aria-hidden="true">+</span>
+          Agregar día
+        </button>
+      </div>
+    </div>
+    }
+  </div>
+</div>

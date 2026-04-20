@@ -64,9 +64,11 @@
               <app-field-opening-hours [field]="field" [control]="getControl(form, [block.code, field.name])"
                 [readOnly]="readOnly || block.readOnly" />
               }
-              @case ('opening-hours-advanced') {
-              <app-field-opening-hours-advanced [field]="field" [formArray]="getArrayControl(block.code, field.name)"
-                [optionSets]="block.optionSets || {}" [readOnly]="readOnly || block.readOnly" />
+              @case ('opening-hours-flexible') {
+              <app-field-opening-hours-flexible [field]="field"
+                [control]="getControl(form, [block.code, field.name])"
+                [optionSets]="block.optionSets || {}"
+                [readOnly]="readOnly || block.readOnly" />
               }
               @case ('location-map') {
               <app-field-location-map [field]="field" [coordsControl]="getControl(form, [block.code, field.name])"

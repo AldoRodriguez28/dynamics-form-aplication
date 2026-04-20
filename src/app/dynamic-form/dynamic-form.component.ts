@@ -14,7 +14,7 @@ import {
   FieldPhoneComponent,
   FieldDomainOptionComponent,
   FieldOpeningHoursComponent,
-  FieldOpeningHoursAdvancedComponent,
+  FieldOpeningHoursFlexibleComponent,
   FieldLocationMapComponent,
   FieldPillMultiselectComponent,
   FieldProductosServiciosComponent,
@@ -54,7 +54,7 @@ import { BlockFactoryService, BlockView, FormValueParser } from './services/bloc
     FieldArrayPrimitiveComponent,
     FieldPhoneComponent,
     FieldOpeningHoursComponent,
-    FieldOpeningHoursAdvancedComponent,
+    FieldOpeningHoursFlexibleComponent,
     FormSidebarComponent
   ],
   templateUrl: './dynamic-form.component.html',
