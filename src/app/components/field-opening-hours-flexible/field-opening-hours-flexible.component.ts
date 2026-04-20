@@ -173,9 +173,21 @@ export class FieldOpeningHoursFlexibleComponent {
     });
   }
 
+  /** Turnos marcados en `openingHoursOverlap` (índices por fila de día). */
+  turnHasOverlapError(entryIndex: number, turnIndex: number): boolean {
+    if (!(this.control.touched || this.control.dirty)) return false;
+    const raw = this.control.errors?.['openingHoursOverlap'] as Record<string, number[]> | true | undefined;
+    if (!raw || raw === true) return false;
+    const list = raw[String(entryIndex)];
+    return Array.isArray(list) && list.includes(turnIndex);
+  }
+
   inputHasError(entryIndex: number, turnIndex: number, key: keyof FlexibleHorariosTurno): boolean {
     if (!(this.control.touched || this.control.dirty)) return false;
     if (this.control.errors?.['required']) return true;
+    if (this.turnHasOverlapError(entryIndex, turnIndex)) {
+      return key === 'abre' || key === 'cierra';
+    }
     const errs = this.control.errors;
     if (!errs?.['openingHoursPair'] && !errs?.['openingHoursOrder']) return false;
     const t = this.turnos(entryIndex)[turnIndex];

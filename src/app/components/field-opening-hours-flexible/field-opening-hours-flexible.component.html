@@ -32,6 +32,9 @@
   @if (control.errors?.['duplicateHorariosDia'] && control.touched) {
   <p class="error-banner" role="alert">No repitas el mismo día en dos filas.</p>
   }
+  @if (control.errors?.['openingHoursOverlap'] && control.touched) {
+  <p class="error-banner" role="alert">Los turnos del mismo día no pueden solaparse. Ajusta las horas o quita un turno.</p>
+  }
 
   <div class="array-list">
     @for (entry of entriesList; track trackByIndex($index); let entryIndex = $index) {
@@ -98,7 +101,11 @@
 
         <div class="day-turns">
           @for (turn of turnos(entryIndex); track trackByIndex($index)) {
-          <div class="turn" [class.turn--alt]="$index % 2 === 1">
+          <div
+            class="turn"
+            [class.turn--alt]="$index % 2 === 1 && !turnHasOverlapError(entryIndex, $index)"
+            [class.turn--conflict]="turnHasOverlapError(entryIndex, $index)"
+          >
             <div class="turn__head">
               <span class="turn__title">Turno {{ $index + 1 }}</span>
             </div>

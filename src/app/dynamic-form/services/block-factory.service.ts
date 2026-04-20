@@ -292,6 +292,7 @@ export class BlockFactoryService {
     });
     if (this.isFlexibleHorariosPersonalizadosField(fieldDef)) {
       validators.push(this.flexibleHorariosTurnsValidator());
+      validators.push(this.flexibleHorariosOverlapValidator());
       validators.push(this.flexibleHorariosDuplicateDiaValidator());
     } else if (fieldDef.type === 'opening_hours') {
       validators.push(this.openingHoursPairValidator());
@@ -737,6 +738,61 @@ export class BlockFactoryService {
         }
       }
       return null;
+    };
+  }
+
+  /**
+   * Mismo día: turnos con apertura/cierre válidos y orden correcto no pueden solaparse.
+   * Intervalos en [abre, cierra) para permitir cierre seguido de apertura (ej. cierra 12:00, abre 12:00).
+   */
+  private flexibleHorariosOverlapValidator(): ValidatorFn {
+    return (control: AbstractControl) => {
+      const value = control.value as
+        | { dia: string; turnos: { abre: string; cierra: string }[] }[]
+        | null
+        | undefined;
+      if (!value || !Array.isArray(value)) return null;
+
+      const disputedByEntry = new Map<number, Set<number>>();
+
+      value.forEach((entry, entryIndex) => {
+        const turns = entry?.turnos;
+        if (!Array.isArray(turns)) return;
+
+        const segments: { turnIndex: number; start: number; end: number }[] = [];
+        turns.forEach((t, turnIndex) => {
+          if (!t || typeof t !== 'object') return;
+          if (!this.hasTimeValue(t.abre) || !this.hasTimeValue(t.cierra)) return;
+          const start = this.timeToMinutes(t.abre);
+          const end = this.timeToMinutes(t.cierra);
+          if (start === null || end === null || start >= end) return;
+          segments.push({ turnIndex, start, end });
+        });
+
+        for (let a = 0; a < segments.length; a++) {
+          for (let b = a + 1; b < segments.length; b++) {
+            const sa = segments[a];
+            const sb = segments[b];
+            if (Math.max(sa.start, sb.start) < Math.min(sa.end, sb.end)) {
+              let set = disputedByEntry.get(entryIndex);
+              if (!set) {
+                set = new Set<number>();
+                disputedByEntry.set(entryIndex, set);
+              }
+              set.add(sa.turnIndex);
+              set.add(sb.turnIndex);
+            }
+          }
+        }
+      });
+
+      if (disputedByEntry.size === 0) return null;
+
+      const openingHoursOverlap: Record<string, number[]> = {};
+      disputedByEntry.forEach((set, entryIndex) => {
+        openingHoursOverlap[String(entryIndex)] = [...set].sort((x, y) => x - y);
+      });
+      return { openingHoursOverlap };
     };
   }
 

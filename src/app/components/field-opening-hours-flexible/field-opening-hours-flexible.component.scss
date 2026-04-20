@@ -366,6 +366,16 @@
   background: #e879a9;
 }
 
+/* Solape entre turnos del mismo día (validación openingHoursOverlap) */
+.turn.turn--conflict {
+  background: linear-gradient(135deg, #fef2f2 0%, #fff1f2 100%);
+  border-color: rgba(248, 113, 113, 0.4);
+}
+
+.turn.turn--conflict::before {
+  background: #e11d48;
+}
+
 .turn__head {
   display: flex;
   align-items: center;
@@ -447,6 +457,10 @@
 
 .turn--alt .field-control {
   background: rgba(255, 255, 255, 0.92);
+}
+
+.turn.turn--conflict .field-control {
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .field-control.input-error {
