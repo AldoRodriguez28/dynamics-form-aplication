@@ -16,7 +16,7 @@ export type FieldType =
   | 'string'
   | string;
 
-export type FieldCollection = 'single' | 'array';
+export type FieldCollection = 'single' | 'array' | 'static';
 
 
 export interface OptionSetSource {
