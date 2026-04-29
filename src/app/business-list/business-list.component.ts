@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, HostListener, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { EMPTY, map, Observable, of, switchMap, tap, catchError, finalize } from 'rxjs';
 import { Business } from '../models/business.model';
@@ -11,16 +11,28 @@ import { BusinessMapping } from '../mapping/business/business.map';
 import { LegacyBusinessInterface } from '../Interfaces/business/response/legacy-business.interface';
 import { ClientNotFoundComponent } from '../components/client-not-found/client-not-found.component';
 import { BusinessEmptyStateComponent } from '../components/business-empty-state/business-empty-state.component';
+import {
+  FormRecord,
+  StatusHistory,
+  StatusHistoryComponent,
+} from '../components/status-history/status-history.component';
 import { decodeJwtPayload } from '../utils/jwt.utils';
 
 @Component({
   selector: 'app-business-list',
   standalone: true,
-  imports: [CommonModule, ClientNotFoundComponent, BusinessEmptyStateComponent],
+  imports: [
+    CommonModule,
+    ClientNotFoundComponent,
+    BusinessEmptyStateComponent,
+    StatusHistoryComponent,
+  ],
   templateUrl: './business-list.component.html',
   styleUrl: './business-list.component.scss'
 })
 export class BusinessListComponent {
+  private readonly historyDrawer = viewChild(StatusHistoryComponent);
+
   private readonly route = inject(ActivatedRoute);
   private readonly businessService = inject(BusinessService);
   private readonly router = inject(Router);
@@ -39,6 +51,9 @@ export class BusinessListComponent {
   shareCopied = false;
 
   clientData$: Observable<LegacyBusinessInterface | null> = EMPTY;
+
+  /** Fila cuyo menú «Más» (⋮) está abierto; clave estable por negocio + índice. */
+  readonly openActionsMenuKey = signal<string | null>(null);
 
   constructor() {
     this.loadClientData();
@@ -74,6 +89,74 @@ export class BusinessListComponent {
 
   goHome(): void {
     this.router.navigateByUrl('/');
+  }
+
+  /**
+   * Abre el panel de historial de estados para un negocio (datos mínimos hasta tener API de auditoría).
+   */
+  openBusinessStatusHistory(business: BusinessInterface): void {
+    this.historyDrawer()?.openHistory(this.businessToFormRecord(business));
+  }
+
+  actionMenuKey(business: BusinessInterface, index: number): string {
+    return `b-${business.businessId ?? 'noid'}-i-${index}`;
+  }
+
+  isActionMenuOpen(business: BusinessInterface, index: number): boolean {
+    return this.openActionsMenuKey() === this.actionMenuKey(business, index);
+  }
+
+  toggleActionsMenu(event: Event, business: BusinessInterface, index: number): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const key = this.actionMenuKey(business, index);
+    this.openActionsMenuKey.update((current) => (current === key ? null : key));
+  }
+
+  closeActionsMenu(): void {
+    this.openActionsMenuKey.set(null);
+  }
+
+  onHistorialMenuPick(event: Event, business: BusinessInterface): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.closeActionsMenu();
+    this.openBusinessStatusHistory(business);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const t = event.target as HTMLElement | null;
+    if (t?.closest?.('[data-action-menu]')) return;
+    this.closeActionsMenu();
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onDocumentKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') this.closeActionsMenu();
+  }
+
+  private businessToFormRecord(business: BusinessInterface): FormRecord {
+    const id = String(business.businessId ?? '');
+    const nombre = business.commercialName?.trim() || 'Sin nombre';
+    const estadoActual = this.statusLabel(this.getBusinessStatus(business));
+    const raw = this.getBusinessStatus(business);
+    const fromApi = business.lastUpdate
+      ? new Date(business.lastUpdate)
+      : null;
+    const fecha =
+      fromApi && !Number.isNaN(fromApi.getTime()) ? fromApi : new Date();
+
+    const historial: StatusHistory[] = [
+      {
+        id: `${id}-snapshot`,
+        estado: estadoActual,
+        fecha,
+        usuario: raw ? 'Registro actual (API)' : '—',
+      },
+    ];
+
+    return { id, nombre, estadoActual, historial };
   }
 
   retry(): void {

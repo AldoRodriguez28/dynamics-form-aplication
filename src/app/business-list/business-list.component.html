@@ -77,7 +77,7 @@
         <span class="actions-col col-acciones">Acciones</span>
       </div>
 
-      @for (business of (clientData.businesses || []); track (business?.businessId ?? $index)) {
+      @for (business of (clientData.businesses || []); track (business?.businessId ?? $index); let rowIndex = $index) {
       <div class="table__row">
         <div class="col-negocio">
           <p class="title">{{ business?.commercialName || '-' }}</p>
@@ -110,10 +110,45 @@
 
         <div class="actions-col col-acciones">
           <span class="cell-label">Acciones</span>
-          <button type="button" class="btn"
-            (click)="goToForm((clientId ?? clientData.legacyAdvertiserId) ?? '', $any(business), '')">
-            Ver formulario
-          </button>
+          <div class="action-buttons">
+            <button type="button" class="btn"
+              (click)="goToForm((clientId ?? clientData.legacyAdvertiserId) ?? '', $any(business), '')">
+              Ver formulario
+            </button>
+            <div class="action-menu" data-action-menu>
+              <button
+                type="button"
+                class="btn btn--more-trigger btn--icon-hit"
+                [attr.aria-expanded]="isActionMenuOpen($any(business), rowIndex)"
+                [attr.aria-controls]="'action-menu-' + actionMenuKey($any(business), rowIndex)"
+                aria-haspopup="true"
+                [attr.aria-label]="'Más acciones: ' + (business?.commercialName || 'negocio')"
+                (click)="toggleActionsMenu($event, $any(business), rowIndex)"
+              >
+                <svg class="btn__icon-svg btn__icon-svg--more" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <circle cx="12" cy="5" r="1.75" />
+                  <circle cx="12" cy="12" r="1.75" />
+                  <circle cx="12" cy="19" r="1.75" />
+                </svg>
+              </button>
+              @if (isActionMenuOpen($any(business), rowIndex)) {
+                <div
+                  class="action-menu__panel"
+                  role="menu"
+                  [id]="'action-menu-' + actionMenuKey($any(business), rowIndex)"
+                >
+                  <button
+                    type="button"
+                    class="action-menu__item"
+                    role="menuitem"
+                    (click)="onHistorialMenuPick($event, $any(business))"
+                  >
+                    Historial de estados
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
         </div>
       </div>
       }
@@ -153,8 +188,9 @@
       </div>
       }
     </div>
-  </div>
+    </div>
   }
+  <app-status-history [embedded]="true" />
 </section>
 } @else if (errorCode === 'CLIENT_NOT_FOUND') {
 <section class="page page--centered hero-style">

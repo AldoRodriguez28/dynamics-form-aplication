@@ -3,6 +3,7 @@ dist/
 tmp/
 out-tsc/
 .angular/cache/
+.cursor/
 bazel-out/
 
 # --- Dependencies & package managers ---
