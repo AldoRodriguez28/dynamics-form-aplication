@@ -72,12 +72,17 @@
         <span class="col-negocio">Negocio</span>
         <span class="col-categoria">Categoría</span>
         <span class="col-poblacion">Población</span>
-        <span class="col-estado">Estado</span>
+        <span class="col-estado">
+          <span class="col-estado-head">
+            <span class="col-estado-head__title">Estado</span>
+            <span class="col-estado-head__hint">Clic · historial</span>
+          </span>
+        </span>
         <!-- <span>Última actualización</span> -->
         <span class="actions-col col-acciones">Acciones</span>
       </div>
 
-      @for (business of (clientData.businesses || []); track (business?.businessId ?? $index); let rowIndex = $index) {
+      @for (business of (clientData.businesses || []); track (business?.businessId ?? $index)) {
       <div class="table__row">
         <div class="col-negocio">
           <p class="title">{{ business?.commercialName || '-' }}</p>
@@ -98,9 +103,16 @@
 
         <div class="col-estado">
           <span class="cell-label">Estado</span>
-          <span class="status" [attr.data-variant]="statusVariant(business?.state)">
+          <button
+            type="button"
+            class="status status--interactive"
+            [attr.data-variant]="statusVariant(business?.state)"
+            [attr.aria-label]="'Ver historial de estados: ' + (business?.commercialName || 'negocio')"
+            title="Ver historial de estados"
+            (click)="openBusinessStatusHistory($any(business))"
+          >
             {{ statusLabel(business.state) }}
-          </span>
+          </button>
         </div>
 
         <!-- <div>
@@ -115,39 +127,6 @@
               (click)="goToForm((clientId ?? clientData.legacyAdvertiserId) ?? '', $any(business), '')">
               Ver formulario
             </button>
-            <div class="action-menu" data-action-menu>
-              <button
-                type="button"
-                class="btn btn--more-trigger btn--icon-hit"
-                [attr.aria-expanded]="isActionMenuOpen($any(business), rowIndex)"
-                [attr.aria-controls]="'action-menu-' + actionMenuKey($any(business), rowIndex)"
-                aria-haspopup="true"
-                [attr.aria-label]="'Más acciones: ' + (business?.commercialName || 'negocio')"
-                (click)="toggleActionsMenu($event, $any(business), rowIndex)"
-              >
-                <svg class="btn__icon-svg btn__icon-svg--more" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <circle cx="12" cy="5" r="1.75" />
-                  <circle cx="12" cy="12" r="1.75" />
-                  <circle cx="12" cy="19" r="1.75" />
-                </svg>
-              </button>
-              @if (isActionMenuOpen($any(business), rowIndex)) {
-                <div
-                  class="action-menu__panel"
-                  role="menu"
-                  [id]="'action-menu-' + actionMenuKey($any(business), rowIndex)"
-                >
-                  <button
-                    type="button"
-                    class="action-menu__item"
-                    role="menuitem"
-                    (click)="onHistorialMenuPick($event, $any(business))"
-                  >
-                    Historial de estados
-                  </button>
-                </div>
-              }
-            </div>
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, inject, signal, viewChild } from '@angular/core';
+import { Component, inject, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { EMPTY, map, Observable, of, switchMap, tap, catchError, finalize } from 'rxjs';
 import { Business } from '../models/business.model';
@@ -52,9 +52,6 @@ export class BusinessListComponent {
 
   clientData$: Observable<LegacyBusinessInterface | null> = EMPTY;
 
-  /** Fila cuyo menú «Más» (⋮) está abierto; clave estable por negocio + índice. */
-  readonly openActionsMenuKey = signal<string | null>(null);
-
   constructor() {
     this.loadClientData();
   }
@@ -96,44 +93,6 @@ export class BusinessListComponent {
    */
   openBusinessStatusHistory(business: BusinessInterface): void {
     this.historyDrawer()?.openHistory(this.businessToFormRecord(business));
-  }
-
-  actionMenuKey(business: BusinessInterface, index: number): string {
-    return `b-${business.businessId ?? 'noid'}-i-${index}`;
-  }
-
-  isActionMenuOpen(business: BusinessInterface, index: number): boolean {
-    return this.openActionsMenuKey() === this.actionMenuKey(business, index);
-  }
-
-  toggleActionsMenu(event: Event, business: BusinessInterface, index: number): void {
-    event.preventDefault();
-    event.stopPropagation();
-    const key = this.actionMenuKey(business, index);
-    this.openActionsMenuKey.update((current) => (current === key ? null : key));
-  }
-
-  closeActionsMenu(): void {
-    this.openActionsMenuKey.set(null);
-  }
-
-  onHistorialMenuPick(event: Event, business: BusinessInterface): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.closeActionsMenu();
-    this.openBusinessStatusHistory(business);
-  }
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent): void {
-    const t = event.target as HTMLElement | null;
-    if (t?.closest?.('[data-action-menu]')) return;
-    this.closeActionsMenu();
-  }
-
-  @HostListener('document:keydown', ['$event'])
-  onDocumentKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Escape') this.closeActionsMenu();
   }
 
   private businessToFormRecord(business: BusinessInterface): FormRecord {
