@@ -1,4 +1,5 @@
 import { ExternalReferenceInterface } from "./external-reference.interface";
+import type { BusinessStatusAuditEntry } from "./business-status-audit.response";
 
 export interface BusinessInterface {
   businessId?: number | null;
@@ -12,7 +13,9 @@ export interface BusinessInterface {
   state?: string | null;
   lastUpdate?: string | Date | null;
   externalData?: string | null;
-  externalReference?:ExternalReferenceInterface
+  externalReference?:ExternalReferenceInterface;
+  /** Auditoría de cambios de estado (cuando el backend la envía). */
+  statusAudit?: BusinessStatusAuditEntry[] | null;
 }
 
 export interface ContactBlockResponse {

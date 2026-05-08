@@ -7,104 +7,41 @@ import {
   input,
   signal,
 } from '@angular/core';
+import { BusinessStatusAuditEntry } from '../../Interfaces/business/response/business-status-audit.response';
 
-export interface StatusHistory {
+export type { BusinessStatusAuditEntry } from '../../Interfaces/business/response/business-status-audit.response';
+
+/** Un paso de la línea de tiempo: transición de estado. */
+export interface StatusTransition {
   id: string;
-  estado: string;
+  oldState: string;
+  newState: string;
   fecha: Date;
-  usuario: string;
+  action: string;
+  actorType: string;
+  actorId: string;
 }
 
 export interface FormRecord {
   id: string;
   nombre: string;
   estadoActual: string;
-  historial: StatusHistory[];
+  historial: StatusTransition[];
 }
 
-const MOCK_FORMS: FormRecord[] = [
-  {
-    id: 'FRM-2024-0182',
-    nombre: 'Alta de comercio — Centro',
-    estadoActual: 'En revisión',
-    historial: [
-      {
-        id: 'SH-001',
-        estado: 'Borrador',
-        fecha: new Date('2026-04-12T09:14:00'),
-        usuario: 'maria.garcia@empresa.test',
-      },
-      {
-        id: 'SH-002',
-        estado: 'Enviado',
-        fecha: new Date('2026-04-12T11:40:22'),
-        usuario: 'maria.garcia@empresa.test',
-      },
-      {
-        id: 'SH-003',
-        estado: 'En revisión',
-        fecha: new Date('2026-04-14T08:05:00'),
-        usuario: 'sistema.workflow',
-      },
-    ],
-  },
-  {
-    id: 'FRM-2024-0190',
-    nombre: 'Renovación de licencia',
-    estadoActual: 'Aprobado',
-    historial: [
-      {
-        id: 'SH-010',
-        estado: 'Borrador',
-        fecha: new Date('2026-03-01T16:22:00'),
-        usuario: 'carlos.ruiz@empresa.test',
-      },
-      {
-        id: 'SH-011',
-        estado: 'Enviado',
-        fecha: new Date('2026-03-02T10:00:00'),
-        usuario: 'carlos.ruiz@empresa.test',
-      },
-      {
-        id: 'SH-012',
-        estado: 'En revisión',
-        fecha: new Date('2026-03-03T14:18:33'),
-        usuario: 'revisor.norte',
-      },
-      {
-        id: 'SH-013',
-        estado: 'Aprobado',
-        fecha: new Date('2026-03-05T09:00:00'),
-        usuario: 'supervisor.norte',
-      },
-    ],
-  },
-  {
-    id: 'FRM-2024-0201',
-    nombre: 'Cambio de titular',
-    estadoActual: 'Devuelto con observaciones',
-    historial: [
-      {
-        id: 'SH-020',
-        estado: 'Borrador',
-        fecha: new Date('2026-04-20T13:45:00'),
-        usuario: 'ana.lopez@empresa.test',
-      },
-      {
-        id: 'SH-021',
-        estado: 'Enviado',
-        fecha: new Date('2026-04-21T08:30:00'),
-        usuario: 'ana.lopez@empresa.test',
-      },
-      {
-        id: 'SH-022',
-        estado: 'Devuelto con observaciones',
-        fecha: new Date('2026-04-22T15:12:00'),
-        usuario: 'revisor.central',
-      },
-    ],
-  },
-];
+export function transitionsFromAudit(
+  entries: BusinessStatusAuditEntry[]
+): StatusTransition[] {
+  return entries.map((e) => ({
+    id: String(e.auditId),
+    oldState: e.oldState,
+    newState: e.newState,
+    fecha: new Date(e.createdAt),
+    action: e.action,
+    actorType: e.actorType,
+    actorId: e.actorId,
+  }));
+}
 
 @Component({
   selector: 'app-status-history',
@@ -147,11 +84,16 @@ export class StatusHistoryComponent {
    */
   readonly embedded = input(false);
 
-  /** Filas mostradas en la tabla principal (vista demo / playground). */
-  protected readonly forms = signal<FormRecord[]>(MOCK_FORMS);
+  /** Filas en la tabla de la vista playground (vacío; el historial real va desde business-list). */
+  protected readonly forms = signal<FormRecord[]>([]);
 
   /** Panel lateral visible. */
   protected readonly sidebarOpen = signal(false);
+
+  /** Carga remota del historial (p. ej. desde business-list). */
+  protected readonly historyLoading = signal(false);
+
+  protected readonly historyError = signal<string | null>(null);
 
   /** Formulario cuyo historial se muestra en el panel. */
   protected readonly selectedForm = signal<FormRecord | null>(null);
@@ -165,19 +107,103 @@ export class StatusHistoryComponent {
     );
   });
 
+  private readonly stateLabels: Record<string, string> = {
+    DRAFT: 'Borrador',
+    IN_PROGRESS: 'En progreso',
+    CONTENT_IN_CREATION: 'Contenido en creación',
+    READY: 'Listo',
+    PENDING: 'Pendiente',
+    COMPLETED: 'Completado',
+    LOCKED: 'Bloqueado',
+  };
+
+  private readonly actionLabels: Record<string, string> = {
+    UPDATE_CONTENT: 'Actualización de contenido',
+  };
+
   /** Abre el drawer con el registro indicado (llamable desde el padre vía `viewChild`). */
   openHistory(record: FormRecord): void {
     this.selectedForm.set(record);
     this.sidebarOpen.set(true);
+    this.historyLoading.set(false);
+    this.historyError.set(null);
+  }
+
+  /**
+   * Abre el drawer y muestra estado de carga hasta que el padre llame a `setHistorial` o `setHistoryError`.
+   */
+  beginHistoryLoad(record: FormRecord): void {
+    this.selectedForm.set({ ...record, historial: [] });
+    this.sidebarOpen.set(true);
+    this.historyLoading.set(true);
+    this.historyError.set(null);
+  }
+
+  setHistorial(historial: StatusTransition[]): void {
+    const form = this.selectedForm();
+    if (!form) {
+      return;
+    }
+    this.selectedForm.set({ ...form, historial });
+    this.historyLoading.set(false);
+    this.historyError.set(null);
+  }
+
+  setHistoryError(message: string | null): void {
+    this.historyError.set(message);
+    this.historyLoading.set(false);
   }
 
   closeSidebar(): void {
     this.sidebarOpen.set(false);
+    this.historyLoading.set(false);
+    this.historyError.set(null);
   }
 
   protected onBackdropClick(event: MouseEvent): void {
     if (event.target === event.currentTarget) {
       this.closeSidebar();
     }
+  }
+
+  protected displayState(code: string | null | undefined): string {
+    const c = (code ?? '').trim().toUpperCase();
+    if (!c) {
+      return '—';
+    }
+    return this.stateLabels[c] ?? c.replace(/_/g, ' ');
+  }
+
+  protected stateVariant(code: string | null | undefined): string {
+    const c = (code ?? '').trim().toUpperCase();
+    if (!c) {
+      return 'UNKNOWN';
+    }
+    return c;
+  }
+
+  protected displayAction(action: string): string {
+    return this.actionLabels[action] ?? action.replace(/_/g, ' ');
+  }
+
+  protected actorSummary(actorType: string, actorId: string): string {
+    const type = (actorType || '—').trim();
+    const id = (actorId || '—').trim();
+    if (type === 'SYSTEM') {
+      return `Sistema · ${id}`;
+    }
+    if (type === 'USER') {
+      return id;
+    }
+    return `${type} · ${id}`;
+  }
+
+  protected transitionAria(item: StatusTransition): string {
+    return `Cambio de estado: ${this.displayState(item.oldState)} a ${this.displayState(
+      item.newState
+    )}. ${this.displayAction(item.action)}. ${this.actorSummary(
+      item.actorType,
+      item.actorId
+    )}.`;
   }
 }

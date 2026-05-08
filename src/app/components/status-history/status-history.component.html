@@ -25,6 +25,11 @@
         <span class="col-acciones">Historial</span>
       </div>
 
+      @if (forms().length === 0) {
+        <p class="table__empty" role="status">
+          El historial de estados se consulta desde la lista de negocios del cliente.
+        </p>
+      }
       @for (row of forms(); track row.id) {
         <div class="table__row">
           <div class="col-id">
@@ -118,25 +123,91 @@
           <strong>{{ form.estadoActual }}</strong>
         </p>
 
+        @if (historyLoading()) {
+          <div class="drawer__loading" aria-busy="true" aria-live="polite">
+            <p class="drawer__loading-text">Cargando historial…</p>
+            <div class="skeleton-stack">
+              @for (s of [1, 2, 3]; track s) {
+              <div class="skeleton-card">
+                <div class="skeleton skeleton--line skeleton--short"></div>
+                <div class="skeleton skeleton--badges"></div>
+                <div class="skeleton skeleton--line"></div>
+                <div class="skeleton skeleton--line skeleton--medium"></div>
+              </div>
+              }
+            </div>
+          </div>
+        } @else if (historyError()) {
+          <div class="drawer__error" role="alert">
+            <p class="drawer__error-title">No se pudo cargar el historial</p>
+            <p class="drawer__error-msg">{{ historyError() }}</p>
+          </div>
+        } @else if (historialOrdenado().length === 0) {
+          <div class="drawer__empty" role="status">
+            <p class="drawer__empty-title">Sin movimientos todavía</p>
+            <p class="drawer__empty-hint">
+              Cuando haya cambios de estado en el negocio, aparecerán aquí en orden cronológico.
+            </p>
+          </div>
+        } @else {
         <ol class="timeline" aria-label="Cambios de estado">
           @for (item of historialOrdenado(); track item.id) {
             <li class="timeline__item">
               <div class="timeline__card">
-                <div class="timeline__row timeline__row--top">
-                  <span class="timeline__id">{{ item.id }}</span>
-                  <span class="timeline__badge">{{ item.estado }}</span>
+                <div class="timeline__row timeline__row--meta">
+                  <span class="timeline__id">#{{ item.id }}</span>
+                  <span class="timeline__action">{{
+                    displayAction(item.action)
+                  }}</span>
                 </div>
+
+                <div
+                  class="transition-flow"
+                  role="group"
+                  [attr.aria-label]="transitionAria(item)"
+                >
+                  <span
+                    class="status"
+                    [attr.data-variant]="stateVariant(item.oldState)"
+                  >
+                    {{ displayState(item.oldState) }}
+                  </span>
+                  <span class="transition-flow__arrow" aria-hidden="true">
+                    <svg
+                      class="transition-flow__arrow-svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M5 12h14" />
+                      <path d="m12 5 7 7-7 7" />
+                    </svg>
+                  </span>
+                  <span
+                    class="status"
+                    [attr.data-variant]="stateVariant(item.newState)"
+                  >
+                    {{ displayState(item.newState) }}
+                  </span>
+                </div>
+
                 <time
                   class="timeline__time"
                   [attr.datetime]="item.fecha.toISOString()"
                 >
                   {{ item.fecha | date: 'dd/MM/yyyy, HH:mm' }}
                 </time>
-                <p class="timeline__user">{{ item.usuario }}</p>
+                <p class="timeline__actor">
+                  {{ actorSummary(item.actorType, item.actorId) }}
+                </p>
               </div>
             </li>
           }
         </ol>
+        }
       }
     </div>
   </aside>

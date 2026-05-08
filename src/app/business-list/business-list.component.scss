@@ -342,55 +342,7 @@ h2 {
   color: #0ea5e9;
 }
 
-.status {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.45rem 1rem;
-  border-radius: 999px;
-  font-weight: 600;
-  font-size: 0.85rem;
-  background: #eef2ff;
-  color: #1f2937;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  max-width: 100%;
-  text-align: center;
-  line-height: 1.1;
-  white-space: normal;
-  word-break: break-word;
-}
-
-.status[data-variant='IN_PROGRESS'] {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.status[data-variant='PENDING'] {
-  background: #e5e7eb;
-  color: #4b5563;
-}
-
-.status[data-variant='COMPLETED'] {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.status[data-variant='CONTENT_IN_CREATION'] {
-  background: #ffedd5;
-  color: #9a3412;
-}
-
-.status[data-variant='DRAFT'] {
-  background: #e2e8f0;
-  color: #475569;
-}
-
-.status[data-variant='LOCKED'] {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-/* Misma cromía que .status; affordance de clic sin cambiar tokens por variante */
+/* Variantes globales en src/styles/status-badges.scss */
 .status.status--interactive {
   cursor: pointer;
   font: inherit;

@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { EMPTY, map, Observable, of, switchMap, tap, catchError, finalize } from 'rxjs';
@@ -13,8 +14,8 @@ import { ClientNotFoundComponent } from '../components/client-not-found/client-n
 import { BusinessEmptyStateComponent } from '../components/business-empty-state/business-empty-state.component';
 import {
   FormRecord,
-  StatusHistory,
   StatusHistoryComponent,
+  transitionsFromAudit,
 } from '../components/status-history/status-history.component';
 import { decodeJwtPayload } from '../utils/jwt.utils';
 
@@ -89,33 +90,61 @@ export class BusinessListComponent {
   }
 
   /**
-   * Abre el panel de historial de estados para un negocio (datos mínimos hasta tener API de auditoría).
+   * Abre el panel de historial y carga las transiciones desde el API de auditoría.
    */
   openBusinessStatusHistory(business: BusinessInterface): void {
-    this.historyDrawer()?.openHistory(this.businessToFormRecord(business));
+    const drawer = this.historyDrawer();
+    if (!drawer) {
+      return;
+    }
+    const businessId = business.businessId;
+    if (businessId == null) {
+      drawer.beginHistoryLoad(this.businessToFormRecordSkeleton(business));
+      drawer.setHistoryError('No hay identificador de negocio para consultar el historial.');
+      return;
+    }
+
+    drawer.beginHistoryLoad(this.businessToFormRecordSkeleton(business));
+    this.businessService
+      .getBusinessStateAuditHistory(businessId)
+      .pipe(
+        catchError((err: unknown) => {
+          drawer.setHistoryError(this.formatHistoryAuditError(err));
+          return EMPTY;
+        })
+      )
+      .subscribe((entries) => {
+        drawer.setHistorial(transitionsFromAudit(entries));
+      });
   }
 
-  private businessToFormRecord(business: BusinessInterface): FormRecord {
+  private businessToFormRecordSkeleton(business: BusinessInterface): FormRecord {
     const id = String(business.businessId ?? '');
     const nombre = business.commercialName?.trim() || 'Sin nombre';
     const estadoActual = this.statusLabel(this.getBusinessStatus(business));
-    const raw = this.getBusinessStatus(business);
-    const fromApi = business.lastUpdate
-      ? new Date(business.lastUpdate)
-      : null;
-    const fecha =
-      fromApi && !Number.isNaN(fromApi.getTime()) ? fromApi : new Date();
+    return { id, nombre, estadoActual, historial: [] };
+  }
 
-    const historial: StatusHistory[] = [
-      {
-        id: `${id}-snapshot`,
-        estado: estadoActual,
-        fecha,
-        usuario: raw ? 'Registro actual (API)' : '—',
-      },
-    ];
-
-    return { id, nombre, estadoActual, historial };
+  private formatHistoryAuditError(err: unknown): string {
+    if (err instanceof HttpErrorResponse) {
+      if (err.status === 0) {
+        return 'No se pudo conectar al servidor. Revisa tu red o intenta más tarde.';
+      }
+      const body = err.error;
+      if (typeof body === 'string' && body.trim()) {
+        return body;
+      }
+      if (
+        body &&
+        typeof body === 'object' &&
+        'message' in body &&
+        typeof (body as { message?: unknown }).message === 'string'
+      ) {
+        return (body as { message: string }).message;
+      }
+      return `El servidor respondió con error (${err.status}).`;
+    }
+    return 'Ocurrió un error al cargar el historial.';
   }
 
   retry(): void {
