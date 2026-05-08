@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, mergeMap, of } from 'rxjs';
+import { Observable, mergeMap, map, of } from 'rxjs';
 import { ClientData } from '../models/business.model';
 import { BusinessForm } from '../models/form-schema.model';
 import { environment } from '../../environments/environment';
@@ -15,6 +15,7 @@ import { ContactBlockResponse } from '../Interfaces/business/response/business.i
 import { BusinessVersionStateResponse } from '../Interfaces/business/response/business-version-state.response';
 import { BusinessVersionDetailResponse } from '../Interfaces/business/response/business-version-detail.response';
 import { UploadFilesPayload } from '../Interfaces/business/request/upload-files.request';
+import { BusinessStatusAuditEntry } from '../Interfaces/business/response/business-status-audit.response';
 
 export type DomainCheckResponse =
   | string
@@ -41,6 +42,35 @@ export class BusinessService {
     private authHeader: AuthHeaderService
   ) { }
 
+
+  /**
+   * GET /api/v1/logs/audit/business/{businessId}/history-state
+   * Historial de transiciones de estado del negocio.
+   */
+  getBusinessStateAuditHistory(
+    businessId: string | number
+  ): Observable<BusinessStatusAuditEntry[]> {
+    const url = `${this.baseUrl}/logs/audit/business/${businessId}/history-state`;
+    return this.http.get<unknown>(url, { headers: this.authHeader.build() }).pipe(
+      map((body) => this.normalizeStateAuditHistoryBody(body))
+    );
+  }
+
+  private normalizeStateAuditHistoryBody(body: unknown): BusinessStatusAuditEntry[] {
+    if (Array.isArray(body)) {
+      return body as BusinessStatusAuditEntry[];
+    }
+    if (body && typeof body === 'object') {
+      const o = body as Record<string, unknown>;
+      for (const key of ['data', 'items', 'history', 'result'] as const) {
+        const v = o[key];
+        if (Array.isArray(v)) {
+          return v as BusinessStatusAuditEntry[];
+        }
+      }
+    }
+    return [];
+  }
 
   getLegacy(businessId: string | number): Observable<LegacyBusinessResponse> {
     const url = `${this.baseUrl}/legacy-advertisers/${businessId}/businesses`;

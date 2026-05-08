@@ -290,6 +290,29 @@ h2 {
   text-align: right;
 }
 
+.col-estado-head {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+  line-height: 1.2;
+}
+
+.col-estado-head__title {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #9ca3af;
+}
+
+.col-estado-head__hint {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #60a5fa;
+}
+
 .title {
   margin: 0;
   font-weight: 700;
@@ -319,52 +342,33 @@ h2 {
   color: #0ea5e9;
 }
 
-.status {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.45rem 1rem;
-  border-radius: 999px;
+/* Variantes globales en src/styles/status-badges.scss */
+.status.status--interactive {
+  cursor: pointer;
+  font: inherit;
   font-weight: 600;
   font-size: 0.85rem;
-  background: #eef2ff;
-  color: #1f2937;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  max-width: 100%;
-  text-align: center;
-  line-height: 1.1;
-  white-space: normal;
-  word-break: break-word;
+  font-family: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
-.status[data-variant='IN_PROGRESS'] {
-  background: #fef3c7;
-  color: #92400e;
+.status.status--interactive:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.1);
 }
 
-.status[data-variant='PENDING'] {
-  background: #e5e7eb;
-  color: #4b5563;
+.status.status--interactive:focus-visible {
+  outline: 2px solid #22d3ee;
+  outline-offset: 2px;
 }
 
-.status[data-variant='COMPLETED'] {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.status[data-variant='CONTENT_IN_CREATION'] {
-  background: #ffedd5;
-  color: #9a3412;
-}
-
-.status[data-variant='DRAFT'] {
-  background: #e2e8f0;
-  color: #475569;
-}
-
-.status[data-variant='LOCKED'] {
-  background: #fee2e2;
-  color: #991b1b;
+.status.status--interactive:active {
+  transform: translateY(0);
 }
 
 .btn {
@@ -404,6 +408,15 @@ h2 {
 .btn:focus-visible {
   outline: 2px solid #22d3ee;
   outline-offset: 2px;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
 }
 
 @media (max-width: 720px) {
@@ -449,7 +462,13 @@ h2 {
   justify-content: flex-end;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0.45rem;
+  gap: 0.35rem;
+}
+
+.table__row .actions-col .action-buttons {
+  width: 100%;
+  max-width: 100%;
+  justify-content: flex-end;
 }
 
 .table__header .actions-col {
@@ -633,6 +652,10 @@ h2 {
   .actions-col {
     justify-content: flex-start;
     align-items: flex-start;
+  }
+
+  .actions-col .action-buttons {
+    justify-content: flex-start;
   }
 
   .cell-label {

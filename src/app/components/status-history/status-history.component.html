@@ -1,0 +1,214 @@
+@if (!embedded()) {
+<section class="page">
+  <header class="page__header">
+    <div class="page__headline">
+      <p class="eyebrow">Trazabilidad</p>
+      <h1 class="business-name">Formularios</h1>
+      <p class="meta">
+        Consulta el estado actual y abre el historial desde cada fila.
+      </p>
+    </div>
+  </header>
+
+  <div class="card">
+    <div class="card__head">
+      <div>
+        <h2>Registros</h2>
+      </div>
+    </div>
+
+    <div class="table table--history" role="region" aria-label="Listado de formularios">
+      <div class="table__header">
+        <span>ID</span>
+        <span>Nombre</span>
+        <span>Estado actual</span>
+        <span class="col-acciones">Historial</span>
+      </div>
+
+      @if (forms().length === 0) {
+        <p class="table__empty" role="status">
+          El historial de estados se consulta desde la lista de negocios del cliente.
+        </p>
+      }
+      @for (row of forms(); track row.id) {
+        <div class="table__row">
+          <div class="col-id">
+            <span class="cell-label">ID</span>
+            <p class="code row-id">{{ row.id }}</p>
+          </div>
+
+          <div class="col-nombre">
+            <span class="cell-label">Nombre</span>
+            <p class="title">{{ row.nombre }}</p>
+          </div>
+
+          <div class="col-estado">
+            <span class="cell-label">Estado actual</span>
+            <span class="status">{{ row.estadoActual }}</span>
+          </div>
+
+          <div class="actions-col col-acciones">
+            <span class="cell-label">Historial</span>
+            <button
+              type="button"
+              class="btn btn--icon"
+              [attr.aria-label]="'Ver historial de estados de ' + row.nombre"
+              (click)="openHistory(row)"
+            >
+              <svg
+                class="btn__icon-svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                <path d="M3 3v5h5" />
+                <path d="M12 7v5l4 2" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+}
+
+@if (sidebarOpen()) {
+  <div
+    class="drawer-backdrop"
+    @backdropFade
+    (click)="onBackdropClick($event)"
+    role="presentation"
+  ></div>
+}
+
+@if (sidebarOpen()) {
+  <aside
+    class="drawer"
+    @sidebarSlide
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-labelledby]="selectedForm() ? 'drawer-heading' : null"
+  >
+    <header class="drawer__header">
+      <div>
+        @if (selectedForm(); as form) {
+          <h2 id="drawer-heading" class="drawer__title">Historial de estados</h2>
+          <p class="drawer__subtitle">
+            <span class="code drawer__code">{{ form.id }}</span>
+            <span class="drawer__dot" aria-hidden="true">·</span>
+            <span>{{ form.nombre }}</span>
+          </p>
+        }
+      </div>
+      <button
+        type="button"
+        class="drawer__close"
+        aria-label="Cerrar panel de historial"
+        (click)="closeSidebar()"
+      >
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </header>
+
+    <div class="drawer__body">
+      @if (selectedForm(); as form) {
+        <p class="drawer__current">
+          Estado actual:
+          <strong>{{ form.estadoActual }}</strong>
+        </p>
+
+        @if (historyLoading()) {
+          <div class="drawer__loading" aria-busy="true" aria-live="polite">
+            <p class="drawer__loading-text">Cargando historial…</p>
+            <div class="skeleton-stack">
+              @for (s of [1, 2, 3]; track s) {
+              <div class="skeleton-card">
+                <div class="skeleton skeleton--line skeleton--short"></div>
+                <div class="skeleton skeleton--badges"></div>
+                <div class="skeleton skeleton--line"></div>
+                <div class="skeleton skeleton--line skeleton--medium"></div>
+              </div>
+              }
+            </div>
+          </div>
+        } @else if (historyError()) {
+          <div class="drawer__error" role="alert">
+            <p class="drawer__error-title">No se pudo cargar el historial</p>
+            <p class="drawer__error-msg">{{ historyError() }}</p>
+          </div>
+        } @else if (historialOrdenado().length === 0) {
+          <div class="drawer__empty" role="status">
+            <p class="drawer__empty-title">Sin movimientos todavía</p>
+            <p class="drawer__empty-hint">
+              Cuando haya cambios de estado en el negocio, aparecerán aquí en orden cronológico.
+            </p>
+          </div>
+        } @else {
+        <ol class="timeline" aria-label="Cambios de estado">
+          @for (item of historialOrdenado(); track item.id) {
+            <li class="timeline__item">
+              <div class="timeline__card">
+                <div class="timeline__row timeline__row--meta">
+                  <span class="timeline__id">#{{ item.id }}</span>
+                  <span class="timeline__action">{{
+                    displayAction(item.action)
+                  }}</span>
+                </div>
+
+                <div
+                  class="transition-flow"
+                  role="group"
+                  [attr.aria-label]="transitionAria(item)"
+                >
+                  <span
+                    class="status"
+                    [attr.data-variant]="stateVariant(item.oldState)"
+                  >
+                    {{ displayState(item.oldState) }}
+                  </span>
+                  <span class="transition-flow__arrow" aria-hidden="true">
+                    <svg
+                      class="transition-flow__arrow-svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M5 12h14" />
+                      <path d="m12 5 7 7-7 7" />
+                    </svg>
+                  </span>
+                  <span
+                    class="status"
+                    [attr.data-variant]="stateVariant(item.newState)"
+                  >
+                    {{ displayState(item.newState) }}
+                  </span>
+                </div>
+
+                <time
+                  class="timeline__time"
+                  [attr.datetime]="item.fecha.toISOString()"
+                >
+                  {{ item.fecha | date: 'dd/MM/yyyy, HH:mm' }}
+                </time>
+                <p class="timeline__actor">
+                  {{ actorSummary(item.actorType, item.actorId) }}
+                </p>
+              </div>
+            </li>
+          }
+        </ol>
+        }
+      }
+    </div>
+  </aside>
+}

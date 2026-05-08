@@ -6,11 +6,13 @@ import { UnauthorizedComponent } from './unauthorized/unauthorized.component';
 import { OtpCallbackComponent } from './otp-callback/otp-callback.component';
 import { otpCallbackResolver } from './resolvers/otp-callback.resolver';
 import { AddressPlaygroundComponent } from './playground/address-playground/address-playground.component';
+import { StatusHistoryComponent } from './components/status-history/status-history.component';
 
 export const routes: Routes = [
   { path: 'unauthorized', component: UnauthorizedComponent },
   { path: 'otp/callback', component: OtpCallbackComponent, resolve: { otpRedeem: otpCallbackResolver } },
   { path: 'playground/direccion', component: AddressPlaygroundComponent },
+  { path: 'playground/historial-estados', component: StatusHistoryComponent },
   { path: ':idClient/:businessId', component: BusinessFormComponent, resolve: { authReady: authByTokenResolver } },
   { path: ':idClient', component: BusinessListComponent, resolve: { authReady: authByTokenResolver } }
 ];

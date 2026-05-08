@@ -72,7 +72,12 @@
         <span class="col-negocio">Negocio</span>
         <span class="col-categoria">Categoría</span>
         <span class="col-poblacion">Población</span>
-        <span class="col-estado">Estado</span>
+        <span class="col-estado">
+          <span class="col-estado-head">
+            <span class="col-estado-head__title">Estado</span>
+            <span class="col-estado-head__hint">Clic · historial</span>
+          </span>
+        </span>
         <!-- <span>Última actualización</span> -->
         <span class="actions-col col-acciones">Acciones</span>
       </div>
@@ -98,9 +103,16 @@
 
         <div class="col-estado">
           <span class="cell-label">Estado</span>
-          <span class="status" [attr.data-variant]="statusVariant(business?.state)">
+          <button
+            type="button"
+            class="status status--interactive"
+            [attr.data-variant]="statusVariant(business?.state)"
+            [attr.aria-label]="'Ver historial de estados: ' + (business?.commercialName || 'negocio')"
+            title="Ver historial de estados"
+            (click)="openBusinessStatusHistory($any(business))"
+          >
             {{ statusLabel(business.state) }}
-          </span>
+          </button>
         </div>
 
         <!-- <div>
@@ -110,10 +122,12 @@
 
         <div class="actions-col col-acciones">
           <span class="cell-label">Acciones</span>
-          <button type="button" class="btn"
-            (click)="goToForm((clientId ?? clientData.legacyAdvertiserId) ?? '', $any(business), '')">
-            Ver formulario
-          </button>
+          <div class="action-buttons">
+            <button type="button" class="btn"
+              (click)="goToForm((clientId ?? clientData.legacyAdvertiserId) ?? '', $any(business), '')">
+              Ver formulario
+            </button>
+          </div>
         </div>
       </div>
       }
@@ -153,8 +167,9 @@
       </div>
       }
     </div>
-  </div>
+    </div>
   }
+  <app-status-history [embedded]="true" />
 </section>
 } @else if (errorCode === 'CLIENT_NOT_FOUND') {
 <section class="page page--centered hero-style">

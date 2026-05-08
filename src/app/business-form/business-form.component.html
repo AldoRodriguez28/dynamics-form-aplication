@@ -62,12 +62,11 @@
       <span
         class="status"
         [attr.data-variant]="statusVariant(schema.status)"
-        [ngClass]="badgeClasses(schema.status)"
       >
         {{ statusLabel(schema.status) }}
       </span>
       } @else {
-      <span class="status" data-variant="DRAFT" [ngClass]="badgeClasses('DRAFT')">Borrador</span>
+      <span class="status" data-variant="DRAFT">Borrador</span>
       }
     </div>
   </header>

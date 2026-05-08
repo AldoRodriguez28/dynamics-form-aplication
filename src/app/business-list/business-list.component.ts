@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, inject, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { EMPTY, map, Observable, of, switchMap, tap, catchError, finalize } from 'rxjs';
 import { Business } from '../models/business.model';
@@ -11,16 +12,28 @@ import { BusinessMapping } from '../mapping/business/business.map';
 import { LegacyBusinessInterface } from '../Interfaces/business/response/legacy-business.interface';
 import { ClientNotFoundComponent } from '../components/client-not-found/client-not-found.component';
 import { BusinessEmptyStateComponent } from '../components/business-empty-state/business-empty-state.component';
+import {
+  FormRecord,
+  StatusHistoryComponent,
+  transitionsFromAudit,
+} from '../components/status-history/status-history.component';
 import { decodeJwtPayload } from '../utils/jwt.utils';
 
 @Component({
   selector: 'app-business-list',
   standalone: true,
-  imports: [CommonModule, ClientNotFoundComponent, BusinessEmptyStateComponent],
+  imports: [
+    CommonModule,
+    ClientNotFoundComponent,
+    BusinessEmptyStateComponent,
+    StatusHistoryComponent,
+  ],
   templateUrl: './business-list.component.html',
   styleUrl: './business-list.component.scss'
 })
 export class BusinessListComponent {
+  private readonly historyDrawer = viewChild(StatusHistoryComponent);
+
   private readonly route = inject(ActivatedRoute);
   private readonly businessService = inject(BusinessService);
   private readonly router = inject(Router);
@@ -74,6 +87,64 @@ export class BusinessListComponent {
 
   goHome(): void {
     this.router.navigateByUrl('/');
+  }
+
+  /**
+   * Abre el panel de historial y carga las transiciones desde el API de auditoría.
+   */
+  openBusinessStatusHistory(business: BusinessInterface): void {
+    const drawer = this.historyDrawer();
+    if (!drawer) {
+      return;
+    }
+    const businessId = business.businessId;
+    if (businessId == null) {
+      drawer.beginHistoryLoad(this.businessToFormRecordSkeleton(business));
+      drawer.setHistoryError('No hay identificador de negocio para consultar el historial.');
+      return;
+    }
+
+    drawer.beginHistoryLoad(this.businessToFormRecordSkeleton(business));
+    this.businessService
+      .getBusinessStateAuditHistory(businessId)
+      .pipe(
+        catchError((err: unknown) => {
+          drawer.setHistoryError(this.formatHistoryAuditError(err));
+          return EMPTY;
+        })
+      )
+      .subscribe((entries) => {
+        drawer.setHistorial(transitionsFromAudit(entries));
+      });
+  }
+
+  private businessToFormRecordSkeleton(business: BusinessInterface): FormRecord {
+    const id = String(business.businessId ?? '');
+    const nombre = business.commercialName?.trim() || 'Sin nombre';
+    const estadoActual = this.statusLabel(this.getBusinessStatus(business));
+    return { id, nombre, estadoActual, historial: [] };
+  }
+
+  private formatHistoryAuditError(err: unknown): string {
+    if (err instanceof HttpErrorResponse) {
+      if (err.status === 0) {
+        return 'No se pudo conectar al servidor. Revisa tu red o intenta más tarde.';
+      }
+      const body = err.error;
+      if (typeof body === 'string' && body.trim()) {
+        return body;
+      }
+      if (
+        body &&
+        typeof body === 'object' &&
+        'message' in body &&
+        typeof (body as { message?: unknown }).message === 'string'
+      ) {
+        return (body as { message: string }).message;
+      }
+      return `El servidor respondió con error (${err.status}).`;
+    }
+    return 'Ocurrió un error al cargar el historial.';
   }
 
   retry(): void {

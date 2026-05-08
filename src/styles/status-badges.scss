@@ -1,0 +1,71 @@
+/**
+ * Badge de estado de negocio — fuente única de verdad para lista, formulario e historial.
+ * Usar: class="status" + [attr.data-variant]="'DRAFT' | 'IN_PROGRESS' | …"
+ */
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  line-height: 1.1;
+  background: #eef2ff;
+  color: #1f2937;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  max-width: 100%;
+  text-align: center;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.status[data-variant='IN_PROGRESS'] {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: rgba(146, 64, 14, 0.12);
+}
+
+.status[data-variant='PENDING'] {
+  background: #e5e7eb;
+  color: #4b5563;
+  border-color: rgba(75, 85, 99, 0.12);
+}
+
+.status[data-variant='COMPLETED'] {
+  background: #dcfce7;
+  color: #166534;
+  border-color: rgba(22, 101, 52, 0.12);
+}
+
+.status[data-variant='CONTENT_IN_CREATION'],
+.status[data-variant='CONTENT_IN_CREATTION'] {
+  background: #ffedd5;
+  color: #9a3412;
+  border-color: rgba(154, 52, 18, 0.12);
+}
+
+.status[data-variant='DRAFT'] {
+  background: #e2e8f0;
+  color: #475569;
+  border-color: rgba(71, 85, 105, 0.12);
+}
+
+.status[data-variant='LOCKED'] {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: rgba(153, 27, 27, 0.12);
+}
+
+.status[data-variant='READY'] {
+  background: #dcfce7;
+  color: #15803d;
+  border-color: rgba(22, 101, 52, 0.15);
+}
+
+.status[data-variant='UNKNOWN'] {
+  background: #f1f5f9;
+  color: #475569;
+  border-color: rgba(71, 85, 105, 0.1);
+}
