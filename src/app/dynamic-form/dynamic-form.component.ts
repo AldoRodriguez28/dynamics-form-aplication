@@ -92,6 +92,10 @@ export class DynamicFormComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['schema']?.currentValue) {
       this.setupForm();
+      return;
+    }
+    if (this.schema?.blocks?.length && (changes['readOnly'] || changes['userRole'])) {
+      this.setupForm();
     }
   }
 
