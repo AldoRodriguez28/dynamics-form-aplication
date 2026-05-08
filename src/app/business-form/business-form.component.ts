@@ -11,6 +11,7 @@ import { BusinessMapping } from '../mapping/business/business.map';
 import { TokenStorageService } from '../services/shared/token-storage.service';
 import { ExternalData } from '../models/external-data.model';
 import { coerceExternalValue, parseExternalData } from '../utils/external-data.utils';
+import { isReadOnlyForSharedWithClientState } from '../utils/role.utils';
 
 @Component({
   selector: 'app-business-form',
@@ -78,6 +79,9 @@ export class BusinessFormComponent {
         return 'Ready';
       case 'locked':
         return 'Locked';
+      case 'shared_with_client':
+      case 'sharedwithclient':
+        return 'Shared with client';
       default:
         return status?.toString() || 'Draft';
     }
@@ -87,6 +91,15 @@ export class BusinessFormComponent {
     const raw = (status ?? 'DRAFT').toString().trim();
     if (!raw) return 'DRAFT';
     return raw.toUpperCase().replace(/[\s-]+/g, '_');
+  }
+
+  /**
+   * Restricción **adicional** al `[readOnly]` del dynamic-form: únicamente cuando el estado
+   * es SHARED_WITH_CLIENT y el usuario no es CLIENT. No sustituye `canEdit`, `readOnlyRoles`
+   * ni el resto de validaciones del formulario dinámico.
+   */
+  extraReadOnlySharedWithClient(schema: BusinessForm): boolean {
+    return isReadOnlyForSharedWithClientState(schema.status, this.userRole);
   }
 
   handleSubmit(payload: SaveBlocksRequest): void {

@@ -115,6 +115,7 @@ export class StatusHistoryComponent {
     PENDING: 'Pendiente',
     COMPLETED: 'Completado',
     LOCKED: 'Bloqueado',
+    SHARED_WITH_CLIENT: 'Compartido con cliente',
   };
 
   private readonly actionLabels: Record<string, string> = {

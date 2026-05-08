@@ -64,6 +64,12 @@
   border-color: rgba(22, 101, 52, 0.15);
 }
 
+.status[data-variant='SHARED_WITH_CLIENT'] {
+  background: #e0f2fe;
+  color: #0369a1;
+  border-color: rgba(3, 105, 161, 0.18);
+}
+
 .status[data-variant='UNKNOWN'] {
   background: #f1f5f9;
   color: #475569;
