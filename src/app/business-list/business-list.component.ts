@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { EMPTY, map, Observable, of, switchMap, tap, catchError, finalize } from 'rxjs';
+import { EMPTY, catchError, finalize, map, Observable, of, switchMap, take, tap } from 'rxjs';
 import { Business } from '../models/business.model';
 import { BusinessService } from '../services/business.service';
 import { BusinessInterface, ContactBlockResponse } from '../Interfaces/business/response/business.interface';
@@ -229,9 +229,14 @@ export class BusinessListComponent {
             return;
           }
           this.shareUrl = shareUrl;
-          clientData.businesses?.forEach((business) => {
-            this.setBusinessState(business, this.extractState(response) ?? 'LOCKED');
-          });
+          const state = this.extractState(response);
+          if (state) {
+            clientData.businesses?.forEach((business) => {
+              this.setBusinessState(business, state);
+            });
+          } else {
+            this.refreshBusinessStatesAfterShare(clientData);
+          }
         },
         error: (error) => {
           console.error('Error al crear URL de compartición', error);
@@ -494,15 +499,64 @@ export class BusinessListComponent {
     return response.url ?? response.shareUrl ?? response.link ?? null;
   }
 
+  /**
+   * Estado devuelto por el API (objeto o cuerpo text que sea JSON con state/status).
+   * No usar fallback local: si no viene estado, se debe refrescar con getLegacy.
+   */
   private extractState(
     response: string | { state?: string; status?: string } | boolean | null | undefined
   ): string | null {
-    if (!response || typeof response === 'string' || typeof response === 'boolean') return null;
+    if (!response || typeof response === 'boolean') return null;
+    if (typeof response === 'string') {
+      const trimmed = response.trim();
+      if (!trimmed) return null;
+      if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+        try {
+          const parsed = JSON.parse(trimmed) as { state?: string; status?: string };
+          return parsed.state ?? parsed.status ?? null;
+        } catch {
+          return null;
+        }
+      }
+      return null;
+    }
     return response.state ?? response.status ?? null;
   }
 
   private setBusinessState(business: BusinessInterface, state: string): void {
     (business as any).state = state;
+  }
+
+  /**
+   * Si la respuesta de compartir no incluye `state`, sincroniza estados con getLegacy
+   * sin cerrar el modal ni sustituir el observable (paramMap no re-emite).
+   */
+  private refreshBusinessStatesAfterShare(clientData: LegacyBusinessInterface): void {
+    const id = this.clientId ?? clientData.legacyAdvertiserId;
+    const rows = clientData.businesses;
+    if (id == null || !rows?.length) return;
+
+    this.businessService
+      .getLegacy(id)
+      .pipe(
+        map(BusinessMapping.MapLegacyResponseToLegacyInterface),
+        take(1),
+        catchError(() => of(null))
+      )
+      .subscribe((fresh) => {
+        if (!fresh?.businesses?.length) return;
+        const byId = new Map(fresh.businesses.map((b) => [b.businessId, b] as const));
+        for (const row of rows) {
+          const key = row.businessId;
+          if (key == null) continue;
+          const upd = byId.get(key);
+          if (!upd) continue;
+          const s = this.getBusinessStatus(upd);
+          if (s != null && String(s).length > 0) {
+            this.setBusinessState(row, s);
+          }
+        }
+      });
   }
 
   private async copyToClipboard(text: string): Promise<boolean> {
