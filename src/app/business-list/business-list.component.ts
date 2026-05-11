@@ -18,6 +18,7 @@ import {
   transitionsFromAudit,
 } from '../components/status-history/status-history.component';
 import { decodeJwtPayload } from '../utils/jwt.utils';
+import { FORM_STATUS_SHARED_WITH_CLIENT } from '../utils/role.utils';
 
 @Component({
   selector: 'app-business-list',
@@ -175,12 +176,16 @@ export class BusinessListComponent {
     return list.some((business) => this.canShare(business));
   }
 
+  /**
+   * Negocios que se pueden desbloquear/revocar el compartido.
+   * Incluye LOCKED (valor optimista al compartir) y SHARED_WITH_CLIENT (estado real que suele devolver el API).
+   */
   canUnlock(business: BusinessInterface | null | undefined): boolean {
     if (!business) return false;
     const role = this.normalizeRole(this.userRole);
     if (!['CAC', 'IC_EDITOR', 'IC_OPERATOR'].includes(role)) return false;
     const status = this.normalizeStatus(this.getBusinessStatus(business));
-    return status === 'LOCKED';
+    return status === 'LOCKED' || status === FORM_STATUS_SHARED_WITH_CLIENT;
   }
 
   canUnlockList(clientData: LegacyBusinessInterface | null): boolean {
