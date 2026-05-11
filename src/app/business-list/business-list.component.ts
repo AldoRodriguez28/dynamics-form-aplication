@@ -185,7 +185,7 @@ export class BusinessListComponent {
     const role = this.normalizeRole(this.userRole);
     if (!['CAC', 'IC_EDITOR', 'IC_OPERATOR'].includes(role)) return false;
     const status = this.normalizeStatus(this.getBusinessStatus(business));
-    return status === 'LOCKED' || status === FORM_STATUS_SHARED_WITH_CLIENT;
+    return status === FORM_STATUS_SHARED_WITH_CLIENT;
   }
 
   canUnlockList(clientData: LegacyBusinessInterface | null): boolean {
