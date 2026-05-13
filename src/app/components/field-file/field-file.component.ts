@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input, OnDestroy } from '@angular/core';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { FormField } from '../../models/form-schema.model';
 import { BusinessService } from '../../services/business.service';
@@ -22,6 +22,28 @@ export class FieldFileComponent implements OnDestroy {
   uploadError: string | null = null;
   uploadSuccess = false;
 
+  /**
+   * El input type="file" no usa [formControl], así que no recibe ng-invalid en el DOM.
+   * También cubre arrayItemIncomplete en el FormArray padre cuando el ítem está vacío pero el hijo es válido.
+   */
+  get showValidationError(): boolean {
+    if (this.readOnly || !this.control) return false;
+    if (this.control.invalid && this.control.touched) return true;
+    const parent = this.control.parent;
+    if (!(parent instanceof FormArray)) return false;
+    const incomplete = !!parent.errors?.['arrayItemIncomplete'];
+    if (!incomplete) return false;
+    const touched = this.control.touched || parent.touched;
+    if (!touched) return false;
+    return !this.hasFileValue(this.control.value);
+  }
+
+  get validationHint(): string | null {
+    if (!this.showValidationError) return null;
+    if (this.control.hasError('required')) return 'Selecciona un archivo.';
+    return 'Añade un archivo en este ítem.';
+  }
+
   constructor(
     private businessService: BusinessService,
     private route: ActivatedRoute
@@ -34,6 +56,7 @@ export class FieldFileComponent implements OnDestroy {
 
   onFileChange(event: Event): void {
     if (this.readOnly) return;
+    this.control.markAsTouched();
     const target = event.target as HTMLInputElement;
     const file = target?.files?.item(0) ?? null;
     if (!file) {
@@ -181,5 +204,30 @@ export class FieldFileComponent implements OnDestroy {
     const parts = clean.split('/');
     const last = parts[parts.length - 1] || '';
     return last || raw;
+  }
+
+  private hasFileValue(value: unknown): boolean {
+    if (value === null || value === undefined) return false;
+    if (value instanceof File) return true;
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) return false;
+      try {
+        const parsed = JSON.parse(trimmed) as Record<string, unknown>;
+        if (parsed && typeof parsed === 'object') {
+          if (typeof parsed['url'] === 'string' && (parsed['url'] as string).trim() !== '') return true;
+          if (typeof parsed['file_id'] === 'number') return true;
+          return false;
+        }
+      } catch {
+        return trimmed.length > 0;
+      }
+    }
+    if (typeof value === 'object') {
+      const o = value as Record<string, unknown>;
+      if (typeof o['url'] === 'string' && o['url'].toString().trim() !== '') return true;
+      if (typeof o['file_id'] === 'number') return true;
+    }
+    return false;
   }
 }
