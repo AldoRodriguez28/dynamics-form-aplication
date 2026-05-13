@@ -168,6 +168,26 @@ export class BusinessListComponent {
     return ['IN_PROGRESS', 'CONTENT_IN_CREATION', 'DRAFT'].includes(status);
   }
 
+  /**
+   * Muestra el botón Compartir (habilitado o deshabilitado): rol interno y al menos un negocio.
+   */
+  canShowShareButton(clientData: LegacyBusinessInterface | null): boolean {
+    const role = this.normalizeRole(this.userRole);
+    if (!['CAC', 'IC_EDITOR', 'IC_OPERATOR'].includes(role)) return false;
+    const list = clientData?.businesses ?? [];
+    return Array.isArray(list) && list.length > 0;
+  }
+
+  /**
+   * Cabecera con acciones de URL: compartir y/o revocar.
+   */
+  canShowShareHeadActions(clientData: LegacyBusinessInterface | null): boolean {
+    return this.canShowShareButton(clientData) || this.canUnlockList(clientData);
+  }
+
+  /**
+   * True solo si al menos un negocio puede compartirse (p. ej. no todos READY/LOCKED u otros no compartibles).
+   */
   canShareList(clientData: LegacyBusinessInterface | null): boolean {
     const role = this.normalizeRole(this.userRole);
     if (!['CAC', 'IC_EDITOR', 'IC_OPERATOR'].includes(role)) return false;

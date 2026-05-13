@@ -1,4 +1,4 @@
-<div class="fps-card">
+<div class="fps-card" [class.fps-card--error]="showFieldError">
   <div class="fps-head">
     <div>
       <p class="fps-eyebrow">Tags</p>
@@ -21,9 +21,14 @@
     }
   </div>
 
+  @if (fieldErrorHint) {
+  <p class="fps-field-error" role="alert">{{ fieldErrorHint }}</p>
+  }
+
   <div class="fps-input-row">
     <input
       class="fps-input"
+      [class.fps-input--error]="showFieldError"
       type="text"
       [placeholder]="field.placeholder || 'Escribe y presiona agregar...'"
       [(ngModel)]="newTag"

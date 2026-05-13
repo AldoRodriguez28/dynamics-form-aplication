@@ -9,6 +9,19 @@
   gap: 0.75rem;
 }
 
+.fps-card--error {
+  border-color: #ef4444;
+  background: #fef2f2;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12), 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
+.fps-field-error {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #b91c1c;
+}
+
 .fps-head {
   display: flex;
   align-items: center;
@@ -100,6 +113,17 @@
   outline: none;
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.fps-input--error {
+  border-color: #ef4444;
+  background: #fff5f5;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+
+.fps-input--error:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18);
 }
 
 .fps-add {

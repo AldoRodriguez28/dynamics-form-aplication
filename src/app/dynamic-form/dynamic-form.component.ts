@@ -125,16 +125,19 @@ export class DynamicFormComponent implements OnChanges {
       Swal.fire({
         icon: 'warning',
         title: 'Faltan campos obligatorios',
-        html: detail,
+        html: `Debes completar o llenar lo siguiente:<br><br>${detail}`,
         confirmButtonText: 'Entendido'
       });
 
       return;
     }
 
-    if (this.form.valid) {
-      this.submitForm.emit(this.buildPayload());
+    if (!this.form.valid) {
+      this.showInvalidFormSwal('guardar');
+      return;
     }
+
+    this.submitForm.emit(this.buildPayload());
   }
 
   onFinalize(): void {
@@ -151,16 +154,54 @@ export class DynamicFormComponent implements OnChanges {
       Swal.fire({
         icon: 'warning',
         title: 'Faltan campos obligatorios',
-        html: detail,
+        html: `Debes completar o llenar lo siguiente:<br><br>${detail}`,
         confirmButtonText: 'Entendido'
       });
 
       return;
     }
 
-    if (this.form.valid) {
-      this.finalizeForm.emit(this.buildPayload());
+    if (!this.form.valid) {
+      this.showInvalidFormSwal('finalizar');
+      return;
     }
+
+    this.finalizeForm.emit(this.buildPayload());
+  }
+
+  /**
+   * El formulario puede seguir inválido por validadores que no reflejan solo `required` del esquema
+   * (horarios, arrays compuestos, teléfono, etc.): mostrar SweetAlert en lugar de fallar en silencio.
+   */
+  private showInvalidFormSwal(context: 'finalizar' | 'guardar'): void {
+    const formatErrors = this.getFormatErrors(this.form);
+    if (formatErrors.length) {
+      const detail = formatErrors
+        .map((item) => {
+          const label = this.getFieldLabelByPath(item.path) || item.path;
+          return `${label}: ${item.errors.join(', ')}`;
+        })
+        .join('<br>');
+      const intro =
+        context === 'finalizar'
+          ? 'Debes completar o corregir lo siguiente antes de finalizar:'
+          : 'Debes completar o corregir lo siguiente antes de guardar:';
+      Swal.fire({
+        icon: 'warning',
+        title: 'Revisa el formulario',
+        html: `${intro}<br><br>${detail}`,
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
+
+    const verb = context === 'finalizar' ? 'finalizar' : 'guardar los cambios';
+    Swal.fire({
+      icon: 'warning',
+      title: 'Formulario incompleto',
+      text: `Debes completar o llenar todos los campos y secciones obligatorias antes de ${verb}. Revisa los avisos en el formulario.`,
+      confirmButtonText: 'Entendido'
+    });
   }
 
   saveJustOneBlock(block: BlockView, event?: Event): void {

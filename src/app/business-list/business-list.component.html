@@ -33,14 +33,17 @@
       <div>
         <h2>Formularios asignados</h2>
       </div>
-      @if (canShareList(clientData) || canUnlockList(clientData)) {
+      @if (canShowShareHeadActions(clientData)) {
       <div class="card__head-actions">
         <span class="share-label">Compartir URL</span>
         <div class="share-actions">
-          @if (canShareList(clientData)) {
+          @if (canShowShareButton(clientData)) {
           <button type="button" class="btn btn--share-head"
-            [disabled]="isSharingList"
+            [disabled]="!canShareList(clientData) || isSharingList"
             [attr.data-loading]="isSharingList ? 'true' : null"
+            [attr.title]="!canShareList(clientData) && !isSharingList
+              ? 'No hay negocios en estado que permitan compartir (por ejemplo, todos listos o bloqueados).'
+              : null"
             (click)="shareBusinessList(clientData)">
             @if (isSharingList) {
             Generando URL...
@@ -57,7 +60,7 @@
             @if (isUnlockingList) {
             Desbloqueando...
             } @else {
-            Desbloquear
+            Revocar
             }
           </button>
           }
