@@ -1,0 +1,44 @@
+@if (visible) {
+<div class="modal-overlay" (click)="onOverlayClick($event)">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h3 class="modal-title">Copiar información de otro negocio</h3>
+      <button type="button" class="modal-close" (click)="onClose()" aria-label="Cerrar">
+        &times;
+      </button>
+    </div>
+
+    <div class="modal-body">
+      @if (loading) {
+      <div class="modal-loading">
+        <span class="spinner"></span>
+        <p>Cargando negocios...</p>
+      </div>
+      } @else if (filteredBusinesses.length === 0) {
+      <div class="modal-empty">
+        <p>No hay otros negocios disponibles para copiar.</p>
+      </div>
+      } @else {
+      <p class="modal-hint">Selecciona el negocio del cual deseas copiar la información:</p>
+      <ul class="business-list">
+        @for (biz of filteredBusinesses; track biz.businessId) {
+        <li class="business-item" (click)="onSelect(biz)">
+          <div class="business-item__info">
+            <span class="business-item__name">{{ biz.commercialName || 'Sin nombre' }}</span>
+            <span class="business-item__meta">
+              ID: {{ biz.businessId }}
+              @if (biz.categoryName) { · {{ biz.categoryName }} }
+              @if (biz.townName) { · {{ biz.townName }} }
+            </span>
+          </div>
+          <span class="business-item__state badge badge--{{ (biz.state || 'draft') | lowercase }}">
+            {{ biz.state || 'Draft' }}
+          </span>
+        </li>
+        }
+      </ul>
+      }
+    </div>
+  </div>
+</div>
+}

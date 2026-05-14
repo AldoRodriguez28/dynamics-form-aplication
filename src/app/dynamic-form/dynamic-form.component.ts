@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { AbstractControl, FormArray, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { Component, EventEmitter, HostListener, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { canFinalizeForm, getControl, getFieldOptions, optionKey, OptionValue, toggleOption } from '../utils';
 import { SaveBlocksRequest } from '../services/request/save-blocks.request';
 import { PayloadBuilder } from '../utils/payload.builder';
@@ -23,6 +23,7 @@ import {
   FieldTextareaComponent
 } from '../components';
 import { FormSidebarComponent } from '../components/form-sidebar/form-sidebar.component';
+import { CopyBlockModalComponent } from '../components/copy-block-modal/copy-block-modal.component';
 import { collectRequiredFields, findMissingRequiredFields } from '../utils';
 import Swal from 'sweetalert2';
 import { CatalogService } from '../services/catalog.service';
@@ -33,6 +34,8 @@ import { BusinessService } from '../services/business.service';
 import { TokenStorageService } from '../services/shared/token-storage.service';
 import { BlockAccessPolicy } from './services/block-access.policy';
 import { BlockFactoryService, BlockView, FormValueParser } from './services/block-factory.service';
+import { BusinessResponse } from '../services/response/business/business.response';
+import { BusinessMapping } from '../mapping/business/business.map';
 
 @Component({
   selector: 'app-dynamic-form',
@@ -55,7 +58,8 @@ import { BlockFactoryService, BlockView, FormValueParser } from './services/bloc
     FieldPhoneComponent,
     FieldOpeningHoursComponent,
     FieldOpeningHoursFlexibleComponent,
-    FormSidebarComponent
+    FormSidebarComponent,
+    CopyBlockModalComponent
   ],
   templateUrl: './dynamic-form.component.html',
   styleUrl: './dynamic-form.component.scss'
@@ -87,6 +91,482 @@ export class DynamicFormComponent implements OnChanges {
   getControl = getControl;
   get canFinalize(): boolean {
     return canFinalizeForm(this.userRole, this.formStatus ?? this.schema?.status);
+  }
+
+  // --- Copy from business ---
+  openMenuBlockCode: string | null = null;
+  copyModalVisible = false;
+  copyModalLoading = false;
+  copyModalBusinesses: BusinessResponse[] = [];
+  private copyTargetBlockCode: string | null = null;
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.openMenuBlockCode = null;
+  }
+
+  toggleBlockMenu(blockCode: string, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.openMenuBlockCode = this.openMenuBlockCode === blockCode ? null : blockCode;
+  }
+
+  openCopyModal(blockCode: string, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.openMenuBlockCode = null;
+    this.copyTargetBlockCode = blockCode;
+    this.copyModalVisible = true;
+    this.copyModalLoading = true;
+
+    const advertiserId = this.schema?.advertiserId ?? this.tokenStore.getAdvertiserId();
+    console.log('[CopyModal] advertiserId:', advertiserId, '| schema.advertiserId:', this.schema?.advertiserId, '| tokenStore:', this.tokenStore.getAdvertiserId());
+    if (!advertiserId) {
+      this.copyModalLoading = false;
+      return;
+    }
+
+    this.businessService.getLegacy(advertiserId, true).subscribe({
+      next: (res) => {
+        console.log('[CopyModal] getLegacy response:', res);
+        console.log('[CopyModal] businesses count:', res.businesses?.length, '| currentBusinessId:', this.schema?.businessId);
+        this.copyModalBusinesses = res.businesses ?? [];
+        this.copyModalLoading = false;
+      },
+      error: () => {
+        this.copyModalBusinesses = [];
+        this.copyModalLoading = false;
+      }
+    });
+  }
+
+  closeCopyModal(): void {
+    this.copyModalVisible = false;
+    this.copyModalBusinesses = [];
+    this.copyTargetBlockCode = null;
+  }
+
+  onCopyBusinessSelected(business: BusinessResponse): void {
+    if (!business.businessId) return;
+    const versionNumber = business.versionNumber ?? business.businessVersion ?? 1;
+
+    this.copyModalVisible = false;
+
+    Swal.fire({
+      title: 'Cargando información...',
+      text: `Copiando datos de "${business.commercialName || business.businessId}"`,
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    this.businessService.getbusinessesById(business.businessId, versionNumber).subscribe({
+      next: (res) => {
+        const sourceSchema = BusinessMapping.MapBlocksToBusinessForm(res, business.commercialName ?? '');
+        this.applySourceBlocks(sourceSchema);
+        Swal.close();
+        Swal.fire({
+          icon: 'success',
+          title: 'Información copiada',
+          text: 'Los datos se cargaron correctamente. Revisa y guarda los cambios.',
+          timer: 3000,
+          showConfirmButton: false
+        });
+      },
+      error: () => {
+        Swal.close();
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudo cargar la información del negocio seleccionado.'
+        });
+      }
+    });
+  }
+
+  private applySourceBlocks(sourceSchema: BusinessForm): void {
+    if (!sourceSchema.blocks?.length || !this.form) return;
+
+    const targetBlockCode = this.copyTargetBlockCode;
+
+    sourceSchema.blocks.forEach((srcBlock) => {
+      if (targetBlockCode && srcBlock.code !== targetBlockCode) return;
+
+      const formGroup = this.form.get(srcBlock.code) as FormGroup | null;
+      if (!formGroup || formGroup.disabled) return;
+
+      const blockView = this.blocks.find((b) => b.code === srcBlock.code);
+      const values = srcBlock.values ?? {};
+
+      Object.entries(values).forEach(([fieldName, value]) => {
+        const control = formGroup.get(fieldName);
+        if (!control || value === null || value === undefined) return;
+
+        const fieldDef = blockView?.rows
+          .flatMap((r) => r.fields)
+          .find((f) => f.name === fieldName);
+
+        const displayType = fieldDef?.displayType;
+
+        if (displayType === 'file') {
+          this.applyFileValue(control as FormControl, value, fieldDef!, srcBlock.code);
+          return;
+        }
+
+        if (displayType === 'phones' && control instanceof FormArray) {
+          this.applyPhoneArrayValue(control, value, fieldDef!);
+        } else if (displayType === 'array-object' && control instanceof FormArray) {
+          this.applyArrayObjectValue(control, value, fieldDef!);
+        } else if ((displayType === 'array-primitive' || displayType === 'productos-servicios') && control instanceof FormArray) {
+          this.applyPrimitiveArrayValue(control, value, fieldDef!, srcBlock.code);
+        } else if (displayType === 'location-map') {
+          this.applyLocationMapValue(formGroup, fieldName, value, values);
+        } else if (fieldDef?.type === 'tel' && fieldDef?.collection !== 'array') {
+          this.applySingleTelValue(formGroup, fieldName, value);
+        } else {
+          control.setValue(value, { emitEvent: true });
+        }
+
+        control.markAsDirty();
+      });
+    });
+
+    this.copyTargetBlockCode = null;
+  }
+
+  private applyPhoneArrayValue(formArray: FormArray, rawValue: unknown, field: any): void {
+    const items = this.normalizePhoneItems(rawValue, field);
+    formArray.clear({ emitEvent: false });
+    items.forEach((item) => {
+      const group = this.fb.group({
+        ...(item.tipo !== undefined ? { tipo: [item.tipo] } : {}),
+        numero: [item.numero ?? ''],
+        country: [item.country ?? '']
+      });
+      formArray.push(group, { emitEvent: false });
+    });
+    formArray.updateValueAndValidity({ emitEvent: true });
+  }
+
+  private normalizePhoneItems(rawValue: unknown, field: any): Array<{ tipo?: string; numero: string; country: string }> {
+    let items: Record<string, unknown>[] = [];
+
+    if (Array.isArray(rawValue)) {
+      items = rawValue.map((item) => {
+        if (typeof item === 'string') {
+          try {
+            const parsed = JSON.parse(item);
+            if (parsed && typeof parsed === 'object') return parsed;
+          } catch { /* ignore */ }
+          return { numero: item };
+        }
+        if (item && typeof item === 'object') return item as Record<string, unknown>;
+        return { numero: String(item ?? '') };
+      });
+    } else if (typeof rawValue === 'string') {
+      try {
+        const parsed = JSON.parse(rawValue);
+        if (Array.isArray(parsed)) return this.normalizePhoneItems(parsed, field);
+        if (parsed && typeof parsed === 'object') items = [parsed];
+      } catch {
+        items = [{ numero: rawValue }];
+      }
+    } else if (rawValue && typeof rawValue === 'object') {
+      items = [rawValue as Record<string, unknown>];
+    }
+
+    if (!items.length) items = [{}];
+
+    return items.map((item) => ({
+      ...(item['tipo'] !== undefined ? { tipo: String(item['tipo'] ?? '') } : {}),
+      numero: this.extractPhoneNumber(item['numero'] ?? item['number'] ?? ''),
+      country: this.normalizeCountryValue(item['country'])
+    }));
+  }
+
+  private extractPhoneNumber(value: unknown): string {
+    if (!value) return '';
+    if (typeof value === 'number') return String(value);
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (trimmed.startsWith('{')) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (parsed && typeof parsed === 'object') {
+            return String(parsed['number'] ?? parsed['numero'] ?? '');
+          }
+        } catch { /* not JSON, use as-is */ }
+      }
+      return trimmed;
+    }
+    if (typeof value === 'object' && value !== null) {
+      const obj = value as Record<string, unknown>;
+      return String(obj['number'] ?? obj['numero'] ?? '');
+    }
+    return String(value);
+  }
+
+  private normalizeCountryValue(value: unknown): string {
+    const normalized = typeof value === 'string' ? value.replace(/\s+/g, '').toUpperCase() : '';
+    if (normalized === 'US') return 'US';
+    if (normalized === 'MX') return 'MX';
+    return '';
+  }
+
+  private applyArrayObjectValue(formArray: FormArray, rawValue: unknown, field: any): void {
+    let items: Record<string, unknown>[] = [];
+    let parsed: unknown = rawValue;
+
+    if (typeof rawValue === 'string') {
+      try { parsed = JSON.parse(rawValue); } catch { parsed = []; }
+    }
+
+    if (Array.isArray(parsed)) {
+      items = parsed.filter((i) => i && typeof i === 'object') as Record<string, unknown>[];
+    } else if (parsed && typeof parsed === 'object') {
+      items = [parsed as Record<string, unknown>];
+    }
+
+    if (!items.length) return;
+
+    const keys = field.itemKeys ?? Object.keys(items[0]);
+    formArray.clear({ emitEvent: false });
+    items.forEach((item) => {
+      const controls: Record<string, unknown> = {};
+      keys.forEach((key: string) => {
+        controls[key] = [item[key] ?? ''];
+      });
+      formArray.push(this.fb.group(controls), { emitEvent: false });
+    });
+    formArray.updateValueAndValidity({ emitEvent: true });
+  }
+
+  private applyPrimitiveArrayValue(formArray: FormArray, rawValue: unknown, field: any, blockCode?: string): void {
+    let items: unknown[] = [];
+
+    if (Array.isArray(rawValue)) {
+      items = rawValue;
+    } else if (typeof rawValue === 'string') {
+      try {
+        const parsed = JSON.parse(rawValue);
+        if (Array.isArray(parsed)) items = parsed;
+        else items = [rawValue];
+      } catch {
+        items = [rawValue];
+      }
+    } else {
+      items = [rawValue];
+    }
+
+    if (!items.length) return;
+
+    // If this is a file array, download and re-upload each file
+    const isFileArray = field.type === 'file' || field.itemType === 'file';
+    if (isFileArray) {
+      this.applyFileArrayValue(formArray, items, field, blockCode ?? '');
+      return;
+    }
+
+    formArray.clear({ emitEvent: false });
+    items.forEach((val) => {
+      formArray.push(this.fb.control(val ?? ''), { emitEvent: false });
+    });
+    formArray.updateValueAndValidity({ emitEvent: true });
+  }
+
+  private applyFileArrayValue(formArray: FormArray, items: unknown[], field: any, blockCode: string): void {
+    const businessId = this.schema?.businessId;
+    if (!businessId) return;
+
+    formArray.clear({ emitEvent: false });
+    items.forEach(() => {
+      formArray.push(this.fb.control(null), { emitEvent: false });
+    });
+    formArray.updateValueAndValidity({ emitEvent: true });
+
+    items.forEach((item, index) => {
+      const url = this.extractFileUrl(item);
+      if (!url) return;
+
+      fetch(url)
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.blob();
+        })
+        .then((blob) => {
+          const fileName = this.extractFileNameFromUrl(url) || `file-${index}`;
+          const file = new File([blob], fileName, { type: blob.type });
+
+          this.businessService
+            .uploadFiles({
+              files: file,
+              businessId,
+              versionNumber: this.schema?.versionNumber ?? 1,
+              fieldName: field.name,
+              usage: field.usage || '',
+              blockCode
+            })
+            .subscribe({
+              next: (response) => {
+                const payload = this.extractUploadedFilePayload(response);
+                if (payload) {
+                  const ctrl = formArray.at(index);
+                  if (ctrl) {
+                    ctrl.setValue(payload);
+                    ctrl.markAsDirty();
+                  }
+                }
+              },
+              error: () => {
+                console.warn(`[CopyFile] Failed to upload file[${index}] for field "${field.name}"`);
+              }
+            });
+        })
+        .catch(() => {
+          console.warn(`[CopyFile] Failed to download file[${index}] from "${url}" for field "${field.name}"`);
+        });
+    });
+  }
+
+  private applyLocationMapValue(
+    formGroup: FormGroup,
+    fieldName: string,
+    coordsValue: unknown,
+    allValues: Record<string, unknown>
+  ): void {
+    const coordsControl = formGroup.get(fieldName);
+    if (coordsControl) {
+      coordsControl.setValue(typeof coordsValue === 'string' ? coordsValue : '', { emitEvent: true });
+      coordsControl.markAsDirty();
+    }
+    const addressControl = formGroup.get('direccion');
+    if (addressControl && allValues['direccion'] !== undefined) {
+      addressControl.setValue(allValues['direccion'] ?? '', { emitEvent: true });
+      addressControl.markAsDirty();
+    }
+  }
+
+  private applySingleTelValue(formGroup: FormGroup, fieldName: string, rawValue: unknown): void {
+    let numero = '';
+    let country = '';
+
+    if (typeof rawValue === 'string') {
+      try {
+        const parsed = JSON.parse(rawValue);
+        if (parsed && typeof parsed === 'object') {
+          numero = String(parsed['number'] ?? parsed['numero'] ?? '');
+          country = this.normalizeCountryValue(parsed['country']);
+        } else {
+          numero = rawValue;
+        }
+      } catch {
+        numero = rawValue;
+      }
+    } else if (rawValue && typeof rawValue === 'object' && !Array.isArray(rawValue)) {
+      const obj = rawValue as Record<string, unknown>;
+      numero = String(obj['number'] ?? obj['numero'] ?? '');
+      country = this.normalizeCountryValue(obj['country']);
+    } else {
+      numero = String(rawValue ?? '');
+    }
+
+    const numberControl = formGroup.get(fieldName);
+    if (numberControl) {
+      numberControl.setValue(numero, { emitEvent: true });
+      numberControl.markAsDirty();
+    }
+
+    const countryControl = formGroup.get(`${fieldName}Country`);
+    if (countryControl) {
+      countryControl.setValue(country, { emitEvent: true });
+      countryControl.markAsDirty();
+    }
+  }
+
+  private applyFileValue(control: FormControl, rawValue: unknown, fieldDef: any, blockCode: string): void {
+    const url = this.extractFileUrl(rawValue);
+    if (!url) return;
+
+    const businessId = this.schema?.businessId;
+    if (!businessId) return;
+
+    fetch(url)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.blob();
+      })
+      .then((blob) => {
+        const fileName = this.extractFileNameFromUrl(url) || 'copied-file';
+        const file = new File([blob], fileName, { type: blob.type });
+
+        this.businessService
+          .uploadFiles({
+            files: file,
+            businessId,
+            versionNumber: this.schema?.versionNumber ?? 1,
+            fieldName: fieldDef.name,
+            usage: fieldDef.usage || '',
+            blockCode
+          })
+          .subscribe({
+            next: (response) => {
+              const payload = this.extractUploadedFilePayload(response);
+              if (payload) {
+                control.setValue(payload);
+                control.markAsDirty();
+              }
+            },
+            error: () => {
+              console.warn(`[CopyFile] Failed to upload file for field "${fieldDef.name}"`);
+            }
+          });
+      })
+      .catch(() => {
+        console.warn(`[CopyFile] Failed to download file from "${url}" for field "${fieldDef.name}"`);
+      });
+  }
+
+  private extractFileUrl(rawValue: unknown): string | null {
+    if (typeof rawValue === 'string') {
+      if (rawValue.startsWith('http')) return rawValue;
+      try {
+        const parsed = JSON.parse(rawValue);
+        if (parsed && typeof parsed === 'object') {
+          const url = parsed['url'];
+          if (typeof url === 'string') return url;
+        }
+      } catch { /* ignore */ }
+      return null;
+    }
+    if (rawValue && typeof rawValue === 'object') {
+      const obj = rawValue as Record<string, unknown>;
+      const url = obj['url'];
+      if (typeof url === 'string') return url;
+    }
+    return null;
+  }
+
+  private extractFileNameFromUrl(url: string): string {
+    try {
+      const pathname = new URL(url).pathname;
+      const segments = pathname.split('/');
+      return segments[segments.length - 1] || 'file';
+    } catch {
+      return 'file';
+    }
+  }
+
+  private extractUploadedFilePayload(response: unknown): { file_id: number; url: string } | null {
+    if (!response || typeof response !== 'object') return null;
+    const data = (response as Record<string, unknown>)['data'];
+    if (!Array.isArray(data) || !data.length) return null;
+    const item = data[0];
+    if (!item || typeof item !== 'object') return null;
+    const fileId = (item as Record<string, unknown>)['file_id'];
+    const url = (item as Record<string, unknown>)['url'];
+    if (typeof fileId === 'number' && typeof url === 'string') {
+      return { file_id: fileId, url };
+    }
+    return null;
   }
 
   ngOnChanges(changes: SimpleChanges): void {

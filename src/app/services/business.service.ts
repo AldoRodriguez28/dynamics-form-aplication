@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, mergeMap, map, of } from 'rxjs';
+import { Observable, mergeMap, map, of, tap } from 'rxjs';
 import { ClientData } from '../models/business.model';
 import { BusinessForm } from '../models/form-schema.model';
 import { environment } from '../../environments/environment';
@@ -72,11 +72,14 @@ export class BusinessService {
     return [];
   }
 
-  getLegacy(businessId: string | number): Observable<LegacyBusinessResponse> {
-    const url = `${this.baseUrl}/legacy-advertisers/${businessId}/businesses`;
+  getLegacy(businessId: string | number, includeAll = false): Observable<LegacyBusinessResponse> {
+    const params = includeAll ? '?includeAll=true' : '';
+    const url = `${this.baseUrl}/legacy-advertisers/${businessId}/businesses${params}`;
     return this.http.get<LegacyBusinessResponse>(url, {
       headers: this.authHeader.build()
-    });
+    }).pipe(
+      tap(res => console.log('[getLegacy] response:', res))
+    );
   }
 
   // getLegacy(businessId: string | number): Observable<LegacyBusinessResponse> {
