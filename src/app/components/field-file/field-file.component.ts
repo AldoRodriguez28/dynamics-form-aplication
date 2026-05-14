@@ -28,8 +28,9 @@ export class FieldFileComponent implements OnDestroy {
   ) {}
 
   get acceptFormats(): string | null {
-    if (!this.field?.allowedFormats?.length) return null;
-    return this.field.allowedFormats.map((ext) => `.${ext}`).join(',');
+    const formats = this.normalizedAllowedFormats();
+    if (!formats.length) return null;
+    return formats.map((ext) => `.${ext}`).join(',');
   }
 
   onFileChange(event: Event): void {
@@ -40,7 +41,20 @@ export class FieldFileComponent implements OnDestroy {
       this.setFileValue(null);
       return;
     }
+
+    const validationError = this.validateFile(file);
+    if (validationError) {
+      this.setFileValue(null);
+      this.uploadError = validationError;
+      this.uploadSuccess = false;
+      this.uploading = false;
+      this.setControlError('fileValidation');
+      if (target) target.value = '';
+      return;
+    }
+
     this.setFileValue(file);
+    this.clearControlErrors('fileValidation', 'upload');
     this.uploadFile(file);
   }
 
@@ -108,11 +122,49 @@ export class FieldFileComponent implements OnDestroy {
     }
   }
 
+  private validateFile(file: File): string | null {
+    const maxSizeMB = this.field?.maxSizeMB;
+    if (typeof maxSizeMB === 'number' && maxSizeMB > 0) {
+      const maxBytes = maxSizeMB * 1024 * 1024;
+      if (file.size > maxBytes) {
+        return `El archivo supera el tamaño máximo permitido de ${this.formatMaxSize(maxSizeMB)} MB.`;
+      }
+    }
+
+    const allowedFormats = this.normalizedAllowedFormats();
+    if (allowedFormats.length) {
+      const extension = this.getFileExtension(file.name);
+      if (!extension || !allowedFormats.includes(extension)) {
+        return `Formato no permitido. Usa archivos: ${allowedFormats.join(', ')}.`;
+      }
+    }
+
+    return null;
+  }
+
+  private normalizedAllowedFormats(): string[] {
+    const formats = this.field?.allowedFormats ?? [];
+    return formats
+      .map((ext) => String(ext).trim().toLowerCase().replace(/^\./, ''))
+      .filter((ext, index, list) => ext.length > 0 && list.indexOf(ext) === index);
+  }
+
+  private getFileExtension(fileName: string): string {
+    const cleanName = fileName.split('?')[0].split('#')[0];
+    const dotIndex = cleanName.lastIndexOf('.');
+    if (dotIndex < 0 || dotIndex === cleanName.length - 1) return '';
+    return cleanName.slice(dotIndex + 1).toLowerCase();
+  }
+
+  private formatMaxSize(maxSizeMB: number): string {
+    return Number.isInteger(maxSizeMB) ? String(maxSizeMB) : maxSizeMB.toFixed(2).replace(/\.?0+$/, '');
+  }
+
   private uploadFile(file: File): void {
     const businessId = this.route.snapshot.paramMap.get('businessId');
     if (!businessId) {
       this.uploadError = 'No se pudo obtener el BusinessId.';
-      this.control.setErrors({ ...(this.control.errors || {}), upload: true });
+      this.setControlError('upload');
       return;
     }
 
@@ -138,14 +190,27 @@ export class FieldFileComponent implements OnDestroy {
           }
           this.uploading = false;
           this.uploadSuccess = true;
-          this.control.setErrors(null);
+          this.clearControlErrors('fileValidation', 'upload');
         },
         error: () => {
           this.uploading = false;
           this.uploadError = 'Error al subir el archivo. Intenta de nuevo.';
-          this.control.setErrors({ ...(this.control.errors || {}), upload: true });
+          this.setControlError('upload');
         }
       });
+  }
+
+  private setControlError(errorKey: string): void {
+    this.control.setErrors({ ...(this.control.errors || {}), [errorKey]: true });
+  }
+
+  private clearControlErrors(...errorKeys: string[]): void {
+    const current = this.control.errors;
+    if (!current) return;
+
+    const next = { ...current };
+    errorKeys.forEach((key) => delete next[key]);
+    this.control.setErrors(Object.keys(next).length ? next : null);
   }
 
   private extractFilePayload(response: unknown): { file_id: number; url: string } | null {
