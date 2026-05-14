@@ -1,0 +1,150 @@
+@if (sidebarOpen()) {
+  <div
+    class="drawer-backdrop"
+    @backdropFade
+    (click)="onBackdropClick($event)"
+    role="presentation"
+  ></div>
+}
+
+@if (sidebarOpen()) {
+  <aside
+    class="drawer"
+    @sidebarSlide
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="audit-drawer-heading"
+  >
+    <header class="drawer__header">
+      <div>
+        <h2 id="audit-drawer-heading" class="drawer__title">Historial de eventos</h2>
+        @if (record(); as rec) {
+          <p class="drawer__subtitle">
+            <span class="code drawer__code">ID {{ rec.businessId }}</span>
+            <span class="drawer__dot" aria-hidden="true">·</span>
+            <span>{{ rec.commercialName }}</span>
+          </p>
+        }
+      </div>
+      <button
+        type="button"
+        class="drawer__close"
+        aria-label="Cerrar panel"
+        (click)="closeSidebar()"
+      >
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </header>
+
+    <div class="drawer__body" #drawerBody>
+      @if (showingDetail) {
+        <!-- Detail drill-down view -->
+        <div class="detail-view">
+          <button type="button" class="detail-view__back" (click)="goBackToList()">
+            <svg class="detail-view__back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m15 18-6-6 6-6"/>
+            </svg>
+            Volver al historial
+          </button>
+
+          @if (activeEvent; as event) {
+            <div class="detail-view__event-summary">
+              <div class="detail-view__meta">
+                <span class="timeline__id">#{{ event.auditId }}</span>
+                <span class="timeline__action">{{ displayAction(event.action) }}</span>
+              </div>
+              <div class="detail-view__info">
+                <span class="badge badge--version">v{{ event.version }}</span>
+                <span class="status" [attr.data-variant]="stateVariant(event.estado)">
+                  {{ displayState(event.estado) }}
+                </span>
+                <time class="timeline__time" [attr.datetime]="event.creationDate">
+                  {{ event.creationDate | date: 'dd/MM/yyyy, HH:mm:ss' }}
+                </time>
+              </div>
+            </div>
+          }
+
+          @if (detailLoading()) {
+            <div class="detail-view__loading">
+              <div class="skeleton skeleton--line"></div>
+              <div class="skeleton skeleton--line skeleton--medium"></div>
+              <div class="skeleton skeleton--line skeleton--short"></div>
+            </div>
+          } @else if (detailError()) {
+            <div class="drawer__error" role="alert">
+              <p class="drawer__error-title">No se pudo cargar el detalle</p>
+              <p class="drawer__error-msg">{{ detailError() }}</p>
+            </div>
+          } @else if (detailData(); as detail) {
+            <app-audit-detail [detail]="detail"></app-audit-detail>
+          }
+        </div>
+      } @else if (loading()) {
+        <div class="drawer__loading" aria-busy="true" aria-live="polite">
+          <p class="drawer__loading-text">Cargando eventos…</p>
+          <div class="skeleton-stack">
+            @for (s of [1, 2, 3, 4]; track s) {
+              <div class="skeleton-card">
+                <div class="skeleton skeleton--line skeleton--short"></div>
+                <div class="skeleton skeleton--line"></div>
+                <div class="skeleton skeleton--line skeleton--medium"></div>
+              </div>
+            }
+          </div>
+        </div>
+      } @else if (error()) {
+        <div class="drawer__error" role="alert">
+          <p class="drawer__error-title">No se pudo cargar el historial</p>
+          <p class="drawer__error-msg">{{ error() }}</p>
+        </div>
+      } @else if (sortedEvents().length === 0) {
+        <div class="drawer__empty" role="status">
+          <p class="drawer__empty-title">Sin eventos registrados</p>
+          <p class="drawer__empty-hint">
+            Cuando se realicen acciones sobre este negocio, aparecerán aquí.
+          </p>
+        </div>
+      } @else {
+        <ol class="timeline" aria-label="Eventos del negocio">
+          @for (event of sortedEvents(); track event.auditId) {
+            <li class="timeline__item">
+              <div class="timeline__card" [class.timeline__card--last-viewed]="lastViewedAuditId() === event.auditId">
+                <div class="timeline__row timeline__row--meta">
+                  <span class="timeline__id">#{{ event.auditId }}</span>
+                  <span class="timeline__action">{{ displayAction(event.action) }}</span>
+                </div>
+
+                <div class="timeline__info">
+                  <div class="timeline__badges">
+                    <span class="badge badge--version">v{{ event.version }}</span>
+                    <span class="status" [attr.data-variant]="stateVariant(event.estado)">
+                      {{ displayState(event.estado) }}
+                    </span>
+                  </div>
+                  <time class="timeline__time" [attr.datetime]="event.creationDate">
+                    {{ event.creationDate | date: 'dd/MM/yyyy, HH:mm:ss' }}
+                  </time>
+                </div>
+
+                <button
+                  type="button"
+                  class="btn-detail"
+                  (click)="beginDetailLoad(event.auditId)"
+                >
+                  Ver detalle
+                  <svg class="btn-detail__icon"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m9 18 6-6-6-6"/>
+                  </svg>
+                </button>
+              </div>
+            </li>
+          }
+        </ol>
+      }
+    </div>
+  </aside>
+}

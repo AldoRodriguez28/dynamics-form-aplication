@@ -107,9 +107,9 @@
             type="button"
             class="status status--interactive"
             [attr.data-variant]="statusVariant(business?.state)"
-            [attr.aria-label]="'Ver historial de estados: ' + (business?.commercialName || 'negocio')"
-            title="Ver historial de estados"
-            (click)="openBusinessStatusHistory($any(business))"
+            [attr.aria-label]="'Ver historial de eventos: ' + (business?.commercialName || 'negocio')"
+            title="Ver historial de eventos"
+            (click)="openBusinessAuditHistory($any(business))"
           >
             {{ statusLabel(business.state) }}
           </button>
@@ -170,6 +170,7 @@
     </div>
   }
   <app-status-history [embedded]="true" />
+  <app-audit-history (requestDetail)="onAuditDetailRequested($event)" />
 </section>
 } @else if (errorCode === 'CLIENT_NOT_FOUND') {
 <section class="page page--centered hero-style">
