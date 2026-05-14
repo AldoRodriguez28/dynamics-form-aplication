@@ -22,6 +22,20 @@ export class FieldProductosServiciosComponent {
     return this.formArray.controls.map((c) => c.value as string).filter(Boolean);
   }
 
+  /** Mismo criterio que otros campos: inválido y ya marcado touched (p. ej. tras interactuar o markAllAsTouched). */
+  get showFieldError(): boolean {
+    if (this.readOnly || !this.formArray) return false;
+    return this.formArray.invalid && this.formArray.touched;
+  }
+
+  get fieldErrorHint(): string | null {
+    if (!this.showFieldError) return null;
+    if (this.formArray.errors?.['arrayItemIncomplete']) {
+      return 'Añade al menos un producto o servicio.';
+    }
+    return 'Completa o corrige los productos o servicios.';
+  }
+
   constructor(private fb: FormBuilder) {}
 
   addTag(): void {
@@ -30,12 +44,16 @@ export class FieldProductosServiciosComponent {
     if (!value) return;
     this.formArray.push(this.fb.control(value));
     this.newTag = '';
+    this.formArray.markAsTouched();
+    this.formArray.updateValueAndValidity();
   }
 
   removeTag(idx: number): void {
     if (this.readOnly) return;
     if (idx < 0 || idx >= this.formArray.length) return;
     this.formArray.removeAt(idx);
+    this.formArray.markAsTouched();
+    this.formArray.updateValueAndValidity();
   }
 
   toggleTag(tag: string): void {
@@ -45,6 +63,8 @@ export class FieldProductosServiciosComponent {
       this.removeTag(idx);
     } else {
       this.formArray.push(this.fb.control(tag));
+      this.formArray.markAsTouched();
+      this.formArray.updateValueAndValidity();
     }
   }
 }

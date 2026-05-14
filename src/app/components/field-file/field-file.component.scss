@@ -4,6 +4,14 @@
   gap: 0.35rem;
 }
 
+.field-wrapper--invalid {
+  padding: 0.5rem 0.35rem;
+  margin: -0.35rem;
+  border-radius: 0.85rem;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+}
+
 .field-label {
   font-weight: 600;
   color: #111827;
@@ -23,11 +31,24 @@
   font-size: 0.95rem;
 }
 
+.field-control.field-control--invalid {
+  border-color: #ef4444;
+  background: #fff5f5;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+
 .field-control:focus {
   outline: none;
   border-color: #2563eb;
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
   background: #fff;
+}
+
+.validation-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #b91c1c;
 }
 
 .help {
