@@ -17,6 +17,8 @@ import {
   StatusHistoryComponent,
   transitionsFromAudit,
 } from '../components/status-history/status-history.component';
+import { AuditHistoryComponent, AuditRecord } from '../components/audit-history/audit-history.component';
+import { AuditService } from '../services/audit.service';
 import { decodeJwtPayload } from '../utils/jwt.utils';
 import { FORM_STATUS_SHARED_WITH_CLIENT } from '../utils/role.utils';
 
@@ -28,12 +30,15 @@ import { FORM_STATUS_SHARED_WITH_CLIENT } from '../utils/role.utils';
     ClientNotFoundComponent,
     BusinessEmptyStateComponent,
     StatusHistoryComponent,
+    AuditHistoryComponent,
   ],
   templateUrl: './business-list.component.html',
   styleUrl: './business-list.component.scss'
 })
 export class BusinessListComponent {
   private readonly historyDrawer = viewChild(StatusHistoryComponent);
+  private readonly auditDrawer = viewChild(AuditHistoryComponent);
+  private readonly auditService = inject(AuditService);
 
   private readonly route = inject(ActivatedRoute);
   private readonly businessService = inject(BusinessService);
@@ -124,6 +129,59 @@ export class BusinessListComponent {
     const nombre = business.commercialName?.trim() || 'Sin nombre';
     const estadoActual = this.statusLabel(this.getBusinessStatus(business));
     return { id, nombre, estadoActual, historial: [] };
+  }
+
+  /**
+   * Abre el panel de historial de eventos (auditoría) para un negocio.
+   */
+  openBusinessAuditHistory(business: BusinessInterface): void {
+    const drawer = this.auditDrawer();
+    if (!drawer) return;
+
+    const businessId = business.businessId;
+    if (businessId == null) {
+      drawer.beginLoad({ businessId: '', commercialName: business.commercialName ?? '' });
+      drawer.setError('No hay identificador de negocio para consultar el historial.');
+      return;
+    }
+
+    const record: AuditRecord = {
+      businessId: String(businessId),
+      commercialName: business.commercialName?.trim() || 'Sin nombre',
+    };
+
+    drawer.beginLoad(record);
+    this.auditService
+      .getAuditEvents(businessId)
+      .pipe(
+        catchError((err: unknown) => {
+          drawer.setError(this.formatHistoryAuditError(err));
+          return EMPTY;
+        })
+      )
+      .subscribe((entries) => {
+        drawer.setEvents(entries);
+      });
+  }
+
+  /**
+   * Carga el detalle de un evento de auditoría cuando el usuario hace clic.
+   */
+  onAuditDetailRequested(auditId: number): void {
+    const drawer = this.auditDrawer();
+    if (!drawer) return;
+
+    this.auditService
+      .getAuditDetail(auditId)
+      .pipe(
+        catchError(() => {
+          drawer.setDetailError('No se pudo cargar el detalle del evento.');
+          return EMPTY;
+        })
+      )
+      .subscribe((detail) => {
+        drawer.setDetail(detail);
+      });
   }
 
   private formatHistoryAuditError(err: unknown): string {

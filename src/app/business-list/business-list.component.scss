@@ -410,6 +410,18 @@ h2 {
   outline-offset: 2px;
 }
 
+.btn--outline {
+  background: transparent;
+  color: #2563eb;
+  border: 1.5px solid #2563eb;
+  box-shadow: none;
+}
+
+.btn--outline:hover {
+  background: rgba(37, 99, 235, 0.06);
+  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.12);
+}
+
 .action-buttons {
   display: flex;
   flex-direction: row;

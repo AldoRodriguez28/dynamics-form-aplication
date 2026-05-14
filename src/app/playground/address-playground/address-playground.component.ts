@@ -18,7 +18,7 @@ import { FieldLocationMapComponent } from '../../components/field-location-map/f
 })
 export class AddressPlaygroundComponent {
   // Controles mínimos para simular tu caso real
-    enforceCompleteAddress = true;
+    enforceCompleteAddress = false;
 
   form = new FormGroup({
     address: new FormControl<string>('', { nonNullable: true }),

@@ -1,0 +1,226 @@
+@if (parsedDetail; as detail) {
+  <div class="detail-content">
+    <p class="detail-content__actor">
+      <strong>Actor:</strong> {{ detail.actorType }} · {{ detail.actorId }}
+    </p>
+
+    @if (detail.type === 'state-change') {
+      <div class="detail-state-change">
+        <span class="status" [attr.data-variant]="stateVariant(detail.oldState)">
+          {{ displayState(detail.oldState) }}
+        </span>
+        <span class="detail-arrow" aria-hidden="true">→</span>
+        <span class="status" [attr.data-variant]="stateVariant(detail.newState)">
+          {{ displayState(detail.newState) }}
+        </span>
+      </div>
+    }
+
+    @if (detail.type === 'content-change') {
+      @if (detail.changes.length === 0 && detail.snapshot.length > 0) {
+        <p class="detail-content__snapshot-label">Contenido registrado (sin cambios):</p>
+        <div class="snapshot-list">
+          @for (entry of detail.snapshot; track entry.field) {
+            <div class="snapshot-item">
+              <span class="snapshot-item__field">{{ humanizeFieldName(entry.field) }}</span>
+              <div class="snapshot-item__value">
+                @switch (entry.value.type) {
+                  @case ('empty') {
+                    <span class="value-empty">(vacío)</span>
+                  }
+                  @case ('text') {
+                    <span class="value-text">{{ entry.value.value }}</span>
+                  }
+                  @case ('url') {
+                    <a class="value-url" [href]="entry.value.value" target="_blank" rel="noopener noreferrer">
+                      {{ entry.value.value }}
+                    </a>
+                  }
+                  @case ('file') {
+                    <span class="value-file">
+                      <span class="value-file__badge">Archivo #{{ entry.value.fileId }}</span>
+                      <a class="value-url value-url--small" [href]="entry.value.url" target="_blank" rel="noopener noreferrer">Ver archivo</a>
+                    </span>
+                  }
+                  @case ('file-list') {
+                    <ul class="value-file-list">
+                      @for (file of entry.value.files; track file.fileId) {
+                        <li class="value-file-list__item">
+                          <span class="value-file__badge">Archivo #{{ file.fileId }}</span>
+                          <a class="value-url value-url--small" [href]="file.url" target="_blank" rel="noopener noreferrer">Ver</a>
+                        </li>
+                      }
+                    </ul>
+                  }
+                  @case ('list') {
+                    <ul class="value-list">
+                      @for (item of entry.value.items; track $index) {
+                        <li>{{ renderFieldValueAsText(item) }}</li>
+                      }
+                    </ul>
+                  }
+                  @case ('key-value') {
+                    <dl class="value-kv">
+                      @for (kv of entry.value.entries; track kv.key) {
+                        <div class="value-kv__row">
+                          <dt>{{ humanizeFieldName(kv.key) }}</dt>
+                          <dd>{{ renderFieldValueAsText(kv.value) }}</dd>
+                        </div>
+                      }
+                    </dl>
+                  }
+                }
+              </div>
+            </div>
+          }
+        </div>
+      } @else if (detail.changes.length === 0) {
+        <p class="detail-content__no-changes">Sin cambios detectados.</p>
+      } @else {
+        <div class="changes-list">
+          @for (change of detail.changes; track change.field) {
+            <div class="change-card">
+              <div class="change-card__header">
+                <span class="change-card__field">{{ humanizeFieldName(change.field) }}</span>
+              </div>
+              <div class="change-card__body">
+                <div class="change-card__column change-card__column--old">
+                  <span class="change-card__label">Anterior</span>
+                  <div class="change-card__value">
+                    @switch (change.oldValue.type) {
+                      @case ('empty') {
+                        <span class="value-empty">(vacío)</span>
+                      }
+                      @case ('text') {
+                        <span class="value-text">{{ change.oldValue.value }}</span>
+                      }
+                      @case ('url') {
+                        <a class="value-url" [href]="change.oldValue.value" target="_blank" rel="noopener noreferrer">
+                          {{ change.oldValue.value }}
+                        </a>
+                      }
+                      @case ('file') {
+                        <span class="value-file">
+                          <span class="value-file__badge">Archivo #{{ change.oldValue.fileId }}</span>
+                          <a class="value-url value-url--small" [href]="change.oldValue.url" target="_blank" rel="noopener noreferrer">Ver archivo</a>
+                        </span>
+                      }
+                      @case ('file-list') {
+                        <ul class="value-file-list">
+                          @for (file of change.oldValue.files; track file.fileId) {
+                            <li class="value-file-list__item">
+                              <span class="value-file__badge">Archivo #{{ file.fileId }}</span>
+                              <a class="value-url value-url--small" [href]="file.url" target="_blank" rel="noopener noreferrer">Ver</a>
+                            </li>
+                          }
+                        </ul>
+                      }
+                      @case ('list') {
+                        <ul class="value-list">
+                          @for (item of change.oldValue.items; track $index) {
+                            <li>{{ renderFieldValueAsText(item) }}</li>
+                          }
+                        </ul>
+                      }
+                      @case ('key-value') {
+                        <dl class="value-kv">
+                          @for (entry of change.oldValue.entries; track entry.key) {
+                            <div class="value-kv__row">
+                              <dt>{{ humanizeFieldName(entry.key) }}</dt>
+                              <dd>{{ renderFieldValueAsText(entry.value) }}</dd>
+                            </div>
+                          }
+                        </dl>
+                      }
+                    }
+                  </div>
+                </div>
+                <div class="change-card__column change-card__column--new">
+                  <span class="change-card__label">Nuevo</span>
+                  <div class="change-card__value">
+                    @switch (change.newValue.type) {
+                      @case ('empty') {
+                        <span class="value-empty">(vacío)</span>
+                      }
+                      @case ('text') {
+                        <span class="value-text">{{ change.newValue.value }}</span>
+                      }
+                      @case ('url') {
+                        <a class="value-url" [href]="change.newValue.value" target="_blank" rel="noopener noreferrer">
+                          {{ change.newValue.value }}
+                        </a>
+                      }
+                      @case ('file') {
+                        <span class="value-file">
+                          <span class="value-file__badge">Archivo #{{ change.newValue.fileId }}</span>
+                          <a class="value-url value-url--small" [href]="change.newValue.url" target="_blank" rel="noopener noreferrer">Ver archivo</a>
+                        </span>
+                      }
+                      @case ('file-list') {
+                        <ul class="value-file-list">
+                          @for (file of change.newValue.files; track file.fileId) {
+                            <li class="value-file-list__item">
+                              <span class="value-file__badge">Archivo #{{ file.fileId }}</span>
+                              <a class="value-url value-url--small" [href]="file.url" target="_blank" rel="noopener noreferrer">Ver</a>
+                            </li>
+                          }
+                        </ul>
+                      }
+                      @case ('list') {
+                        <ul class="value-list">
+                          @for (item of change.newValue.items; track $index) {
+                            <li>{{ renderFieldValueAsText(item) }}</li>
+                          }
+                        </ul>
+                      }
+                      @case ('key-value') {
+                        <dl class="value-kv">
+                          @for (entry of change.newValue.entries; track entry.key) {
+                            <div class="value-kv__row">
+                              <dt>{{ humanizeFieldName(entry.key) }}</dt>
+                              <dd>{{ renderFieldValueAsText(entry.value) }}</dd>
+                            </div>
+                          }
+                        </dl>
+                      }
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+
+    @if (detail.type === 'version-creation') {
+      <div class="detail-version-creation">
+        <p class="detail-version-creation__title">Nueva versión creada</p>
+        <div class="detail-version-creation__info">
+          <div class="detail-version-creation__item">
+            <span class="detail-version-creation__label">Versión</span>
+            <span class="badge badge--version">v{{ detail.newVersionNumber }}</span>
+          </div>
+          @if (detail.previousVersionId !== null) {
+            <div class="detail-version-creation__item">
+              <span class="detail-version-creation__label">Versión anterior (ID)</span>
+              <span class="detail-version-creation__value">{{ detail.previousVersionId }}</span>
+            </div>
+          }
+          <div class="detail-version-creation__item">
+            <span class="detail-version-creation__label">Nueva versión (ID)</span>
+            <span class="detail-version-creation__value">{{ detail.newVersionId }}</span>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (detail.type === 'generic') {
+      <pre class="detail-content__raw">{{ detail.data | json }}</pre>
+    }
+
+    @if (detail.type === 'raw') {
+      <pre class="detail-content__raw">{{ detail.raw }}</pre>
+    }
+  </div>
+}

@@ -185,8 +185,10 @@ export class BusinessFormComponent {
     this.businessService.getBusinessVersionState(this.businessId, version).subscribe({
       next: (res) => {
         const state = res?.state ?? current.status;
-        if (!state) return;
-        this.formSchemaSubject.next({ ...current, status: state });
+        if (!state || state === current.status) return;
+        // Mutate status in-place to avoid triggering ngOnChanges/setupForm rebuild
+        current.status = state;
+        this.formSchemaSubject.next(current);
       },
       error: (error) => console.error('Error al actualizar estatus', error)
     });

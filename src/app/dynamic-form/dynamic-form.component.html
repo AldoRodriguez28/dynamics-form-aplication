@@ -25,6 +25,20 @@
             <button type="button" class="btn ghost btn--small" (click)="saveJustOneBlock(block, $event)">
               Guardar
             </button>
+            <div class="more-menu" (click)="$event.stopPropagation()">
+              <button type="button" class="btn-more" (click)="toggleBlockMenu(block.code, $event)"
+                aria-label="Más opciones">
+                &#8943;
+              </button>
+              @if (openMenuBlockCode === block.code) {
+              <div class="more-menu__dropdown">
+                <button type="button" class="more-menu__item" (click)="openCopyModal(block.code, $event)">
+                  <span class="more-menu__icon">&#128203;</span>
+                  Copiar información de otro negocio
+                </button>
+              </div>
+              }
+            </div>
             }
           </div>
           <span class="section__chevron" aria-hidden="true"></span>
@@ -139,4 +153,13 @@
     </form>
   </div>
 </div>
+
+<app-copy-block-modal
+  [visible]="copyModalVisible"
+  [businesses]="copyModalBusinesses"
+  [loading]="copyModalLoading"
+  [currentBusinessId]="schema?.businessId"
+  (selectBusiness)="onCopyBusinessSelected($event)"
+  (closeModal)="closeCopyModal()">
+</app-copy-block-modal>
 }
