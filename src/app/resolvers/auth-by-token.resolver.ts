@@ -3,6 +3,7 @@ import { inject } from '@angular/core';
 import { catchError, map, of, tap } from 'rxjs';
 import { AuthService } from '../services/Auth.service';
 import { TokenStorageService } from '../services/shared/token-storage.service';
+import { ThemeService } from '../theme/theme.service';
 import { decodeJwtPayload } from '../utils/jwt.utils';
 
 export const authByTokenResolver: ResolveFn<boolean> = (route) => {
@@ -17,6 +18,7 @@ export const authByTokenResolver: ResolveFn<boolean> = (route) => {
     const auth = inject(AuthService);
     const storage = inject(TokenStorageService);
     const router = inject(Router);
+    const theme = inject(ThemeService);
 
     storage.setAccessToken(finalToken);
     console.info('[Resolver] calling AuthService.loginByToken');
@@ -36,6 +38,10 @@ export const authByTokenResolver: ResolveFn<boolean> = (route) => {
             const roleClaim = payload?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
             const role = Array.isArray(roleClaim) ? roleClaim[0] : roleClaim;
             if (role != null) storage.setRole(String(role));
+
+            const origin = payload?.['bcm.origin'] ?? payload?.['origin'] ?? null;
+            if (origin != null) storage.setOrigin(String(origin));
+            theme.applyFromOrigin(origin != null ? String(origin) : null);
 
         }),
         map(() => true),
