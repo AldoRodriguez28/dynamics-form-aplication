@@ -1,3 +1,4 @@
+@use './styles/theme.tokens.scss';
 @use './styles/status-badges.scss';
 @import 'sweetalert2/dist/sweetalert2.min.css';
 
@@ -27,14 +28,9 @@
   font-display: swap;
 }
 
-body {
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
-}
-
-
 :root {
   color-scheme: light;
-  background-color: #f8fafc;
+  background-color: var(--bg-app);
 }
 
 * {
@@ -43,13 +39,12 @@ body {
 
 body {
   margin: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
-    Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: var(--font-family);
   background: radial-gradient(circle at 20% 20%, rgba(67, 56, 202, 0.05), transparent 28%),
     radial-gradient(circle at 80% 10%, rgba(14, 165, 233, 0.06), transparent 30%),
-    #f8fafc;
+    var(--bg-app);
   min-height: 100vh;
-  color: #111827;
+  color: var(--text-base);
 }
 
 .app-shell {

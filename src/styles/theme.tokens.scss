@@ -1,0 +1,26 @@
+:root {
+  /* Marca / color */
+  --color-primary: #4338ca;
+  --color-primary-contrast: #ffffff;
+  --color-accent: #0ea5e9;
+  --bg-app: #f8fafc;
+  --text-base: #111827;
+
+  /* Branding */
+  --logo-url: url('/assets/brands/default/logo.svg');
+  --logo-height: 32px;
+
+  /* Tipografía */
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Forma / superficie */
+  --radius-md: 0.875rem;
+  --shadow-card: 0 4px 20px rgba(15, 23, 42, 0.06);
+}
+
+[data-origin='brandx'] {
+  --color-primary: #d6206e;
+  --color-accent: #ff8a00;
+  --logo-url: url('/assets/brands/brandx/logo.svg');
+  --font-family: 'BrandXSans', 'Inter', sans-serif;
+}
