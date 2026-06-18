@@ -1,0 +1,16 @@
+.brandx-shell {
+  min-height: 100vh;
+}
+.brandx-header {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+}
+.brandx-logo {
+  height: var(--logo-height);
+}
+.brandx-content {
+  padding: 1.5rem;
+}
