@@ -14,6 +14,12 @@ describe('LayoutHostComponent', () => {
     return { fixture, theme };
   }
 
+  afterEach(() => {
+    document.documentElement.removeAttribute('data-origin');
+    document.documentElement.style.removeProperty('--color-primary');
+    document.documentElement.style.removeProperty('--color-accent');
+  });
+
   it('renderiza el shell default cuando layoutKey es default', () => {
     const { fixture } = setup();
     fixture.detectChanges();
