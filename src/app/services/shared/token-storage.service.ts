@@ -10,6 +10,7 @@ export class TokenStorageService {
   private static readonly OTP_VERIFIED_KEY = 'OTP_VERIFIED';
   private static readonly OTP_TARGET_KEY = 'OTP_TARGET';
   private static readonly OTP_VERIFIED_NUMBERS_KEY = 'number_otp_verified';
+  private static readonly ORIGIN_KEY = 'ORIGIN_KEY';
 
   setOtpVerified(verified: boolean): void {
     sessionStorage.setItem(TokenStorageService.OTP_VERIFIED_KEY, verified ? 'true' : 'false');
@@ -89,6 +90,7 @@ export class TokenStorageService {
     localStorage.removeItem(TokenStorageService.ROLE_KEY);
     sessionStorage.removeItem(TokenStorageService.ROLE_KEY);
     sessionStorage.removeItem(TokenStorageService.ACCESS_TOKEN_KEY);
+    localStorage.removeItem(TokenStorageService.ORIGIN_KEY);
     this.clearOtpVerified();
     this.clearOtpTarget();
     this.clearOtpVerifiedNumbers();
@@ -112,6 +114,16 @@ export class TokenStorageService {
   /** Lee advertiser_NAME */
   getAdvertiserName(): string | null {
     return localStorage.getItem(TokenStorageService.ADVERTISER_NAME);
+  }
+
+  /** Guarda el origin (quién consume el formulario) */
+  setOrigin(origin: string): void {
+    localStorage.setItem(TokenStorageService.ORIGIN_KEY, origin);
+  }
+
+  /** Lee el origin */
+  getOrigin(): string | null {
+    return localStorage.getItem(TokenStorageService.ORIGIN_KEY);
   }
 
   /** Guarda role */
