@@ -39,7 +39,7 @@ export const authByTokenResolver: ResolveFn<boolean> = (route) => {
 
             const origin = payload?.['bcm.origin'] ?? payload?.['origin'] ?? null;
             if (origin != null) storage.setOrigin(String(origin));
-            theme.applyFromOrigin(origin != null ? String(origin) : null);
+            theme.sessionOrigin.set(origin != null ? String(origin) : null);
 
         }),
         map(() => true),

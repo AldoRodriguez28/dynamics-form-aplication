@@ -1,25 +1,19 @@
+import { TestBed } from '@angular/core/testing';
 import { applyStoredTheme } from './theme.initializer';
 import { ThemeService } from './theme.service';
-import { TokenStorageService } from '../services/shared/token-storage.service';
 
 describe('applyStoredTheme', () => {
-  let theme: jasmine.SpyObj<ThemeService>;
-  let storage: jasmine.SpyObj<TokenStorageService>;
-
-  beforeEach(() => {
-    theme = jasmine.createSpyObj<ThemeService>('ThemeService', ['applyFromOrigin']);
-    storage = jasmine.createSpyObj<TokenStorageService>('TokenStorageService', ['getOrigin']);
+  it('siembra sessionOrigin desde el storage', () => {
+    const storage = { getOrigin: () => 'sacom' } as any;
+    const theme = TestBed.inject(ThemeService);
+    applyStoredTheme(theme, storage);
+    expect(theme.sessionOrigin()).toBe('sacom');
   });
 
-  it('reaplica el origin guardado', () => {
-    storage.getOrigin.and.returnValue('brandx');
+  it('siembra null cuando no hay origin guardado', () => {
+    const storage = { getOrigin: () => null } as any;
+    const theme = TestBed.inject(ThemeService);
     applyStoredTheme(theme, storage);
-    expect(theme.applyFromOrigin).toHaveBeenCalledWith('brandx');
-  });
-
-  it('aplica default (null) cuando no hay origin guardado', () => {
-    storage.getOrigin.and.returnValue(null);
-    applyStoredTheme(theme, storage);
-    expect(theme.applyFromOrigin).toHaveBeenCalledWith(null);
+    expect(theme.sessionOrigin()).toBeNull();
   });
 });

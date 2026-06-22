@@ -21,16 +21,14 @@ function routeWithToken(token: string): ActivatedRouteSnapshot {
 }
 
 describe('authByTokenResolver — origin', () => {
-  let theme: jasmine.SpyObj<ThemeService>;
   let auth: jasmine.SpyObj<AuthService>;
 
   beforeEach(() => {
-    theme = jasmine.createSpyObj<ThemeService>('ThemeService', ['applyFromOrigin']);
     auth = jasmine.createSpyObj<AuthService>('AuthService', ['loginByToken']);
     TestBed.configureTestingModule({
       providers: [
         TokenStorageService,
-        { provide: ThemeService, useValue: theme },
+        ThemeService,
         { provide: AuthService, useValue: auth },
         { provide: Router, useValue: { navigateByUrl: () => {} } },
       ],
@@ -38,27 +36,29 @@ describe('authByTokenResolver — origin', () => {
     localStorage.clear();
   });
 
-  it('aplica y persiste el origin cuando el JWT lo trae', (done) => {
+  it('setea sessionOrigin y persiste el origin cuando el JWT lo trae', (done) => {
     const bearer = makeJwt({ 'bcm.origin': 'brandx' });
     auth.loginByToken.and.returnValue(of({ bearerToken: bearer } as any));
     const storage = TestBed.inject(TokenStorageService);
+    const theme = TestBed.inject(ThemeService);
 
     TestBed.runInInjectionContext(() => {
       (authByTokenResolver(routeWithToken('t'), {} as any) as any).subscribe(() => {
-        expect(theme.applyFromOrigin).toHaveBeenCalledWith('brandx');
+        expect(theme.sessionOrigin()).toBe('brandx');
         expect(storage.getOrigin()).toBe('brandx');
         done();
       });
     });
   });
 
-  it('aplica default (null) cuando el JWT no trae origin', (done) => {
+  it('setea sessionOrigin null cuando el JWT no trae origin', (done) => {
     const bearer = makeJwt({ 'bcm.advertiser_id': 1 });
     auth.loginByToken.and.returnValue(of({ bearerToken: bearer } as any));
+    const theme = TestBed.inject(ThemeService);
 
     TestBed.runInInjectionContext(() => {
       (authByTokenResolver(routeWithToken('t'), {} as any) as any).subscribe(() => {
-        expect(theme.applyFromOrigin).toHaveBeenCalledWith(null);
+        expect(theme.sessionOrigin()).toBeNull();
         done();
       });
     });

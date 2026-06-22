@@ -13,6 +13,6 @@ export const routes: Routes = [
   { path: 'otp/callback', component: OtpCallbackComponent, resolve: { otpRedeem: otpCallbackResolver } },
   { path: 'playground/direccion', component: AddressPlaygroundComponent },
   { path: 'playground/historial-estados', component: StatusHistoryComponent },
-  { path: ':idClient/:businessId', component: BusinessFormComponent, resolve: { authReady: authByTokenResolver } },
+  { path: ':idClient/:businessId', component: BusinessFormComponent, resolve: { authReady: authByTokenResolver }, data: { brandable: true } },
   { path: ':idClient', component: BusinessListComponent, resolve: { authReady: authByTokenResolver } }
 ];

@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { LayoutHostComponent } from './layouts/layout-host.component';
+import { ThemeRouteBinder } from './theme/theme-route-binder';
 
 @Component({
   selector: 'app-root',
@@ -9,4 +10,8 @@ import { LayoutHostComponent } from './layouts/layout-host.component';
 })
 export class AppComponent {
   title = 'formularios-dinamicos-angular-20';
+
+  constructor() {
+    inject(ThemeRouteBinder).start();
+  }
 }
