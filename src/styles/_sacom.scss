@@ -1,0 +1,26 @@
+:root[data-origin='sacom'] {
+  // Inputs estilo drawer
+  input[type='text'],
+  input[type='email'],
+  input[type='tel'],
+  input[type='url'],
+  input[type='number'],
+  select,
+  textarea {
+    border: 1.5px solid var(--color-border, #e5e5e5);
+    border-radius: var(--radius-md, 8px);
+    font-family: var(--font-family, 'Inter');
+    font-size: 12px;
+    outline: none;
+
+    &:focus {
+      border-color: var(--color-primary, #ffd800);
+    }
+  }
+
+  label {
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--color-text, #1a1a1a);
+  }
+}
