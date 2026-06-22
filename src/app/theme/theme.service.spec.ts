@@ -46,4 +46,10 @@ describe('ThemeService', () => {
     service.applyFromOrigin('  BrandX  ');
     expect(service.active()).toBe(BRANDX_THEME);
   });
+
+  it('sessionOrigin arranca en null y es escribible', () => {
+    expect(service.sessionOrigin()).toBeNull();
+    service.sessionOrigin.set('sacom');
+    expect(service.sessionOrigin()).toBe('sacom');
+  });
 });

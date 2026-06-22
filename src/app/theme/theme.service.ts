@@ -7,6 +7,8 @@ import { DEFAULT_THEME } from './themes/default.theme';
 export class ThemeService {
   readonly active = signal<ThemeConfig>(DEFAULT_THEME);
   readonly layoutKey = computed(() => this.active().layoutKey);
+  /** Marca de la sesión leída del token; null = sin marca. La aplica el ThemeRouteBinder. */
+  readonly sessionOrigin = signal<string | null>(null);
 
   applyFromOrigin(origin: string | null): void {
     const key = origin?.trim().toLowerCase() || null;
