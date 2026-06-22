@@ -22,7 +22,7 @@ export class ThemeRouteBinder {
     const key = origin?.trim().toLowerCase() || null;
 
     if (brandable && key && THEME_REGISTRY[key]) {
-      this.theme.applyFromOrigin(origin);
+      this.theme.applyFromOrigin(key);
     } else {
       this.theme.applyFromOrigin(null);
     }
