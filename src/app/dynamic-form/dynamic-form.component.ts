@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, HostListener, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { Component, computed, EventEmitter, HostListener, inject, Input, OnChanges, Output, signal, SimpleChanges } from '@angular/core';
 import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { canFinalizeForm, getControl, getFieldOptions, optionKey, OptionValue, toggleOption } from '../utils';
 import { SaveBlocksRequest } from '../services/request/save-blocks.request';
@@ -20,6 +20,7 @@ import { BlockAccessPolicy } from './services/block-access.policy';
 import { BlockFactoryService, BlockView, FormValueParser } from './services/block-factory.service';
 import { BusinessResponse } from '../services/response/business/business.response';
 import { BusinessMapping } from '../mapping/business/business.map';
+import { ThemeService } from '../theme/theme.service';
 
 @Component({
   selector: 'app-dynamic-form',
@@ -40,6 +41,42 @@ export class DynamicFormComponent implements OnChanges {
   private readonly blockFactory = inject(BlockFactoryService);
   private readonly fb = inject(FormBuilder);
   private readonly tokenStore = inject(TokenStorageService);
+  private readonly theme = inject(ThemeService);
+
+  readonly variant = computed<'default' | 'sacom'>(() =>
+    this.theme.active().origin === 'sacom' ? 'sacom' : 'default'
+  );
+
+  readonly currentStep = signal(0);
+
+  currentBlock(): BlockView | undefined {
+    return this.blocks[this.currentStep()];
+  }
+
+  isLastStep(): boolean {
+    return this.currentStep() >= this.blocks.length - 1;
+  }
+
+  currentStepInvalid(): boolean {
+    const block = this.currentBlock();
+    if (!block) return false;
+    const group = this.form.get(block.code);
+    return !!group && group.invalid;
+  }
+
+  nextStep(): void {
+    const block = this.currentBlock();
+    const group = block ? (this.form.get(block.code) as FormGroup | null) : null;
+    if (this.currentStepInvalid()) {
+      group?.markAllAsTouched();
+      return;
+    }
+    if (!this.isLastStep()) this.currentStep.set(this.currentStep() + 1);
+  }
+
+  prevStep(): void {
+    if (this.currentStep() > 0) this.currentStep.set(this.currentStep() - 1);
+  }
 
   @Input({ required: true }) schema!: BusinessForm;
   @Input() readOnly = false;

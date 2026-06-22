@@ -1,4 +1,45 @@
 @if (form) {
+  @if (variant() === 'sacom') {
+    <div class="sacom-wizard" data-origin="sacom">
+      <form class="sacom-wizard__form" novalidate (ngSubmit)="onSubmit()" [formGroup]="form">
+        <div class="sacom-steps">
+          @for (block of blocks; track block.code; let i = $index) {
+          <div class="sacom-step"
+               [class.sacom-step--active]="currentStep() === i"
+               [class.sacom-step--done]="currentStep() > i">{{ i + 1 }}</div>
+          @if (i < blocks.length - 1) {
+          <div class="sacom-step-line" [class.sacom-step-line--done]="currentStep() > i"></div>
+          }
+          }
+        </div>
+
+        @if (currentBlock(); as block) {
+        <p class="sacom-step-label">Paso {{ currentStep() + 1 }} de {{ blocks.length }} — {{ block.title }}</p>
+        <app-block-fields
+          [block]="block"
+          [group]="getBlockGroup(block.code)"
+          [optionsMap]="optionsMap"
+          [readOnly]="readOnly" />
+        }
+
+        @if (!formReadOnly) {
+        <div class="sacom-actions">
+          @if (currentStep() > 0) {
+          <button type="button" class="sacom-btn sacom-btn--secondary" (click)="prevStep()">Atrás</button>
+          }
+          @if (!isLastStep()) {
+          <button type="button" class="sacom-btn sacom-btn--primary" (click)="nextStep()">Siguiente</button>
+          } @else {
+          <button type="button" class="sacom-btn sacom-btn--secondary" (click)="emitDraft()">Guardar avance</button>
+          @if (canFinalize) {
+          <button type="button" class="sacom-btn sacom-btn--primary" (click)="onFinalize()">Finalizar</button>
+          }
+          }
+        </div>
+        }
+      </form>
+    </div>
+  } @else {
 <div class="df-shell">
   <aside class="df-sidebar">
     <app-form-sidebar [blocks]="blocks" [form]="form"></app-form-sidebar>
@@ -69,13 +110,14 @@
     </form>
   </div>
 </div>
+  }
 
-<app-copy-block-modal
-  [visible]="copyModalVisible"
-  [businesses]="copyModalBusinesses"
-  [loading]="copyModalLoading"
-  [currentBusinessId]="schema?.businessId"
-  (selectBusiness)="onCopyBusinessSelected($event)"
-  (closeModal)="closeCopyModal()">
-</app-copy-block-modal>
+  <app-copy-block-modal
+    [visible]="copyModalVisible"
+    [businesses]="copyModalBusinesses"
+    [loading]="copyModalLoading"
+    [currentBusinessId]="schema.businessId"
+    (selectBusiness)="onCopyBusinessSelected($event)"
+    (closeModal)="closeCopyModal()">
+  </app-copy-block-modal>
 }

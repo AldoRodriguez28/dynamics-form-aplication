@@ -355,3 +355,34 @@ details[open] .section__chevron {
     text-align: center;
   }
 }
+
+// ── SACOM Stepper Wizard ──────────────────────────────────────────────────────
+
+.sacom-wizard {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 18px;
+  font-family: var(--font-family, 'Inter', Arial, sans-serif);
+  color: var(--color-text, #1a1a1a);
+}
+.sacom-steps { display: flex; align-items: center; gap: 4px; margin-bottom: 8px; }
+.sacom-step {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--color-bg, #f4f4f4); color: var(--color-text-muted, #767676);
+  font-size: 10px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  &--active { background: var(--color-primary, #ffd800); color: var(--color-text, #1a1a1a); }
+  &--done { background: var(--color-text, #1a1a1a); color: var(--color-primary, #ffd800); }
+}
+.sacom-step-line { flex: 1; height: 2px; background: var(--color-border, #e5e5e5);
+  &--done { background: var(--color-text, #1a1a1a); } }
+.sacom-step-label { font-size: 11px; font-weight: 700; margin: 0 0 14px; }
+.sacom-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; }
+.sacom-btn {
+  width: 100%; border: none; border-radius: var(--radius-full, 9999px);
+  padding: 10px 24px; font-size: 13px; font-weight: 700; cursor: pointer;
+  font-family: var(--font-family, 'Inter', Arial, sans-serif);
+  &--primary { background: var(--color-action, #1a1a1a); color: #fff; &:hover { background: var(--color-action-hover, #2d2d2d); } }
+  &--secondary { background: transparent; color: var(--color-text-light, #666);
+    border: 1.5px solid var(--color-border, #e5e5e5); &:hover { background: var(--color-bg, #f4f4f4); } }
+}
