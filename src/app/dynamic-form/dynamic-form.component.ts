@@ -24,6 +24,7 @@ import {
 } from '../components';
 import { FormSidebarComponent } from '../components/form-sidebar/form-sidebar.component';
 import { CopyBlockModalComponent } from '../components/copy-block-modal/copy-block-modal.component';
+import { BlockFieldsComponent } from './block-fields/block-fields.component';
 import { collectRequiredFields, findMissingRequiredFields } from '../utils';
 import Swal from 'sweetalert2';
 import { CatalogService } from '../services/catalog.service';
@@ -59,7 +60,8 @@ import { BusinessMapping } from '../mapping/business/business.map';
     FieldOpeningHoursComponent,
     FieldOpeningHoursFlexibleComponent,
     FormSidebarComponent,
-    CopyBlockModalComponent
+    CopyBlockModalComponent,
+    BlockFieldsComponent
   ],
   templateUrl: './dynamic-form.component.html',
   styleUrl: './dynamic-form.component.scss'
@@ -589,6 +591,10 @@ export class DynamicFormComponent implements OnChanges {
 
   getArrayControl(blockCode: string, name: string): FormArray {
     return this.form.get([blockCode, name]) as FormArray;
+  }
+
+  getBlockGroup(blockCode: string): FormGroup {
+    return this.form.get(blockCode) as FormGroup;
   }
 
   onSubmit(): void {

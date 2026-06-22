@@ -44,96 +44,12 @@
           <span class="section__chevron" aria-hidden="true"></span>
         </summary>
 
-        <div class="section__content" [formGroupName]="block.code">
-          @for (row of block.rows; track row.num) {
-          <div class="field-grid">
-            @for (field of row.fields; track field.name) {
-            <div class="field-col" [style.gridColumn]="'span ' + field.colSpan">
-              @switch (field.displayType) {
-              @case ('textarea') {
-              <app-field-textarea [field]="field" [control]="getControl(form, [block.code, field.name])"
-                [readOnly]="readOnly || block.readOnly" />
-              }
-              @case ('select') {
-              <app-field-select [field]="field" [control]="getControl(form, [block.code, field.name])"
-                [options]="getOptions(block.code, field.name)" [readOnly]="readOnly || block.readOnly" />
-              }
-              @case ('multiselect') {
-              <app-field-multiselect [field]="field" [control]="getControl(form, [block.code, field.name])"
-                [options]="getOptions(block.code, field.name)" [readOnly]="readOnly || block.readOnly" />
-              }
-              @case ('checkbox-grid') {
-              <app-field-pill-multiselect [field]="field" [control]="getControl(form, [block.code, field.name])"
-                [options]="getOptions(block.code, field.name)" [readOnly]="readOnly || block.readOnly" />
-              }
-              @case ('array-checkbox-grid') {
-              <app-field-pill-multiselect [field]="field" [control]="getControl(form, [block.code, field.name])"
-                [options]="getOptions(block.code, field.name)" [readOnly]="readOnly || block.readOnly" />
-              }
-              @case ('file') {
-              <app-field-file [field]="field" [control]="getControl(form, [block.code, field.name])"
-                [blockCode]="block.code" [readOnly]="readOnly || block.readOnly" />
-              }
-              @case ('opening-hours') {
-              <app-field-opening-hours [field]="field" [control]="getControl(form, [block.code, field.name])"
-                [readOnly]="readOnly || block.readOnly" />
-              }
-              @case ('opening-hours-flexible') {
-              <app-field-opening-hours-flexible [field]="field"
-                [control]="getControl(form, [block.code, field.name])"
-                [optionSets]="block.optionSets || {}"
-                [readOnly]="readOnly || block.readOnly" />
-              }
-              @case ('location-map') {
-              <app-field-location-map [field]="field" [coordsControl]="getControl(form, [block.code, field.name])"
-                [addressControl]="getControl(form, [block.code, 'direccion'])" [blockName]="block.title"
-                [readOnly]="readOnly || block.readOnly" />
-              }
-              @case ('domain-option') {
-              <app-field-domain-option [field]="field" [control]="getControl(form, [block.code, field.name])"
-                [readOnly]="readOnly || block.readOnly" />
-              }
-              @case ('pill-multiselect') {
-              <app-field-pill-multiselect [field]="field" [control]="getControl(form, [block.code, field.name])"
-                [readOnly]="readOnly || block.readOnly" />
-              }
-              @case ('productos-servicios') {
-              <app-field-productos-servicios [field]="field" [formArray]="getArrayControl(block.code, field.name)"
-                [readOnly]="readOnly || block.readOnly" />
-              }
-              @case ('phones') {
-              <app-field-phone [field]="field" [formArray]="getArrayControl(block.code, field.name)"
-                [optionSets]="block.optionSets || {}" [readOnly]="readOnly || block.readOnly" />
-              }
-              @case ('checkbox') {
-              <app-field-input [field]="field" [control]="getControl(form, [block.code, field.name])"
-                [countryControl]="field.countryControlName ? getControl(form, [block.code, field.countryControlName]) : undefined"
-                [readOnly]="readOnly || block.readOnly" />
-              }
-              @case ('url') {
-              <app-field-url [field]="field" [control]="getControl(form, [block.code, field.name])"
-                [readOnly]="readOnly || block.readOnly" />
-              }
-              @case ('array-object') {
-              <app-field-array-object [field]="field" [formArray]="getArrayControl(block.code, field.name)"
-                [optionSets]="block.optionSets || {}" [readOnly]="readOnly || block.readOnly" />
-              }
-              @case ('array-primitive') {
-              <app-field-array-primitive [field]="field" [formArray]="getArrayControl(block.code, field.name)"
-                [options]="getOptions(block.code, field.name)" [blockCode]="block.code"
-                [readOnly]="readOnly || block.readOnly" />
-              }
-              @default {
-              <app-field-input [field]="field" [control]="getControl(form, [block.code, field.name])"
-                [countryControl]="field.countryControlName ? getControl(form, [block.code, field.countryControlName]) : undefined"
-                [readOnly]="readOnly || block.readOnly" />
-              }
-              }
-            </div>
-            }
-          </div>
-          }
-        </div>
+        <app-block-fields
+          [block]="block"
+          [group]="getBlockGroup(block.code)"
+          [optionsMap]="optionsMap"
+          [readOnly]="readOnly"
+        />
       </details>
       <hr class="df-divider" />
       }
