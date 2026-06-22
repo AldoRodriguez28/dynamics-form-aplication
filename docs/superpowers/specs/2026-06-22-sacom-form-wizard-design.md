@@ -17,8 +17,9 @@ El resto de la app (lista de negocios y demás rutas) debe permanecer con el loo
 
 ## 2. Requisitos
 
-1. **Trigger:** `origin` del token igual a `SACOM` (normalizado: minúsculas/trim → `sacom`).
-   Sigue el patrón existente de `brandx` pero **scoped a la ruta del formulario**.
+1. **Trigger:** claim **`originSystem`** del token igual a `SACOM`/`sacom`
+   (normalizado: minúsculas/trim → `sacom`). Todo lo que no sea `sacom` cae a default.
+   Se lee `bcm.originSystem` o `originSystem`. **Scoped a la ruta del formulario**.
 2. **Scope:** solo la ruta del formulario `/:idClient/:businessId`. La lista
    `/:idClient` y cualquier otra ruta quedan en default.
 3. **Presentación:** full-screen (100vw/100vh). El host provee el contenedor tipo drawer

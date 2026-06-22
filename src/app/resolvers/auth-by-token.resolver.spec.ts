@@ -20,7 +20,7 @@ function routeWithToken(token: string): ActivatedRouteSnapshot {
   } as unknown as ActivatedRouteSnapshot;
 }
 
-describe('authByTokenResolver — origin', () => {
+describe('authByTokenResolver — originSystem', () => {
   let auth: jasmine.SpyObj<AuthService>;
 
   beforeEach(() => {
@@ -36,23 +36,36 @@ describe('authByTokenResolver — origin', () => {
     localStorage.clear();
   });
 
-  it('setea sessionOrigin y persiste el origin cuando el JWT lo trae', (done) => {
-    const bearer = makeJwt({ 'bcm.origin': 'brandx' });
+  it('setea sessionOrigin y persiste el originSystem cuando el JWT lo trae', (done) => {
+    const bearer = makeJwt({ originSystem: 'SACOM' });
     auth.loginByToken.and.returnValue(of({ bearerToken: bearer } as any));
     const storage = TestBed.inject(TokenStorageService);
     const theme = TestBed.inject(ThemeService);
 
     TestBed.runInInjectionContext(() => {
       (authByTokenResolver(routeWithToken('t'), {} as any) as any).subscribe(() => {
-        expect(theme.sessionOrigin()).toBe('brandx');
-        expect(storage.getOrigin()).toBe('brandx');
+        expect(theme.sessionOrigin()).toBe('SACOM');
+        expect(storage.getOrigin()).toBe('SACOM');
         done();
       });
     });
   });
 
-  it('setea sessionOrigin null cuando el JWT no trae origin', (done) => {
-    const bearer = makeJwt({ 'bcm.advertiser_id': 1 });
+  it('lee también el claim con prefijo bcm.originSystem', (done) => {
+    const bearer = makeJwt({ 'bcm.originSystem': 'sacom' });
+    auth.loginByToken.and.returnValue(of({ bearerToken: bearer } as any));
+    const theme = TestBed.inject(ThemeService);
+
+    TestBed.runInInjectionContext(() => {
+      (authByTokenResolver(routeWithToken('t'), {} as any) as any).subscribe(() => {
+        expect(theme.sessionOrigin()).toBe('sacom');
+        done();
+      });
+    });
+  });
+
+  it('setea sessionOrigin null cuando el JWT no trae originSystem', (done) => {
+    const bearer = makeJwt({ 'bcm.advertiser_id': 1, origin: 'BCM' });
     auth.loginByToken.and.returnValue(of({ bearerToken: bearer } as any));
     const theme = TestBed.inject(ThemeService);
 

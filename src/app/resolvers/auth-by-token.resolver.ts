@@ -27,7 +27,12 @@ export const authByTokenResolver: ResolveFn<boolean> = (route) => {
             storage.setToken(res.bearerToken);
 
             const payload = decodeJwtPayload(res.bearerToken);
+            //const originClaim = payload?.['bcm.origin'] ?? payload?.['origin'] ?? null;
             const advertiserId = payload?.['bcm.advertiser_id'];
+
+            console.log('payload', payload);
+            
+           // console.log('origin', originClaim);
             if (advertiserId != null) storage.setAdvertiserId(String(advertiserId));
 
             const advertiserName = payload?.['bcm.advertiser_name'];
@@ -37,9 +42,10 @@ export const authByTokenResolver: ResolveFn<boolean> = (route) => {
             const role = Array.isArray(roleClaim) ? roleClaim[0] : roleClaim;
             if (role != null) storage.setRole(String(role));
 
-            const origin = payload?.['bcm.origin'] ?? payload?.['origin'] ?? null;
-            if (origin != null) storage.setOrigin(String(origin));
-            theme.sessionOrigin.set(origin != null ? String(origin) : null);
+            // El design system se decide por `originSystem` (p.ej. SACOM). Lo demás cae a default.
+            const originSystem = payload?.['bcm.originSystem'] ?? payload?.['originSystem'] ?? null;
+            if (originSystem != null) storage.setOrigin(String(originSystem));
+            theme.sessionOrigin.set(originSystem != null ? String(originSystem) : null);
 
         }),
         map(() => true),
