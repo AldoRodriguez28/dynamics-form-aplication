@@ -187,19 +187,6 @@ h2 {
   color: #6b7280;
 }
 
-.page--sacom {
-  max-width: none;
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-}
-.card--sacom {
-  border: none;
-  box-shadow: none;
-  background: transparent;
-  padding: 0;
-}
-
 @media (max-width: 640px) {
   .page {
     padding: 1.5rem 1rem;
@@ -218,4 +205,17 @@ h2 {
   .meta-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+.page--sacom {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+.card--sacom {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  padding: 0;
 }
