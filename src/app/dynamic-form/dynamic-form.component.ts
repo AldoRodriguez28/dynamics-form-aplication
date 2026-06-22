@@ -5,23 +5,6 @@ import { canFinalizeForm, getControl, getFieldOptions, optionKey, OptionValue, t
 import { SaveBlocksRequest } from '../services/request/save-blocks.request';
 import { PayloadBuilder } from '../utils/payload.builder';
 import { BusinessForm, BusinessFormBlock, FormStatus } from '../models/form-schema.model';
-import {
-  FieldArrayObjectComponent,
-  FieldArrayPrimitiveComponent,
-  FieldFileComponent,
-  FieldInputComponent,
-  FieldUrlComponent,
-  FieldPhoneComponent,
-  FieldDomainOptionComponent,
-  FieldOpeningHoursComponent,
-  FieldOpeningHoursFlexibleComponent,
-  FieldLocationMapComponent,
-  FieldPillMultiselectComponent,
-  FieldProductosServiciosComponent,
-  FieldMultiselectComponent,
-  FieldSelectComponent,
-  FieldTextareaComponent
-} from '../components';
 import { FormSidebarComponent } from '../components/form-sidebar/form-sidebar.component';
 import { CopyBlockModalComponent } from '../components/copy-block-modal/copy-block-modal.component';
 import { BlockFieldsComponent } from './block-fields/block-fields.component';
@@ -44,21 +27,6 @@ import { BusinessMapping } from '../mapping/business/business.map';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    FieldInputComponent,
-    FieldUrlComponent,
-    FieldTextareaComponent,
-    FieldSelectComponent,
-    FieldMultiselectComponent,
-    FieldFileComponent,
-    FieldDomainOptionComponent,
-    FieldLocationMapComponent,
-    FieldPillMultiselectComponent,
-    FieldProductosServiciosComponent,
-    FieldArrayObjectComponent,
-    FieldArrayPrimitiveComponent,
-    FieldPhoneComponent,
-    FieldOpeningHoursComponent,
-    FieldOpeningHoursFlexibleComponent,
     FormSidebarComponent,
     CopyBlockModalComponent,
     BlockFieldsComponent
