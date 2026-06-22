@@ -194,7 +194,7 @@ abordará tipo por tipo, verificando visualmente.
 **Nuevos:**
 - `src/app/theme/themes/sacom.theme.ts`
 - `src/app/layouts/sacom-layout/sacom-layout.component.{ts,html,scss}`
-- `src/app/.../block-fields/block-fields.component.{ts,html}` (extracción)
+- `src/app/dynamic-form/block-fields/block-fields.component.{ts,html}` (extracción)
 - `ThemeRouteBinder` (servicio)
 - Estilos SACOM (layout + stepper + overrides de campos) + carga de fuente Inter
 
