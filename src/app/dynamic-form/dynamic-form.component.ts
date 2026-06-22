@@ -127,7 +127,6 @@ export class DynamicFormComponent implements OnChanges {
     this.copyModalLoading = true;
 
     const advertiserId = this.schema?.advertiserId ?? this.tokenStore.getAdvertiserId();
-    console.log('[CopyModal] advertiserId:', advertiserId, '| schema.advertiserId:', this.schema?.advertiserId, '| tokenStore:', this.tokenStore.getAdvertiserId());
     if (!advertiserId) {
       this.copyModalLoading = false;
       return;
@@ -135,8 +134,6 @@ export class DynamicFormComponent implements OnChanges {
 
     this.businessService.getLegacy(advertiserId, true).subscribe({
       next: (res) => {
-        console.log('[CopyModal] getLegacy response:', res);
-        console.log('[CopyModal] businesses count:', res.businesses?.length, '| currentBusinessId:', this.schema?.businessId);
         this.copyModalBusinesses = res.businesses ?? [];
         this.copyModalLoading = false;
       },
@@ -914,6 +911,7 @@ export class DynamicFormComponent implements OnChanges {
     if (this.readOnly || this.schema?.canEdit === false) {
       this.form.disable({ emitEvent: false });
     }
+    this.currentStep.set(0);
     this.loadApiOptionsForBlocks();
   }
 

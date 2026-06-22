@@ -22,6 +22,15 @@
           [readOnly]="readOnly" />
         }
 
+        @if (currentBlock(); as block) {
+        @if (!formReadOnly && !block.readOnly) {
+        <div class="sacom-block-actions">
+          <button type="button" class="sacom-btn sacom-btn--secondary" (click)="saveJustOneBlock(block, $event)">Guardar bloque</button>
+          <button type="button" class="sacom-btn sacom-btn--secondary" (click)="openCopyModal(block.code, $event)">Copiar de otro negocio</button>
+        </div>
+        }
+        }
+
         @if (!formReadOnly) {
         <div class="sacom-actions">
           @if (currentStep() > 0) {

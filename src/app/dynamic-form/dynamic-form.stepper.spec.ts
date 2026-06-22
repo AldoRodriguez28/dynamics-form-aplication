@@ -1,9 +1,11 @@
+import { SimpleChange } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { provideHttpClient } from '@angular/common/http';
 import { DynamicFormComponent } from './dynamic-form.component';
 import { ThemeService } from '../theme/theme.service';
 import { SACOM_THEME } from '../theme/themes/sacom.theme';
+import { BusinessForm } from '../models/form-schema.model';
 
 describe('DynamicFormComponent – stepper SACOM', () => {
   function make(): DynamicFormComponent {
@@ -49,6 +51,25 @@ describe('DynamicFormComponent – stepper SACOM', () => {
     (cmp.form.get('b1') as FormGroup).get('x')!.setValue('lleno');
     cmp.nextStep();
     cmp.prevStep();
+    expect(cmp.currentStep()).toBe(0);
+  });
+
+  it('setupForm() via ngOnChanges resetea currentStep a 0', () => {
+    const cmp = make();
+    // Advance to step 1 manually (bypassing validation by setting value)
+    (cmp.form.get('b1') as FormGroup).get('x')!.setValue('lleno');
+    cmp.nextStep();
+    expect(cmp.currentStep()).toBe(1);
+
+    // Build a minimal schema with one block and drive setupForm via ngOnChanges
+    const minimalSchema: BusinessForm = {
+      blocks: [
+        { code: 'b1', rows: [], values: {} }
+      ]
+    };
+    cmp.schema = minimalSchema;
+    cmp.ngOnChanges({ schema: new SimpleChange(null, minimalSchema, false) });
+
     expect(cmp.currentStep()).toBe(0);
   });
 });
