@@ -1,6 +1,7 @@
 import { CommonModule, Location } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { ThemeService } from '../theme/theme.service';
 import { BehaviorSubject, catchError, map, Observable, of, switchMap, tap } from 'rxjs';
 import Swal from 'sweetalert2';
 import { BusinessService } from '../services/business.service';
@@ -21,6 +22,9 @@ import { isReadOnlyForSharedWithClientState } from '../utils/role.utils';
   styleUrl: './business-form.component.scss'
 })
 export class BusinessFormComponent {
+  private readonly theme = inject(ThemeService);
+  readonly isSacom = computed(() => this.theme.active().origin === 'sacom');
+
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly location = inject(Location);

@@ -1,4 +1,5 @@
-<section class="page">
+<section class="page" [class.page--sacom]="isSacom()">
+  @if (!isSacom()) {
   <div class="page__actions">
     <button class="back-button" type="button" (click)="goBack()">
       ← Volver
@@ -70,9 +71,10 @@
       }
     </div>
   </header>
+  }
 
   @if (formSchema$ | async; as schema) {
-  <div class="card">
+  <div class="card" [class.card--sacom]="isSacom()">
     <app-dynamic-form
       [schema]="schema"
       [userRole]="userRole"
