@@ -184,11 +184,6 @@ details[open] .section__chevron {
   line-height: 1;
 }
 
-.section__content {
-  padding: 1rem 1.25rem 1.5rem;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-}
-
 .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -255,27 +250,6 @@ details[open] .section__chevron {
 .chevron {
   font-size: 1.4rem;
   color: #6b7280;
-}
-
-.field-grid {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 1rem;
-  margin-bottom: 0.75rem;
-}
-
-.field-grid:last-child {
-  margin-bottom: 0;
-}
-
-@media (max-width: 640px) {
-  .field-grid {
-    grid-template-columns: repeat(1, minmax(0, 1fr));
-  }
-}
-
-.field-col {
-  min-width: 0;
 }
 
 .actions {

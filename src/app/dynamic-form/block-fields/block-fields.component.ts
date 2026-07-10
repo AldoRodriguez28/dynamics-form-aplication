@@ -45,6 +45,7 @@ import {
     FieldOpeningHoursFlexibleComponent,
   ],
   templateUrl: './block-fields.component.html',
+  styleUrl: './block-fields.component.scss',
 })
 export class BlockFieldsComponent {
   @Input({ required: true }) block!: BlockView;
