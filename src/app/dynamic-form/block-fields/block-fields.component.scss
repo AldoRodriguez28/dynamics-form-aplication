@@ -1,0 +1,43 @@
+.section__content {
+  padding: 1rem 1.25rem 1.5rem;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.field-grid:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  .field-grid {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+.field-col {
+  min-width: 0;
+}
+
+/*
+ * SACOM conserva el layout previo a la extracción de BlockFieldsComponent:
+ * campos en columna única a ancho completo, sin el fondo/padding del default.
+ * El wizard SACOM y documentElement llevan data-origin="sacom".
+ */
+:host-context([data-origin='sacom']) {
+  .section__content {
+    padding: 0;
+    background: none;
+  }
+
+  .field-grid {
+    display: block;
+    gap: 0;
+    margin-bottom: 0;
+  }
+}
